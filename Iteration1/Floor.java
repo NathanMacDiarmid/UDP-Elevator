@@ -6,6 +6,9 @@ import java.io.File;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.Time;
+import java.time.LocalTime;
+import java.time.temporal.ChronoField;
 import java.util.*;
 
 public class Floor implements Runnable {
@@ -28,16 +31,16 @@ public class Floor implements Runnable {
         try (Scanner input = new Scanner(new File("Iteration1/data.txt"))) {
             while (input.hasNextLine()) {
                 String[] data = input.nextLine().split(" ");
-                String[] timeTemp = data[0].split("[:\\.]");
-                long tempTime = Integer.parseInt(timeTemp[0]) * 3600000 + Integer.parseInt(timeTemp[1]) * '\uea60'
-                        + Integer.parseInt(timeTemp[2]) * 1000 + Integer.parseInt(timeTemp[3]);
-                elevatorQueue.add(new InputData(tempTime, Integer.parseInt(data[1]),
-                        true));
+                LocalTime time = LocalTime.parse((data[0]));
+                int l = time.get(ChronoField.MILLI_OF_DAY);
+                elevatorQueue.add(new InputData(l, Integer.parseInt(data[1]), isGoingUp(data[2]),
+                        Integer.parseInt(data[3])));
             }
         } catch (NumberFormatException | FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        Collections.sort(elevatorQueue);
 
     }
 
@@ -49,6 +52,10 @@ public class Floor implements Runnable {
         }
     }
 
+    public void sortList(ArrayList<InputData> queueToPrint) {
+
+    }
+
     @Override
     /**
      * The run method for the Agent class is inherited from the
@@ -56,7 +63,8 @@ public class Floor implements Runnable {
      */
     public void run() {
         this.readData();
-        System.out.println(elevatorQueue);
+        printInputData(elevatorQueue);
+
         while (true) {
             // Change this to floor input from person
             Random rand = new Random();
@@ -65,13 +73,15 @@ public class Floor implements Runnable {
             while (firstIngredient == secondIngredient) {
                 secondIngredient = rand.nextInt((3 - 1) + 1) + 1;
             }
-
             scheduler.put(firstIngredient, secondIngredient);
             System.out.println("Agent just put the ingredient " + firstIngredient + " and second ingredient "
                     + secondIngredient + " on the table");
-
         }
-
     }
 
+    public void printInputData(ArrayList<InputData> queueToPrint) {
+        for (InputData q : queueToPrint) {
+            System.out.println(q);
+        }
+    }
 }
