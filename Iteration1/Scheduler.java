@@ -1,8 +1,5 @@
 package Iteration1;
 
-import java.util.ArrayList;
-import java.lang.Math;
-
 public class Scheduler {
     private boolean elevatorAvailabile = true;
     private int currentFloor = 0;
@@ -23,15 +20,7 @@ public class Scheduler {
             } catch (InterruptedException e) {
             }
         }
-        /*try {
-            // Sleeps for 6.2 seconds per floor, multiplies by 1000 to get to miliseconds
-            Thread.sleep((long) Math.abs(((elevatorQueue.getFloor() - elevatorQueue.getCarRequest() + floor) * 6.2) * 1000));
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }*/
-        System.out.println(this.currentFloor);
-        System.out.println(this.nextFloor);
+        System.out.println("Elevator is picking someone up on floor " + this.currentFloor);
         this.currentFloor = currentFloor;
         elevatorAvailabile = true;
         notifyAll();

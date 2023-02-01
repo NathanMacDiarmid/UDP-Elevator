@@ -21,7 +21,7 @@ public class Elevator implements Runnable {
     public void run() {
         while (true) {
             this.currentFloor = scheduler.get(this.currentFloor);
-            System.out.println("Elevator has gotten stuff - " + "The current floor is now " + this.currentFloor);
+            System.out.println("Elevator has dropped passenger off on floor - " + this.currentFloor);
         }
     }
 }

@@ -60,7 +60,6 @@ public class Floor implements Runnable {
        while(elevatorQueue.size() != 0) {
             scheduler.put(elevatorQueue.get(0));
             elevatorQueue.remove(0);
-            System.out.println("Floor has put stuff");
        }
        System.exit(1);
     }
