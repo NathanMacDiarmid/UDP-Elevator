@@ -1,11 +1,12 @@
 package Iteration1;
 
 import java.util.ArrayList;
+import java.lang.Math;
 
 public class Scheduler {
-    private boolean empty = true;
-    private ArrayList<Integer> ingredients = new ArrayList<>();
-    private int totalSandwhiches = 0;
+    private boolean elevatorAvailabile = true;
+    private int currentFloor = 0;
+    private int nextFloor = 0;
 
     /**
      * The getter method for the Table class gets items from {@link #ingredients}
@@ -15,24 +16,26 @@ public class Scheduler {
      * (1 - bread, 2 - jam, 3 - peanut butter)
      * @return the ingredients that the Agent passed and stored on the Table
      */
-    public synchronized ArrayList<Integer> get(int ingredient) {
-        while (empty || isRightIngredient(ingredient)) {
+    public synchronized int get(int currentFloor) {
+        while (elevatorAvailabile) {
             try {
                 wait();
             } catch (InterruptedException e) {
             }
         }
-        ArrayList<Integer> buffer = new ArrayList<>();
-        buffer.addAll(ingredients);
-        ingredients.clear();
-        empty = true;
-        totalSandwhiches++;
-        System.out.println("Total sandwhiches made: " + totalSandwhiches + "\n");
-        if (totalSandwhiches >= 20) {
-            System.exit(1);
-        }
+        /*try {
+            // Sleeps for 6.2 seconds per floor, multiplies by 1000 to get to miliseconds
+            Thread.sleep((long) Math.abs(((elevatorQueue.getFloor() - elevatorQueue.getCarRequest() + floor) * 6.2) * 1000));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }*/
+        System.out.println(this.currentFloor);
+        System.out.println(this.nextFloor);
+        this.currentFloor = currentFloor;
+        elevatorAvailabile = true;
         notifyAll();
-        return buffer;
+        return nextFloor;
     }
 
     /**
@@ -42,30 +45,16 @@ public class Scheduler {
      * @param firstIngredient the first ingredient that the Agent supplies
      * @param secondIngredient the second ingredient that the Agent supplies
      */
-    public synchronized void put(int firstIngredient, int secondIngredient) {
-        while(!empty) {
+    public synchronized void put(InputData elevatorQueue) {
+        while(!elevatorAvailabile) {
             try {
                 wait();
             } catch (InterruptedException e) {
             }
         }
-        this.ingredients.add(firstIngredient);
-        this.ingredients.add(secondIngredient);
-        empty = false;
+        this.currentFloor = elevatorQueue.getFloor();
+        this.nextFloor = elevatorQueue.getCarRequest();
+        elevatorAvailabile = false;
         notifyAll();
-    }
-
-    /**
-     * Helper method isRightIngredient checks {@link #ingredients}
-     * to see if the ingredient being passed is the correct ingredient
-     * that is missing.
-     * @param ingredient the ingredient that is attempting to be passed to finish the sandwhich
-     * @return true if ingredient is in {@link #ingredients}, false otherwise
-     */
-    private boolean isRightIngredient(int ingredient) {
-        if (this.ingredients.get(0) == ingredient || this.ingredients.get(1) == ingredient) {
-            return true;
-        }
-        return false;
     }
 }

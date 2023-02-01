@@ -1,21 +1,14 @@
 package Iteration1;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.File;
-
-import java.io.FileReader;
-import java.io.IOException;
-import java.sql.Time;
 import java.time.LocalTime;
 import java.time.temporal.ChronoField;
 import java.util.*;
 
 public class Floor implements Runnable {
     private Scheduler scheduler;
-    private BufferedReader input;
     private ArrayList<InputData> elevatorQueue;
-    private String instructions;
 
     /**
      * Default constructor for Agent class
@@ -41,7 +34,6 @@ public class Floor implements Runnable {
             e.printStackTrace();
         }
         Collections.sort(elevatorQueue);
-
     }
 
     public boolean isGoingUp(String direction) {
@@ -65,18 +57,12 @@ public class Floor implements Runnable {
         this.readData();
         printInputData(elevatorQueue);
 
-        while (true) {
-            // Change this to floor input from person
-            Random rand = new Random();
-            int firstIngredient = rand.nextInt((3 - 1) + 1) + 1;
-            int secondIngredient = rand.nextInt((3 - 1) + 1) + 1;
-            while (firstIngredient == secondIngredient) {
-                secondIngredient = rand.nextInt((3 - 1) + 1) + 1;
-            }
-            scheduler.put(firstIngredient, secondIngredient);
-            System.out.println("Agent just put the ingredient " + firstIngredient + " and second ingredient "
-                    + secondIngredient + " on the table");
-        }
+       while(elevatorQueue.size() != 0) {
+            scheduler.put(elevatorQueue.get(0));
+            elevatorQueue.remove(0);
+            System.out.println("Floor has put stuff");
+       }
+       System.exit(1);
     }
 
     public void printInputData(ArrayList<InputData> queueToPrint) {

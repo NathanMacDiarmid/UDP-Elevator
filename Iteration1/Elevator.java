@@ -1,9 +1,7 @@
 package Iteration1;
 
-import java.util.ArrayList;
-
 public class Elevator implements Runnable {
-    private int floor;
+    private int currentFloor = 0;
     private Scheduler scheduler;
 
     /**
@@ -11,9 +9,8 @@ public class Elevator implements Runnable {
      * @param table the Table that is used as the middle man (Box class)
      * @param ingredient the ingredient that the Chef supplies to finish the sandwhich
      */
-    public Elevator(Scheduler scheduler, int floor) {
+    public Elevator(Scheduler scheduler) {
         this.scheduler = scheduler;
-        this.floor = floor;
     }
 
     @Override
@@ -23,8 +20,8 @@ public class Elevator implements Runnable {
      */
     public void run() {
         while (true) {
-            ArrayList<Integer> ingredients = scheduler.get(this.floor);
-            System.out.println("I made a sandwhich with given ingredients: " + ingredients + " and my " + this.floor);
+            this.currentFloor = scheduler.get(this.currentFloor);
+            System.out.println("Elevator has gotten stuff - " + "The current floor is now " + this.currentFloor);
         }
     }
 }
