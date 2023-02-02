@@ -1,7 +1,5 @@
 package Iteration1;
 
-import java.sql.Time;
-
 public class InputData implements Comparable<InputData> {
     // represents the time the request was sent 
     private long currentTime;

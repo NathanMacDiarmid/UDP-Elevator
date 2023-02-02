@@ -26,7 +26,7 @@ public class Floor implements Runnable {
      * Creates a usable format for the rest scheduler. 
      */
     public void readData() {
-        try (Scanner input = new Scanner(new File(new File("").getAbsolutePath() + "\\src\\Iteration1\\data.txt"))) {
+        try (Scanner input = new Scanner(new File("Iteration1/data.txt"))) {
             while (input.hasNextLine()) {
                 // Values are space-separated 
                 String[] data = input.nextLine().split(" ");
