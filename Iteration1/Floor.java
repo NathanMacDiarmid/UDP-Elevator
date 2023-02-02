@@ -11,9 +11,9 @@ public class Floor implements Runnable {
     private ArrayList<InputData> elevatorQueue;
 
     /**
-     * Default constructor for Agent class
-     * 
-     * @param table the Table that is used as the middle man (Box class)
+     * Default constructor for Floor class
+     * @param scheduler the Scheduler that is used as the middle man (Box class)
+     * Also initializes {@link #elevatorQueue} ArrayList
      */
     public Floor(Scheduler scheduler) {
         this.scheduler = scheduler;
@@ -30,7 +30,6 @@ public class Floor implements Runnable {
                         Integer.parseInt(data[3])));
             }
         } catch (NumberFormatException | FileNotFoundException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         Collections.sort(elevatorQueue);
@@ -48,9 +47,15 @@ public class Floor implements Runnable {
 
     }
 
+    public void printInputData(ArrayList<InputData> queueToPrint) {
+        for (InputData q : queueToPrint) {
+            System.out.println(q);
+        }
+    }
+
     @Override
     /**
-     * The run method for the Agent class is inherited from the
+     * The run method for the Floor class is inherited from the
      * Runnable interface. It runs the Thread when .start() is used
      */
     public void run() {
@@ -62,11 +67,5 @@ public class Floor implements Runnable {
             elevatorQueue.remove(0);
        }
        System.exit(1);
-    }
-
-    public void printInputData(ArrayList<InputData> queueToPrint) {
-        for (InputData q : queueToPrint) {
-            System.out.println(q);
-        }
     }
 }
