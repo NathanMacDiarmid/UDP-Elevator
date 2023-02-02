@@ -6,12 +6,10 @@ public class Scheduler {
     private int nextFloor = 0;
 
     /**
-     * The getter method for the Table class gets items from {@link #ingredients}
-     * that were passed from the Agent and gives them to the 
-     * correct Chef (Jam, Bread, or Peanut Butter)
-     * @param ingredient the ingredient that the Chef supplies
-     * (1 - bread, 2 - jam, 3 - peanut butter)
-     * @return the ingredients that the Agent passed and stored on the Table
+     * The getter method for the Scheduler class gets the floor from {@link #currentFloor}
+     * that were passed from the Elevator and goes to the next floor
+     * @param currentFloor the floor the Elevator is currently at
+     * @return the next floor the elevator will stop at
      */
     public synchronized int get(int currentFloor) {
         while (elevatorAvailabile) {
@@ -20,7 +18,7 @@ public class Scheduler {
             } catch (InterruptedException e) {
             }
         }
-        System.out.println("Elevator is picking someone up on floor " + this.currentFloor);
+        System.out.println("Elevator is picking someone up on floor - " + this.currentFloor);
         this.currentFloor = currentFloor;
         elevatorAvailabile = true;
         notifyAll();
@@ -28,11 +26,13 @@ public class Scheduler {
     }
 
     /**
-     * The putter method for the Table class puts the items that were
-     * passed from Agent into {@link #ingredients}, missing one of the
-     * three ingredients. Both ingredients are randomly gernerated numbers
-     * @param firstIngredient the first ingredient that the Agent supplies
-     * @param secondIngredient the second ingredient that the Agent supplies
+     * The putter method for the Scheduler class puts the floor reqeuests that were
+     * passed from Floor into {@link Scheduler#currentFloor} and 
+     * {@link Scheduler#nextFloor} respectfully
+     * @param elevatorQueue the first InputData instance in the list of
+     * commands that were passed from Floor that hold the current time,
+     * floor the elevator was requested on, floor the elevator goes to,
+     * and whether the elevator is going up or down.
      */
     public synchronized void put(InputData elevatorQueue) {
         while(!elevatorAvailabile) {
