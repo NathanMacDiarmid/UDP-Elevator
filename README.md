@@ -4,6 +4,27 @@ Elevator Control System and Simulator
 Iteration 1 simulates a elevator using java threads represented with string prompts in the terminal. 
 Users are notified when the elevator has finished a request/move and where that request is. 
 
+## Contributions:
+🥇 Amanda Piazza (101143004)
+  * UML class and sequence diagram
+  * README
+     
+🥇 Juanita Rodelo (101141857) 
+
+   * UML class and sequence diagram
+     
+🥇 Matthew Belanger (101144323)
+
+   * UnitTests
+     
+🥇 Michael Kyrollos (101183521)  
+
+   * Parsing and importing the txt, README    
+     
+🥇 Nathan MacDiarmid (101098993) 
+
+   * Communication between floor, elevator, and scheduler
+
 ### Structure 
 * Floor.java accepts events from InputData.java. Each event consists of the current time, the floor request, 
 the direction of travel and the car button pressed. These events are sent to Scheduler.java
