@@ -1,5 +1,3 @@
-package Iteration1;
-
 public class Elevator implements Runnable {
     private int currentFloor = 0;
     private Scheduler scheduler;
