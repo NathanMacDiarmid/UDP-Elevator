@@ -9,8 +9,8 @@ public class Main {
         Thread floorThread = new Thread(floor);
         Thread elevatorThread1 = new Thread(elevator1);
 
-        floorThread.start();;
-        elevatorThread1.start();;
+        floorThread.start();
+        elevatorThread1.start();
     }
 }
 

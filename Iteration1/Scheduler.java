@@ -46,5 +46,17 @@ public class Scheduler {
         elevatorAvailabile = false;
         notifyAll();
     }
+
+        /**
+     * The two following methods are ONLY FOR TESTING PURPOSES and
+     * should not be included in commercial product.
+     */
+    public int getCurrentFloor() {
+        return currentFloor;
+    }
+
+    public int getNextFloor() {
+        return nextFloor;
+    }
 }
 
