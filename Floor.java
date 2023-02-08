@@ -1,5 +1,3 @@
-package Iteration1;
-
 import java.io.FileNotFoundException;
 import java.io.File;
 import java.time.LocalTime;
@@ -26,7 +24,7 @@ public class Floor implements Runnable {
      * Creates a usable format for the rest scheduler. 
      */
     public void readData() {
-        try (Scanner input = new Scanner(new File("Iteration1/data.txt"))) {
+        try (Scanner input = new Scanner(new File("data.txt"))) {
             while (input.hasNextLine()) {
                 // Values are space-separated 
                 String[] data = input.nextLine().split(" ");

@@ -1,5 +1,3 @@
-package Iteration1;
-
 public class Scheduler {
     private boolean elevatorAvailabile = true;
     private int currentFloor = 0;

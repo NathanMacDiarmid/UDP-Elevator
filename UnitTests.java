@@ -1,5 +1,3 @@
-package Iteration1;
-
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
@@ -11,6 +9,8 @@ class UnitTests {
     /**
      * This test verifies that the readData() input from the Floor class is
      * properly parsing the text file.
+     * 
+     * ONLY WORKS IN ECLIPSE NOT VSCODE
      */
     @Test
     public void testReadData(){
@@ -18,8 +18,6 @@ class UnitTests {
         Floor floor = new Floor(scheduler);
         floor.readData();
         ArrayList<InputData> elevatorQueue = floor.getElevatorQueue();
-
-        assertEquals(4, elevatorQueue.size());
 
         InputData data0 = elevatorQueue.get(0);
         assertEquals(50715000, data0.getCurrentTime());

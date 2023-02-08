@@ -26,14 +26,14 @@ Users are notified when the elevator has finished a request/move and where that 
    * Communication between floor, elevator, and scheduler
 
 ### Structure 
-* Floor.java accepts events from InputData.java. Each event consists of the current time, the floor request, 
-the direction of travel and the car button pressed. These events are sent to Scheduler.java
+   * Floor.java accepts events from InputData.java. Each event consists of the current time, the floor request, 
+   the direction of travel and the car button pressed. These events are sent to Scheduler.java
 
-* Elevator.java waits for the Scheduler to receive an event. It becomes active once the Scheulder.java is __ 
-with an event in elevatorQueue ArrayList. The move is executed and the new data is sent to Scheduler.java.
+   * Elevator.java waits for the Scheduler to receive an event. It becomes active once the Scheulder.java is __ 
+   with an event in elevatorQueue ArrayList. The move is executed and the new data is sent to Scheduler.java.
 
-* Scheduler.java is a organized messanger between Floor.java and Elevator.java. It accepts events from Floor.java
-and sends this event to Elevator.java. New data is recieved from Elevator.java and is sent to Floor.java. 
+   * Scheduler.java is a organized messanger between Floor.java and Elevator.java. It accepts events from Floor.java
+   and sends this event to Elevator.java. New data is recieved from Elevator.java and is sent to Floor.java. 
 
 ### How to run the program 
 
@@ -59,12 +59,17 @@ and sends this event to Elevator.java. New data is recieved from Elevator.java a
 ![image](https://user-images.githubusercontent.com/83596468/216787074-54510204-1e15-4962-bf5e-0ccc8cf7e359.png)
 
 Include the following files 
-    * Elevator.java
-    * Floor.java
-    * InputData.java
-    * Main.java
-    * Scheduler.java
-    * UnitTests.java
+  * Elevator.java
+
+  * Floor.java
+
+  * InputData.java
+
+  * Main.java
+
+  * Scheduler.java
+
+  * UnitTests.java
     
 8. Run the program with the green play button at the top
 ![image](https://user-images.githubusercontent.com/83596468/216787181-8ad4004f-394d-4835-aacc-642752549049.png)
