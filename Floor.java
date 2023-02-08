@@ -83,4 +83,12 @@ public class Floor implements Runnable {
        }
        System.exit(1);
     }
+
+        /**
+     * The following method is ONLY FOR TESTING PURPOSES and
+     * should not be included in commercial product.
+     */
+    public ArrayList<InputData> getElevatorQueue(){
+        return elevatorQueue;
+    }
 }
