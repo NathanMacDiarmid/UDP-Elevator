@@ -1,20 +1,21 @@
+package src;
 public class InputData implements Comparable<InputData> {
     // represents the time the request was sent 
-    private long currentTime;
+    private long timeOfRequest;
     // the floor at which the request was sent
     private int floor;
-    // the direction the elevator will go once arrived at the floor(true if going up)
-    private boolean isDirectionUp;
+    // the direction the elevator will go once arrived at the floor (up, down, up/down)
+    private String requestDirection;
     // the floor the elevator will go to once it arrives at the 'floor'
     private int carRequest;
 
     /** 
      * Constructor for the InputData class, takes in all the values per line in the txt file. 
      */
-    public InputData(long currentTime, int floor, boolean isDirectionUp, int carRequest) {
-        this.currentTime = currentTime;
+    public InputData(long timeOfRequest, int floor, String requestDirection, int carRequest) {
+        this.timeOfRequest = timeOfRequest;
         this.floor = floor;
-        this.isDirectionUp = isDirectionUp;
+        this.requestDirection = requestDirection;
         this.carRequest = carRequest;
     }
 
@@ -22,8 +23,8 @@ public class InputData implements Comparable<InputData> {
      * Getter for the currentTime field. 
      * @return long The time at which the request was sent  
      */
-    public long getCurrentTime() {
-        return currentTime;
+    public long getTimeOfRequest() {
+        return timeOfRequest;
     }
 
     /**
@@ -35,11 +36,11 @@ public class InputData implements Comparable<InputData> {
     }
 
     /**
-     * Getter for isDirectionUp field. 
-     * @return true if the elevator is going up 
+     * Getter for requestDirection field. 
+     * @return string of direction value
      */
-    public boolean isDirectionUp() {
-        return isDirectionUp;
+    public String getRequestDirection() {
+        return requestDirection;
     }
 
     /**
@@ -58,14 +59,14 @@ public class InputData implements Comparable<InputData> {
     */
     public String toString() {
         // Division to convert int to a readable format 
-        long millis = currentTime % 1000;
-        long second = (currentTime / 1000) % 60;
-        long minute = (currentTime / (1000 * 60)) % 60;
-        long hour = (currentTime / (1000 * 60 * 60)) % 24;
+        long millis = timeOfRequest % 1000;
+        long second = (timeOfRequest / 1000) % 60;
+        long minute = (timeOfRequest / (1000 * 60)) % 60;
+        long hour = (timeOfRequest / (1000 * 60 * 60)) % 24;
         // adding String formatting 
         String time = String.format("%02d:%02d:%02d.%d", hour, minute, second, millis);
         return "InputData [currentTime=" + time + ", floor=" + floor + ", isDirectionUp="
-                + isDirectionUp + ", car button=" + carRequest + "]";
+                + requestDirection + ", car button=" + carRequest + "]";
     }
 
     @Override
@@ -75,7 +76,7 @@ public class InputData implements Comparable<InputData> {
      * @return int Representation of 1 line of data that has been parsed
     */
     public int compareTo(InputData o) {
-        int compareTime = (int) (((InputData) o).getCurrentTime());
-        return (int) this.currentTime - compareTime;
+        int compareTime = (int) (((InputData) o).getTimeOfRequest());
+        return (int) this.timeOfRequest - compareTime;
     }
 }
