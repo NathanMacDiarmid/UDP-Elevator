@@ -1,4 +1,4 @@
-package src;
+
 
 import java.util.HashMap;
 import java.util.Map;
@@ -60,12 +60,26 @@ public class Elevator implements Runnable {
      * Runnable interface. It runs the Thread when .start() is used
      */
     public void run() {
+
         while (true) {
-            //get request, sleep for 7 sec (time to go between floor), get again to check if there are more requests
-    
-            this.currentFloor = scheduler.getFloorRequest(this.currentFloor);
-            
-            System.out.println("Elevator has dropped passenger off on floor - " + this.currentFloor + "\n");
+            String currentThreadName = Thread.currentThread().getName();
+            int floorToGoTo = scheduler.getFloorRequest(this.currentFloor);
+            setDoorOpen(true);
+            System.out.println(currentThreadName + ": Doors are opening");
+            //TODO: sleep for the amount of time it takes someone to get into the elevator?
+            floorButtons.replace(floorToGoTo, true);
+            floorButtonsLamps.replace(floorToGoTo, true);
+            System.out.println(currentThreadName + ": Floor button " + floorToGoTo + " has been pressed and the button light is on");
+            setDoorOpen(false);
+            System.out.println(currentThreadName + ": Doors are closing");
+            setMotorMoving(true);
+            System.out.println(Thread.currentThread().getName() + ": Started to move");
+            currentFloor = floorToGoTo;
+            setDoorOpen(true);
+            System.out.println(currentThreadName + ": Doors are opening");
+            System.out.println(currentThreadName + ": passenger has been dropped off on floor: " + this.currentFloor);
+            setDoorOpen(false);
+            System.out.println(currentThreadName + ": Doors are closing\n");
         }
     }
 }

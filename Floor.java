@@ -1,4 +1,4 @@
-package src;
+
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -56,24 +56,24 @@ public class Floor implements Runnable {
         return directionLamp;
     }
 
-    public void setDirectionLamp(String directionLamp){
-        this.directionLamp = directionLamp;
+    public void setDirectionLamp(String directionLamp){ 
+        this.directionLamp = directionLamp; 
     }
 
     public Boolean getRequestUpButtonLamp(){
         return requestUpButtonLamp;
     }
 
-    public Boolean setRequestUpButtonLamp(){
-        return requestUpButtonLamp;
+    public void setRequestUpButtonLamp(Boolean isOn){
+        requestUpButtonLamp = isOn;
     }
 
     public Boolean getRequestDownButtonLamp(){
         return requestDownButtonLamp;
     }
 
-    public Boolean setRequestDownButtonLamp(){
-        return requestDownButtonLamp;
+    public void setRequestDownButtonLamp(Boolean isOn){
+        this.requestDownButtonLamp = isOn;
     }
     
     public Boolean getArrivingSensor(){
@@ -89,7 +89,7 @@ public class Floor implements Runnable {
      * Creates a usable format for the rest scheduler. 
      */
     public void readData() {
-        String path = new File("").getAbsolutePath() + "/src/" + "data.txt";
+        String path = new File("").getAbsolutePath() + "/" + "data.txt";
 
         try (Scanner input = new Scanner(new File(path))) {
             while (input.hasNextLine()) { //TODO: check each value to verify if they are valid before adding them to elevatorQueue
@@ -101,23 +101,32 @@ public class Floor implements Runnable {
                 int timeOfRequest = time.get(ChronoField.MILLI_OF_DAY); //TODO: should we declare these variables before we initialize them?
                 //save current floor
                 int currentFloor = Integer.parseInt(data[1]);
-                //save requested floor direction
-                String directionRequest = data[2];
                 //save floor request
                 int floorRequest = Integer.parseInt(data[3]);
                 //Creating new InputData class for every line in the txt, storing it in the elevator ArrayList
-                elevatorQueue.add(new InputData(timeOfRequest, currentFloor, directionRequest, floorRequest));
+                elevatorQueue.add(new InputData(timeOfRequest, currentFloor, isGoingUp(data[2]), floorRequest));
             }
         } catch (NumberFormatException | FileNotFoundException e) {
             e.printStackTrace();
         }
-        System.out.println("before sort:");
-        printInputData(elevatorQueue);
         // InputData.java implements the Comparable class, the 'sort' will be calling the compareTo()
         // It is sorted in ascending order based on the 'timeOfRequest' of the request. 
         Collections.sort(elevatorQueue);
-        System.out.println("after sort:");
         printInputData(elevatorQueue);
+    }
+
+    /**
+     * Determines the direction button pressed based on String representation 
+     * Assumes that the data in the txt is in valid format and following our standard 
+     * @param direction The Direction that has been parsed ("up" or "down")
+     * @return true if "up" is the direction, false otherwise. 
+     */
+    public boolean isGoingUp(String direction) {
+        if (direction.equals("up")) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /** 
@@ -127,6 +136,7 @@ public class Floor implements Runnable {
         for (InputData q : queueToPrint) {
             System.out.println(q);
         }
+        System.out.println();
     }
 
     @Override
@@ -137,19 +147,36 @@ public class Floor implements Runnable {
     public void run() {
          
         this.readData();
-        //get current time
-        //when current time = time from the input data
-        //turn on sensors
-        System.out.println("timeOfRequest = " + elevatorQueue.get(0).getTimeOfRequest());
-        System.out.println("fake current time: " + LocalDateTime.now().get(ChronoField.MILLI_OF_DAY));
+        long startTime = System.currentTimeMillis();
+        long firstRequestTime = elevatorQueue.get(0).getTimeOfRequest();
+        
         while(elevatorQueue.size() != 0) {
-            //long currentTimeInMillliSec = LocalDateTime.now().get(ChronoField.MILLI_OF_DAY); //uncomment at the end
-            long currentTimeInMillliSec = elevatorQueue.get(0).getTimeOfRequest(); //for testing purposes only
+            
             long timeOfR = elevatorQueue.get(0).getTimeOfRequest();
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            //System.out.println("Elapsed Time: " + elapsedTime);
 
-            if(timeOfR == currentTimeInMillliSec){ //if request is ready to be scheduled
-                scheduler.putFloorRequest(elevatorQueue.get(0)); //TODO: the way we send the data needs to change
+            if((timeOfR - firstRequestTime) <= elapsedTime){
+                if(elevatorQueue.get(0).isDirectionUp()){ 
+                        setDirectionLamp("up"); //TODO: make null if no movemement 
+                        setRequestUpButtonLamp(true); //TODO: turn these off when request has been fulfilled
+                        setRequestUpButton(true);
+                }else{
+                        setDirectionLamp("down");
+                        setRequestDownButtonLamp(true);
+                        setRequestDownButton(true);
+                }
+                System.out.println("Floor: Someone on floor " + elevatorQueue.get(0).getFloor() + " has pressed the " + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on");
+
+                scheduler.putFloorRequest(elevatorQueue.get(0));
                 elevatorQueue.remove(0);
+            }
+
+            try {
+                Thread.sleep(1000); //sleep for the amount of time it takes to move from floor to floor
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
         }
        

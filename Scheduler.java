@@ -1,4 +1,4 @@
-package src;
+
 
 import java.util.*;
 
@@ -22,7 +22,7 @@ public class Scheduler {
             } catch (InterruptedException e) {
             }
         }
-        System.out.println("Elevator is picking someone up on floor - " + this.currentFloor);
+        System.out.println("Scheduler: Elevator has been notified to pick someone up on floor: " + this.currentFloor);
         elevatorAvailabile = true;
         this.currentFloor = currentFloor;
         notifyAll(); 
