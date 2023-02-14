@@ -1,14 +1,15 @@
+
 public class Main {
     public static void main(String[] args) {
+
+        Thread floor, elevator1;
         Scheduler scheduler = new Scheduler();
-        Floor floor = new Floor(scheduler);
-        Elevator elevator1 = new Elevator(scheduler);
 
-        Thread floorThread = new Thread(floor);
-        Thread elevatorThread1 = new Thread(elevator1);
+        floor = new Thread(new Floor(scheduler), "floor");
+        elevator1 = new Thread(new Elevator(scheduler), "elevator1");
 
-        floorThread.start();;
-        elevatorThread1.start();;
+        floor.start();
+        elevator1.start();
     }
 }
 

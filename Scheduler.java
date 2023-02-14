@@ -1,7 +1,12 @@
+
+
+import java.util.*;
+
 public class Scheduler {
     private boolean elevatorAvailabile = true;
     private int currentFloor = 0;
     private int nextFloor = 0;
+
 
     /**
      * The getter method for the Scheduler class gets the floor from {@link #currentFloor}
@@ -9,19 +14,21 @@ public class Scheduler {
      * @param currentFloor the floor the Elevator is currently at
      * @return the next floor the elevator will stop at
      */
-    public synchronized int get(int currentFloor) {
+    public synchronized int getFloorRequest(int currentFloor) {
+    //public synchronized int getFloorRequest(Elevator currentElevator) {
         while (elevatorAvailabile) {
             try {
                 wait();
             } catch (InterruptedException e) {
             }
         }
-        System.out.println("Elevator is picking someone up on floor - " + this.currentFloor);
-        this.currentFloor = currentFloor;
+        System.out.println("Scheduler: Elevator has been notified to pick someone up on floor: " + this.currentFloor);
         elevatorAvailabile = true;
-        notifyAll();
+        this.currentFloor = currentFloor;
+        notifyAll(); 
         return nextFloor;
     }
+
 
     /**
      * The putter method for the Scheduler class puts the floor reqeuests that were
@@ -32,7 +39,7 @@ public class Scheduler {
      * floor the elevator was requested on, floor the elevator goes to,
      * and whether the elevator is going up or down.
      */
-    public synchronized void put(InputData elevatorQueue) {
+    public synchronized void putFloorRequest(InputData elevatorQueue) {
         while(!elevatorAvailabile) {
             try {
                 wait();
@@ -44,8 +51,9 @@ public class Scheduler {
         elevatorAvailabile = false;
         notifyAll();
     }
+    
 
-        /**
+     /**
      * The two following methods are ONLY FOR TESTING PURPOSES and
      * should not be included in commercial product.
      */
@@ -57,4 +65,5 @@ public class Scheduler {
         return nextFloor;
     }
 }
+
 
