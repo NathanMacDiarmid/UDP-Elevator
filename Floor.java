@@ -145,7 +145,6 @@ public class Floor implements Runnable {
      * Runnable interface. It runs the Thread when .start() is used
      */
     public void run() {
-         
         this.readData();
         long startTime = System.currentTimeMillis();
         long firstRequestTime = elevatorQueue.get(0).getTimeOfRequest();
@@ -156,12 +155,12 @@ public class Floor implements Runnable {
             long elapsedTime = System.currentTimeMillis() - startTime;
             //System.out.println("Elapsed Time: " + elapsedTime);
 
-            if((timeOfR - firstRequestTime) <= elapsedTime){
+            if ((timeOfR - firstRequestTime) >= elapsedTime) {
                 if(elevatorQueue.get(0).isDirectionUp()){ 
                         setDirectionLamp("up"); //TODO: make null if no movemement 
                         setRequestUpButtonLamp(true); //TODO: turn these off when request has been fulfilled
                         setRequestUpButton(true);
-                }else{
+                } else {
                         setDirectionLamp("down");
                         setRequestDownButtonLamp(true);
                         setRequestDownButton(true);
@@ -172,12 +171,12 @@ public class Floor implements Runnable {
                 elevatorQueue.remove(0);
             }
 
-            try {
+            /*try {
                 Thread.sleep(1000); //sleep for the amount of time it takes to move from floor to floor
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            }
+            }*/
         }
        
        System.exit(1);

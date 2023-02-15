@@ -63,11 +63,12 @@ public class Elevator implements Runnable {
 
         while (true) {
             String currentThreadName = Thread.currentThread().getName();
-            int floorToGoTo = scheduler.getFloorRequest(this.currentFloor);
+            this.currentFloor = scheduler.getFloorRequest(this.currentFloor);
             setDoorOpen(true);
             System.out.println(currentThreadName + ": Doors are opening");
+            System.out.println(currentThreadName + ": Current floor is now: " + currentFloor);
             //TODO: sleep for the amount of time it takes someone to get into the elevator?
-            floorButtons.replace(floorToGoTo, true);
+            /*floorButtons.replace(floorToGoTo, true);
             floorButtonsLamps.replace(floorToGoTo, true);
             System.out.println(currentThreadName + ": Floor button " + floorToGoTo + " has been pressed and the button light is on");
             setDoorOpen(false);
@@ -79,7 +80,7 @@ public class Elevator implements Runnable {
             System.out.println(currentThreadName + ": Doors are opening");
             System.out.println(currentThreadName + ": passenger has been dropped off on floor: " + this.currentFloor);
             setDoorOpen(false);
-            System.out.println(currentThreadName + ": Doors are closing\n");
+            System.out.println(currentThreadName + ": Doors are closing\n");*/
         }
     }
 }
