@@ -16,16 +16,13 @@ public class Floor implements Runnable {
     private Scheduler scheduler;
     // All requests will be stored in this sorted ArrayList
     private ArrayList<InputData> elevatorQueue;
-    private Boolean requestUpButton;
-    private Boolean requestDownButton;
+    private boolean requestUpButton;
+    private boolean requestDownButton;
     private String directionLamp;
-    private Boolean requestUpButtonLamp;
-    private Boolean requestDownButtonLamp;
-    private Boolean arrivingSensor;
+    private boolean requestUpButtonLamp;
+    private boolean requestDownButtonLamp;
+    private boolean[] arrivingSensor;
    
-    
-
-
     /**
      * Default constructor for Floor class
      * @param scheduler the Scheduler that is used as the middle man (Box class)
@@ -34,6 +31,7 @@ public class Floor implements Runnable {
     public Floor(Scheduler scheduler) {
         this.scheduler = scheduler;
         elevatorQueue = new ArrayList<>();
+        arrivingSensor = new boolean[7];
     }
 
     public Boolean getRequestUpButton(){
@@ -76,13 +74,13 @@ public class Floor implements Runnable {
         this.requestDownButtonLamp = isOn;
     }
     
-    public Boolean getArrivingSensor(){
+    /*public Boolean getArrivingSensor(){
         return arrivingSensor;
     }
 
     public void setArrivingSensor(Boolean arrivingSensor){
         this.arrivingSensor = arrivingSensor;
-    }
+    }*/
 
     /**
      * Reads a file named data.txt that is in the same directory and parses through elevator data. 
