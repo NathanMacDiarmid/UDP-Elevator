@@ -63,6 +63,9 @@ public class Elevator implements Runnable {
 
         while (true) {
             String currentThreadName = Thread.currentThread().getName();
+            // This passes the current floor the elevator instance is on to the scheduler to be used as a variable
+            // Reassigns the current floor in this elevator instance to the incremented variable
+            // ex: passes in currentFloor = 1, reassigns currentFloor = 2
             this.currentFloor = scheduler.getFloorRequest(this.currentFloor);
             setDoorOpen(true);
             System.out.println(currentThreadName + ": Doors are opening");
