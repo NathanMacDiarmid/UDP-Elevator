@@ -29,6 +29,7 @@ public class Scheduler {
             } catch (InterruptedException e) {
             }
         }
+
         //System.out.println("Scheduler: Elevator has been notified to pick someone up on floor: " + this.initialFloor);
         if (currentFloor == elevatorQueue.get(0).getFloor()) {
             passengerPickedUp = true;
@@ -73,14 +74,14 @@ public class Scheduler {
      * floor the elevator was requested on, floor the elevator goes to,
      * and whether the elevator is going up or down.
      */
-    public synchronized void putFloorRequest(InputData elevatorIntruction) {
+    public synchronized void putFloorRequest(InputData elevatorIntstruction) {
         while(!elevatorAvailabile) {
             try {
                 wait();
             } catch (InterruptedException e) {
             }
         }
-        this.elevatorQueue.add(elevatorIntruction);
+        this.elevatorQueue.add(elevatorIntstruction);
         elevatorAvailabile = false;
         notifyAll();
     }

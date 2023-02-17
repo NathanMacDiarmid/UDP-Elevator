@@ -67,6 +67,15 @@ public class Elevator implements Runnable {
             setDoorOpen(true);
             System.out.println(currentThreadName + ": Doors are opening");
             System.out.println(currentThreadName + ": Current floor is now: " + currentFloor);
+
+            //Simulate elvator moving time (using small time for testing)
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
             //TODO: sleep for the amount of time it takes someone to get into the elevator?
             /*floorButtons.replace(floorToGoTo, true);
             floorButtonsLamps.replace(floorToGoTo, true);

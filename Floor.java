@@ -151,9 +151,8 @@ public class Floor implements Runnable {
             
             long timeOfR = elevatorQueue.get(0).getTimeOfRequest();
             long elapsedTime = System.currentTimeMillis() - startTime;
-            //System.out.println("Elapsed Time: " + elapsedTime);
 
-            if ((timeOfR - firstRequestTime) >= elapsedTime) {
+            if ((timeOfR - firstRequestTime) <= elapsedTime) {
                 if(elevatorQueue.get(0).isDirectionUp()){ 
                         setDirectionLamp("up"); //TODO: make null if no movemement 
                         setRequestUpButtonLamp(true); //TODO: turn these off when request has been fulfilled
@@ -169,8 +168,11 @@ public class Floor implements Runnable {
                 elevatorQueue.remove(0);
             }
 
+            System.out.println("YAY");
+
+            //Wait 1 second before checking for new request
             /*try {
-                Thread.sleep(1000); //sleep for the amount of time it takes to move from floor to floor
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
