@@ -3,13 +3,13 @@
 import java.util.*;
 
 public class Scheduler {
-    private boolean elevatorAvailabile;
+    private boolean queueInUse;
     private int currentFloor;
     private boolean passengerPickedUp;
     private ArrayList<InputData> elevatorQueue;
 
     public Scheduler() {
-        this.elevatorAvailabile = true;
+        this.queueInUse = true;
         this.elevatorQueue = new ArrayList<InputData>();
         this.currentFloor = 0;
         this.passengerPickedUp = false;
@@ -22,8 +22,7 @@ public class Scheduler {
      * @return the next floor the elevator will stop at
      */
     public synchronized int getFloorRequest(int currentFloor) {
-    //public synchronized int getFloorRequest(Elevator currentElevator) {
-        while (elevatorAvailabile) {
+        while (queueInUse) {
             try {
                 wait();
             } catch (InterruptedException e) {
@@ -31,33 +30,40 @@ public class Scheduler {
         }
 
         //System.out.println("Scheduler: Elevator has been notified to pick someone up on floor: " + this.initialFloor);
+
+        // This checks if the passenger is picked up
         if (currentFloor == elevatorQueue.get(0).getFloor()) {
             passengerPickedUp = true;
         }
+        // This checks if elevator has arrived on the destination floor
         if (currentFloor == elevatorQueue.get(0).getCarRequest() && passengerPickedUp) {
-            elevatorAvailabile = true;
+            queueInUse = true;
             this.currentFloor = currentFloor;
             elevatorQueue.remove(0);
             passengerPickedUp = false;
             notifyAll(); 
             return currentFloor;
+        // This checks if the elevators current floor is lower than its destination floor, if so, it goes up one floor  
+        // Also checks if the passenger has already been picked up (go immediately to destination floor)  
         } else if (currentFloor < elevatorQueue.get(0).getCarRequest() && passengerPickedUp) {
-            elevatorAvailabile = false;
             this.currentFloor = currentFloor;
             notifyAll(); 
             return currentFloor + 1;
+        // This checks if the elevators current floor is higher than its destination floor, if so, it goes down one floor
+        // Also checks if the passenger has already been picked up (go immediately to destination floor)
         } else if (currentFloor > elevatorQueue.get(0).getCarRequest() && passengerPickedUp) {
-            elevatorAvailabile = false;
             this.currentFloor = currentFloor;
             notifyAll(); 
             return currentFloor - 1;
+        // This checks if the elevator current floor is lower than the floor the elevator was requested from, if so, it goes up one floor
+        // This implies that the passenger was not picked up
         } else if (currentFloor < elevatorQueue.get(0).getFloor()) {
-            elevatorAvailabile = false;
             this.currentFloor = currentFloor;
             notifyAll(); 
             return currentFloor + 1;
+        // This is the default, but it checks if the current floor is higher than the floor the elevator was requested from, if so, it goes down one floor
+        // This also implies that the passenger has not been picked up
         } else {
-            elevatorAvailabile = false;
             this.currentFloor = currentFloor;
             notifyAll(); 
             return currentFloor - 1;
@@ -75,14 +81,14 @@ public class Scheduler {
      * and whether the elevator is going up or down.
      */
     public synchronized void putFloorRequest(InputData elevatorIntstruction) {
-        while(!elevatorAvailabile) {
+        while(!queueInUse) {
             try {
                 wait();
             } catch (InterruptedException e) {
             }
         }
         this.elevatorQueue.add(elevatorIntstruction);
-        elevatorAvailabile = false;
+        queueInUse = false;
         notifyAll();
     }
     

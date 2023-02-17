@@ -168,8 +168,6 @@ public class Floor implements Runnable {
                 elevatorQueue.remove(0);
             }
 
-            System.out.println("YAY");
-
             //Wait 1 second before checking for new request
             /*try {
                 Thread.sleep(1000);
@@ -179,6 +177,7 @@ public class Floor implements Runnable {
             }*/
         }
        
+        // remove this to have the last command execute
        System.exit(1);
     }
 
