@@ -3,10 +3,17 @@
 import java.util.*;
 
 public class Scheduler {
-    private boolean elevatorAvailabile = true;
-    private int currentFloor = 0;
-    private int nextFloor = 0;
+    private boolean elevatorAvailabile;
+    private int currentFloor;
+    private boolean passengerPickedUp;
+    private ArrayList<InputData> elevatorQueue;
 
+    public Scheduler() {
+        this.elevatorAvailabile = true;
+        this.elevatorQueue = new ArrayList<InputData>();
+        this.currentFloor = 0;
+        this.passengerPickedUp = false;
+    }
 
     /**
      * The getter method for the Scheduler class gets the floor from {@link #currentFloor}
@@ -22,11 +29,39 @@ public class Scheduler {
             } catch (InterruptedException e) {
             }
         }
-        System.out.println("Scheduler: Elevator has been notified to pick someone up on floor: " + this.currentFloor);
-        elevatorAvailabile = true;
-        this.currentFloor = currentFloor;
-        notifyAll(); 
-        return nextFloor;
+
+        //System.out.println("Scheduler: Elevator has been notified to pick someone up on floor: " + this.initialFloor);
+        if (currentFloor == elevatorQueue.get(0).getFloor()) {
+            passengerPickedUp = true;
+        }
+        if (currentFloor == elevatorQueue.get(0).getCarRequest() && passengerPickedUp) {
+            elevatorAvailabile = true;
+            this.currentFloor = currentFloor;
+            elevatorQueue.remove(0);
+            passengerPickedUp = false;
+            notifyAll(); 
+            return currentFloor;
+        } else if (currentFloor < elevatorQueue.get(0).getCarRequest() && passengerPickedUp) {
+            elevatorAvailabile = false;
+            this.currentFloor = currentFloor;
+            notifyAll(); 
+            return currentFloor + 1;
+        } else if (currentFloor > elevatorQueue.get(0).getCarRequest() && passengerPickedUp) {
+            elevatorAvailabile = false;
+            this.currentFloor = currentFloor;
+            notifyAll(); 
+            return currentFloor - 1;
+        } else if (currentFloor < elevatorQueue.get(0).getFloor()) {
+            elevatorAvailabile = false;
+            this.currentFloor = currentFloor;
+            notifyAll(); 
+            return currentFloor + 1;
+        } else {
+            elevatorAvailabile = false;
+            this.currentFloor = currentFloor;
+            notifyAll(); 
+            return currentFloor - 1;
+        }
     }
 
 
@@ -39,15 +74,14 @@ public class Scheduler {
      * floor the elevator was requested on, floor the elevator goes to,
      * and whether the elevator is going up or down.
      */
-    public synchronized void putFloorRequest(InputData elevatorQueue) {
+    public synchronized void putFloorRequest(InputData elevatorIntstruction) {
         while(!elevatorAvailabile) {
             try {
                 wait();
             } catch (InterruptedException e) {
             }
         }
-        this.currentFloor = elevatorQueue.getFloor();
-        this.nextFloor = elevatorQueue.getCarRequest();
+        this.elevatorQueue.add(elevatorIntstruction);
         elevatorAvailabile = false;
         notifyAll();
     }
@@ -62,7 +96,7 @@ public class Scheduler {
     }
 
     public int getNextFloor() {
-        return nextFloor;
+        return currentFloor;
     }
 }
 

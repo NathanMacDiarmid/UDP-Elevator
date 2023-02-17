@@ -16,16 +16,13 @@ public class Floor implements Runnable {
     private Scheduler scheduler;
     // All requests will be stored in this sorted ArrayList
     private ArrayList<InputData> elevatorQueue;
-    private Boolean requestUpButton;
-    private Boolean requestDownButton;
+    private boolean requestUpButton;
+    private boolean requestDownButton;
     private String directionLamp;
-    private Boolean requestUpButtonLamp;
-    private Boolean requestDownButtonLamp;
-    private Boolean arrivingSensor;
+    private boolean requestUpButtonLamp;
+    private boolean requestDownButtonLamp;
+    private boolean[] arrivingSensor;
    
-    
-
-
     /**
      * Default constructor for Floor class
      * @param scheduler the Scheduler that is used as the middle man (Box class)
@@ -34,6 +31,7 @@ public class Floor implements Runnable {
     public Floor(Scheduler scheduler) {
         this.scheduler = scheduler;
         elevatorQueue = new ArrayList<>();
+        arrivingSensor = new boolean[7];
     }
 
     public Boolean getRequestUpButton(){
@@ -76,13 +74,13 @@ public class Floor implements Runnable {
         this.requestDownButtonLamp = isOn;
     }
     
-    public Boolean getArrivingSensor(){
+    /*public Boolean getArrivingSensor(){
         return arrivingSensor;
     }
 
     public void setArrivingSensor(Boolean arrivingSensor){
         this.arrivingSensor = arrivingSensor;
-    }
+    }*/
 
     /**
      * Reads a file named data.txt that is in the same directory and parses through elevator data. 
@@ -145,7 +143,6 @@ public class Floor implements Runnable {
      * Runnable interface. It runs the Thread when .start() is used
      */
     public void run() {
-         
         this.readData();
         long startTime = System.currentTimeMillis();
         long firstRequestTime = elevatorQueue.get(0).getTimeOfRequest();
@@ -154,14 +151,13 @@ public class Floor implements Runnable {
             
             long timeOfR = elevatorQueue.get(0).getTimeOfRequest();
             long elapsedTime = System.currentTimeMillis() - startTime;
-            //System.out.println("Elapsed Time: " + elapsedTime);
 
-            if((timeOfR - firstRequestTime) <= elapsedTime){
+            if ((timeOfR - firstRequestTime) <= elapsedTime) {
                 if(elevatorQueue.get(0).isDirectionUp()){ 
                         setDirectionLamp("up"); //TODO: make null if no movemement 
                         setRequestUpButtonLamp(true); //TODO: turn these off when request has been fulfilled
                         setRequestUpButton(true);
-                }else{
+                } else {
                         setDirectionLamp("down");
                         setRequestDownButtonLamp(true);
                         setRequestDownButton(true);
@@ -172,12 +168,15 @@ public class Floor implements Runnable {
                 elevatorQueue.remove(0);
             }
 
-            try {
-                Thread.sleep(1000); //sleep for the amount of time it takes to move from floor to floor
+            System.out.println("YAY");
+
+            //Wait 1 second before checking for new request
+            /*try {
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            }
+            }*/
         }
        
        System.exit(1);
