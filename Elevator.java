@@ -1,11 +1,14 @@
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Elevator implements Runnable {
     private int currentFloor = 0;
     private Scheduler scheduler;
+
+    /* floorButtons represent the buttons inside the elevator */
     private Map<Integer, Boolean> floorButtons = new HashMap<>() {{
         put(1, false);
         put(2, false);
@@ -15,6 +18,8 @@ public class Elevator implements Runnable {
         put(6, false);
         put(7, false);
     }};
+
+    /* floorButtonsLamps represent the lamps on the buttons inside the elevator */
     private Map<Integer, Boolean> floorButtonsLamps = new HashMap<>() {{ //TODO: can we just have one map that represents buttons and their lights (integer, boolean(pressed or not), String("light on"/"light off"))
         put(1, false);
         put(2, false);
@@ -25,8 +30,12 @@ public class Elevator implements Runnable {
         put(7, false);
     }};
 
-    private Boolean motorMoving; //TODO: should this be a string to specify which direction it's going in
+    private Boolean motorMoving;
     private Boolean doorOpen;
+
+    /* requestQueue is used as priority queue of requests */
+    private ArrayList<InputData> requestQueue;
+
 
     /**
      * Default constructor for Elevator
@@ -34,13 +43,14 @@ public class Elevator implements Runnable {
      */
     public Elevator(Scheduler scheduler) {
         this.scheduler = scheduler;
+        this.requestQueue = new ArrayList<InputData>();
     }
 
-    public void setFloorButton(Integer floor, Boolean buttonPressed){ //TODO: maybe add getters later on if needed
+    public void setFloorButton(Integer floor, Boolean buttonPressed){
         floorButtons.replace(floor, buttonPressed);
     }
 
-    public void setFloorButtonLamps(Integer floor, Boolean buttonLampOn){ //TODO: maybe add getters later on if needed
+    public void setFloorButtonLamps(Integer floor, Boolean buttonLampOn){
         floorButtonsLamps.replace(floor, buttonLampOn);
     }
 
@@ -52,8 +62,6 @@ public class Elevator implements Runnable {
         this.doorOpen = doorOpen;
     }
     
-
-
     @Override
     /**
      * The run method for the Elevator class is inherited from the
@@ -61,38 +69,65 @@ public class Elevator implements Runnable {
      */
     public void run() {
 
+        String currentThreadName = Thread.currentThread().getName();
+        Boolean noMoreRequestsComing = false;
+        int oldCurrentFloor; //this keeps track of the previous floor visited by elevator
+        System.out.println(currentThreadName + ": Current floor is: " + this.currentFloor + "\n");
+        
         while (true) {
-            String currentThreadName = Thread.currentThread().getName();
-            // This passes the current floor the elevator instance is on to the scheduler to be used as a variable
-            // Reassigns the current floor in this elevator instance to the incremented variable
-            // ex: passes in currentFloor = 1, reassigns currentFloor = 2
-            this.currentFloor = scheduler.getFloorRequest(this.currentFloor);
-            setDoorOpen(true);
-            System.out.println(currentThreadName + ": Doors are opening");
-            System.out.println(currentThreadName + ": Current floor is now: " + currentFloor);
 
-            //Simulate elvator moving time (using small time for testing)
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            oldCurrentFloor = this.currentFloor; 
+
+            if(!noMoreRequestsComing){ //if there are more requests to grab
+
+                Map<InputData, Boolean> request = scheduler.getFloorRequest(); //grab them
+                for(InputData r: request.keySet()){
+                    requestQueue.add(r);
+                    noMoreRequestsComing = request.get(r);
+                }
+                
             }
 
-            //TODO: sleep for the amount of time it takes someone to get into the elevator?
-            /*floorButtons.replace(floorToGoTo, true);
-            floorButtonsLamps.replace(floorToGoTo, true);
-            System.out.println(currentThreadName + ": Floor button " + floorToGoTo + " has been pressed and the button light is on");
-            setDoorOpen(false);
-            System.out.println(currentThreadName + ": Doors are closing");
-            setMotorMoving(true);
-            System.out.println(Thread.currentThread().getName() + ": Started to move");
-            currentFloor = floorToGoTo;
-            setDoorOpen(true);
-            System.out.println(currentThreadName + ": Doors are opening");
-            System.out.println(currentThreadName + ": passenger has been dropped off on floor: " + this.currentFloor);
-            setDoorOpen(false);
-            System.out.println(currentThreadName + ": Doors are closing\n");*/
+            if(requestQueue.size() > 0){ //if there are currently requests to service
+
+                this.currentFloor = scheduler.moveElevator(requestQueue, this.currentFloor); //ask scheduler to notify elevator when it has arrived at destination floor and/or picked someone up along the way
+        
+                if(this.currentFloor == oldCurrentFloor){ //if oldCurrentFloor is equal to new current floor, elevator did not move
+                    setMotorMoving(false);
+                    System.out.println(currentThreadName + ": Motor stopped moving");
+                    setDoorOpen(true);
+                    System.out.println("Doors opening -> People are walking in/out");
+                    
+                    try {
+                        Thread.sleep(1000); //sleep for the amount of time it takes to open/close doors. Small time for testing
+                        //Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+
+                    System.out.println("Doors are closing");
+                    setDoorOpen(false);
+                }else{
+
+                    setMotorMoving(true);
+                    System.out.println(currentThreadName + ": Motor moving");
+                    
+                }
+                System.out.println(currentThreadName + ": Current floor is now: " + this.currentFloor + "\n");
+
+                try {
+                    Thread.sleep(3000); //sleep for the amount of time it takes to move between floors. Small time for testing
+                    //Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+
         }
+
     }
+
+    
 }

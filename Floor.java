@@ -13,6 +13,7 @@ import java.time.temporal.ChronoField;
 import java.util.*;
 
 public class Floor implements Runnable {
+
     private Scheduler scheduler;
     // All requests will be stored in this sorted ArrayList
     private ArrayList<InputData> elevatorQueue;
@@ -21,7 +22,6 @@ public class Floor implements Runnable {
     private String directionLamp;
     private boolean requestUpButtonLamp;
     private boolean requestDownButtonLamp;
-    private boolean[] arrivingSensor;
    
     /**
      * Default constructor for Floor class
@@ -30,8 +30,7 @@ public class Floor implements Runnable {
      */
     public Floor(Scheduler scheduler) {
         this.scheduler = scheduler;
-        elevatorQueue = new ArrayList<>();
-        arrivingSensor = new boolean[7];
+        this. elevatorQueue = new ArrayList<>();
     }
 
     public Boolean getRequestUpButton(){
@@ -73,14 +72,6 @@ public class Floor implements Runnable {
     public void setRequestDownButtonLamp(Boolean isOn){
         this.requestDownButtonLamp = isOn;
     }
-    
-    /*public Boolean getArrivingSensor(){
-        return arrivingSensor;
-    }
-
-    public void setArrivingSensor(Boolean arrivingSensor){
-        this.arrivingSensor = arrivingSensor;
-    }*/
 
     /**
      * Reads a file named data.txt that is in the same directory and parses through elevator data. 
@@ -107,6 +98,7 @@ public class Floor implements Runnable {
         } catch (NumberFormatException | FileNotFoundException e) {
             e.printStackTrace();
         }
+
         // InputData.java implements the Comparable class, the 'sort' will be calling the compareTo()
         // It is sorted in ascending order based on the 'timeOfRequest' of the request. 
         Collections.sort(elevatorQueue);
@@ -146,16 +138,21 @@ public class Floor implements Runnable {
         this.readData();
         long startTime = System.currentTimeMillis();
         long firstRequestTime = elevatorQueue.get(0).getTimeOfRequest();
+        boolean lastRequest = false; //tracks when the last request is being passed to the scheduler
         
         while(elevatorQueue.size() != 0) {
+
+            if(elevatorQueue.size() == 1){ //If there is only one request left in the input file, set lastRequest to true
+                lastRequest = true;
+            }
             
             long timeOfR = elevatorQueue.get(0).getTimeOfRequest();
             long elapsedTime = System.currentTimeMillis() - startTime;
 
             if ((timeOfR - firstRequestTime) <= elapsedTime) {
                 if(elevatorQueue.get(0).isDirectionUp()){ 
-                        setDirectionLamp("up"); //TODO: make null if no movemement 
-                        setRequestUpButtonLamp(true); //TODO: turn these off when request has been fulfilled
+                        setDirectionLamp("up");
+                        setRequestUpButtonLamp(true); 
                         setRequestUpButton(true);
                 } else {
                         setDirectionLamp("down");
@@ -163,22 +160,13 @@ public class Floor implements Runnable {
                         setRequestDownButton(true);
                 }
                 System.out.println("Floor: Someone on floor " + elevatorQueue.get(0).getFloor() + " has pressed the " + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on");
-
-                scheduler.putFloorRequest(elevatorQueue.get(0));
+                scheduler.putFloorRequest(elevatorQueue.get(0), lastRequest);
                 elevatorQueue.remove(0);
             }
-
-            //Wait 1 second before checking for new request
-            /*try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }*/
         }
        
         // remove this to have the last command execute
-       System.exit(1);
+       //System.exit(1);
     }
 
     /**
