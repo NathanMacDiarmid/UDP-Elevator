@@ -20,23 +20,23 @@ public class InputData implements Comparable<InputData> {
     }
 
     /**
-     * Getter for the currentTime field. 
-     * @return long The time at which the request was sent  
+     * Gets the time of request
+     * @return long - time at which the request was executed
      */
     public long getTimeOfRequest() {
         return timeOfRequest;
     }
 
     /**
-     * Getter for floor field. 
-     * @return int The floor at which the request was sent
+     * Gets initial floor of request
+     * @return int
      */
     public int getFloor() {
         return floor;
     }
 
     /**
-     * Getter for isDirectionUp field. 
+     * Gets direction of request.
      * @return true if the elevator is going up 
      */
     public boolean isDirectionUp() {
@@ -44,8 +44,8 @@ public class InputData implements Comparable<InputData> {
     }
 
     /**
-     * Getter for the carRequest field. 
-     * @return int The floor the elevator will go to once it arrives at the 'floor'
+     * Gets the destination floor of request 
+     * @return int
      */
     public int getCarRequest() {
         return this.carRequest;
