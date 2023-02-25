@@ -98,20 +98,37 @@ public class Floor implements Runnable {
 
         try (Scanner input = new Scanner(new File(path))) {
             while (input.hasNextLine()) { //TODO: check each value to verify if they are valid before adding them to elevatorQueue
+
                 // Values are space-separated 
                 String[] data = input.nextLine().split(" ");
 
-                // Using the LocalTime class to parse through a standard time format of 'HH:MM:SS:XM'
-                LocalTime time = LocalTime.parse((data[0]));
+                LocalTime time;
+                int timeOfRequest;
+                int currentFloor;
+                int floorRequest;
 
-                // converting the LocalTime to an integer, will stored as an int that represents the millisecond of the day
-                int timeOfRequest = time.get(ChronoField.MILLI_OF_DAY); //TODO: should we declare these variables before we initialize them?
+                // Checks to make sure that only 4 pieces of data are passed from data.txt (time of request, current floor, direction, floor destination)
+                // If more than 4 pieces are passed, it goes to the next line
+                if (data.length > 4) {
+                    continue;
+                }
 
-                //save current floor
-                int currentFloor = Integer.parseInt(data[1]);
+                // This try catch block handles if the input data are correct types, otherwise, goes to next line in data.txt
+                try {
+                    // Using the LocalTime class to parse through a standard time format of 'HH:MM:SS:XM'
+                    time = LocalTime.parse((data[0]));
 
-                //save floor request
-                int floorRequest = Integer.parseInt(data[3]);
+                    // converting the LocalTime to an integer, will stored as an int that represents the millisecond of the day
+                    timeOfRequest = time.get(ChronoField.MILLI_OF_DAY); //TODO: should we declare these variables before we initialize them?
+
+                    //save current floor
+                    currentFloor = Integer.parseInt(data[1]);
+
+                    //save floor request
+                    floorRequest = Integer.parseInt(data[3]);
+                } catch (Exception e) {
+                    continue;
+                }
 
                 // Skips input line if invalid input
                 if (handleInputErrors(currentFloor, floorRequest, data[2])) {
