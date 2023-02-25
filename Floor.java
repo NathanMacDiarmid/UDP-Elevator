@@ -1,5 +1,4 @@
 
-
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.net.URL;
@@ -22,94 +21,104 @@ public class Floor implements Runnable {
     private String directionLamp;
     private boolean requestUpButtonLamp;
     private boolean requestDownButtonLamp;
-   
+
     /**
      * Default constructor for Floor class
+     * 
      * @param scheduler the Scheduler that is used as the middle man (Box class)
-     * Also initializes {@link #elevatorQueue} ArrayList
+     *                  Also initializes {@link #elevatorQueue} ArrayList
      */
     public Floor(Scheduler scheduler) {
         this.scheduler = scheduler;
-        this. elevatorQueue = new ArrayList<>();
+        this.elevatorQueue = new ArrayList<>();
     }
 
-    public Boolean getRequestUpButton(){
+    public Boolean getRequestUpButton() {
         return requestUpButton;
     }
 
-    public void setRequestUpButton(Boolean requestUpButton){
+    public void setRequestUpButton(Boolean requestUpButton) {
         this.requestUpButton = requestUpButton;
     }
 
-    public Boolean getRequestDownButton(){
+    public Boolean getRequestDownButton() {
         return requestDownButton;
     }
 
-    public void setRequestDownButton(Boolean requestDownButton){
+    public void setRequestDownButton(Boolean requestDownButton) {
         this.requestDownButton = requestDownButton;
     }
 
-    public String getDirectionLamp(){
+    public String getDirectionLamp() {
         return directionLamp;
     }
 
-    public void setDirectionLamp(String directionLamp){ 
-        this.directionLamp = directionLamp; 
+    public void setDirectionLamp(String directionLamp) {
+        this.directionLamp = directionLamp;
     }
 
-    public Boolean getRequestUpButtonLamp(){
+    public Boolean getRequestUpButtonLamp() {
         return requestUpButtonLamp;
     }
 
-    public void setRequestUpButtonLamp(Boolean isOn){
+    public void setRequestUpButtonLamp(Boolean isOn) {
         requestUpButtonLamp = isOn;
     }
 
-    public Boolean getRequestDownButtonLamp(){
+    public Boolean getRequestDownButtonLamp() {
         return requestDownButtonLamp;
     }
 
-    public void setRequestDownButtonLamp(Boolean isOn){
+    public void setRequestDownButtonLamp(Boolean isOn) {
         this.requestDownButtonLamp = isOn;
     }
 
     /**
-     * Reads a file named data.txt that is in the same directory and parses through elevator data. 
-     * Creates a usable format for the rest scheduler. 
+     * Reads a file named data.txt that is in the same directory and parses through
+     * elevator data.
+     * Creates a usable format for the rest scheduler.
      */
     public void readData() {
         String path = new File("").getAbsolutePath() + "/" + "data.txt";
 
         try (Scanner input = new Scanner(new File(path))) {
-            while (input.hasNextLine()) { //TODO: check each value to verify if they are valid before adding them to elevatorQueue
-                // Values are space-separated 
+            while (input.hasNextLine()) { // TODO: check each value to verify if they are valid before adding them to
+                                          // elevatorQueue
+                // Values are space-separated
                 String[] data = input.nextLine().split(" ");
-                // Using the LocalTime class to parse through a standard time format of 'HH:MM:SS:XM'
+                // Using the LocalTime class to parse through a standard time format of
+                // 'HH:MM:SS:XM'
                 LocalTime time = LocalTime.parse((data[0]));
-                // converting the LocalTime to an integer, will stored as an int that represents the millisecond of the day
-                int timeOfRequest = time.get(ChronoField.MILLI_OF_DAY); //TODO: should we declare these variables before we initialize them?
-                //save current floor
+                // converting the LocalTime to an integer, will stored as an int that represents
+                // the millisecond of the day
+                int timeOfRequest = time.get(ChronoField.MILLI_OF_DAY); // TODO: should we declare these variables
+                                                                        // before we initialize them?
+                // save current floor
                 int currentFloor = Integer.parseInt(data[1]);
-                //save floor request
+                // save floor request
                 int floorRequest = Integer.parseInt(data[3]);
-                //Creating new InputData class for every line in the txt, storing it in the elevator ArrayList
+                // Creating new InputData class for every line in the txt, storing it in the
+                // elevator ArrayList
                 elevatorQueue.add(new InputData(timeOfRequest, currentFloor, isGoingUp(data[2]), floorRequest));
             }
         } catch (NumberFormatException | FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        // InputData.java implements the Comparable class, the 'sort' will be calling the compareTo()
-        // It is sorted in ascending order based on the 'timeOfRequest' of the request. 
+        // InputData.java implements the Comparable class, the 'sort' will be calling
+        // the compareTo()
+        // It is sorted in ascending order based on the 'timeOfRequest' of the request.
         Collections.sort(elevatorQueue);
         printInputData(elevatorQueue);
     }
 
     /**
-     * Determines the direction button pressed based on String representation 
-     * Assumes that the data in the txt is in valid format and following our standard 
+     * Determines the direction button pressed based on String representation
+     * Assumes that the data in the txt is in valid format and following our
+     * standard
+     * 
      * @param direction The Direction that has been parsed ("up" or "down")
-     * @return true if "up" is the direction, false otherwise. 
+     * @return true if "up" is the direction, false otherwise.
      */
     public boolean isGoingUp(String direction) {
         if (direction.equals("up")) {
@@ -119,8 +128,8 @@ public class Floor implements Runnable {
         }
     }
 
-    /** 
-     * Prints out the data that has been parsed from the "data.txt" file. 
+    /**
+     * Prints out the data that has been parsed from the "data.txt" file.
      */
     public void printInputData(ArrayList<InputData> queueToPrint) {
         for (InputData q : queueToPrint) {
@@ -135,45 +144,51 @@ public class Floor implements Runnable {
      * Runnable interface. It runs the Thread when .start() is used
      */
     public void run() {
+        initiateFloor();
+    }
+
+    private void initiateFloor() {
         this.readData();
         long startTime = System.currentTimeMillis();
         long firstRequestTime = elevatorQueue.get(0).getTimeOfRequest();
-        boolean lastRequest = false; //tracks when the last request is being passed to the scheduler
-        
-        while(elevatorQueue.size() != 0) {
+        boolean lastRequest = false; // tracks when the last request is being passed to the scheduler
 
-            if(elevatorQueue.size() == 1){ //If there is only one request left in the input file, set lastRequest to true
+        while (elevatorQueue.size() != 0) {
+
+            if (elevatorQueue.size() == 1) { // If there is only one request left in the input file, set lastRequest to
+                                             // true
                 lastRequest = true;
             }
-            
+
             long timeOfR = elevatorQueue.get(0).getTimeOfRequest();
             long elapsedTime = System.currentTimeMillis() - startTime;
 
             if ((timeOfR - firstRequestTime) <= elapsedTime) {
-                if(elevatorQueue.get(0).isDirectionUp()){ 
-                        setDirectionLamp("up");
-                        setRequestUpButtonLamp(true); 
-                        setRequestUpButton(true);
+                if (elevatorQueue.get(0).isDirectionUp()) {
+                    setDirectionLamp("up");
+                    setRequestUpButtonLamp(true);
+                    setRequestUpButton(true);
                 } else {
-                        setDirectionLamp("down");
-                        setRequestDownButtonLamp(true);
-                        setRequestDownButton(true);
+                    setDirectionLamp("down");
+                    setRequestDownButtonLamp(true);
+                    setRequestDownButton(true);
                 }
-                System.out.println("Floor: Someone on floor " + elevatorQueue.get(0).getFloor() + " has pressed the " + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on");
+                System.out.println("Floor: Someone on floor " + elevatorQueue.get(0).getFloor() + " has pressed the "
+                        + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on");
                 scheduler.putFloorRequest(elevatorQueue.get(0), lastRequest);
                 elevatorQueue.remove(0);
             }
         }
-       
+
         // remove this to have the last command execute
-       //System.exit(1);
+        // System.exit(1);
     }
 
     /**
      * The following method is ONLY FOR TESTING PURPOSES and
      * should not be included in commercial product.
      */
-    public ArrayList<InputData> getElevatorQueue(){
+    public ArrayList<InputData> getElevatorQueue() {
         return elevatorQueue;
     }
 }
