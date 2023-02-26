@@ -1,12 +1,5 @@
-
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.io.BufferedReader;
 import java.io.File;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoField;
 import java.util.*;
@@ -74,31 +67,76 @@ public class Floor implements Runnable {
     }
 
     /**
-     * Reads a file named data.txt that is in the same directory and parses through
-     * elevator data.
-     * Creates a usable format for the rest scheduler.
+     * Handles invalid input requests when parsing the data in data.txt
+     * @param currentFloor the floor being requested from in the data.txt file
+     * @param floorRequest the floor destination in the data.txt file
+     * @param direction the direction the elevator is going
+     * @return true if any of these inputs are invalid (negative, greater than 7 or not "up" or "down")
+     * @return false otherwise
+     */
+    private boolean handleInputErrors(int currentFloor, int floorRequest, String direction) {
+        if (currentFloor < 0 || currentFloor > 7) {
+            return true;
+        }
+
+        if (floorRequest < 0 || floorRequest > 7) {
+            return true;
+        }
+
+        if (!direction.equals("up") && !direction.equals("down")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Reads a file named data.txt that is in the same directory and parses through elevator data. 
+     * Creates a usable format for the rest scheduler. 
      */
     public void readData(String filename) {
         String path = new File("").getAbsolutePath() + "/" + filename;
 
         try (Scanner input = new Scanner(new File(path))) {
-            while (input.hasNextLine()) { // TODO: check each value to verify if they are valid before adding them to
-                                          // elevatorQueue
-                // Values are space-separated
+            while (input.hasNextLine()) { //TODO: check each value to verify if they are valid before adding them to elevatorQueue
+
+                // Values are space-separated 
                 String[] data = input.nextLine().split(" ");
-                // Using the LocalTime class to parse through a standard time format of
-                // 'HH:MM:SS:XM'
-                LocalTime time = LocalTime.parse((data[0]));
-                // converting the LocalTime to an integer, will stored as an int that represents
-                // the millisecond of the day
-                int timeOfRequest = time.get(ChronoField.MILLI_OF_DAY); // TODO: should we declare these variables
-                                                                        // before we initialize them?
-                // save current floor
-                int currentFloor = Integer.parseInt(data[1]);
-                // save floor request
-                int floorRequest = Integer.parseInt(data[3]);
-                // Creating new InputData class for every line in the txt, storing it in the
-                // elevator ArrayList
+
+                LocalTime time;
+                int timeOfRequest;
+                int currentFloor;
+                int floorRequest;
+
+                // Checks to make sure that only 4 pieces of data are passed from data.txt (time of request, current floor, direction, floor destination)
+                // If more than 4 pieces are passed, it goes to the next line
+                if (data.length > 4) {
+                    continue;
+                }
+
+                // This try catch block handles if the input data are correct types, otherwise, goes to next line in data.txt
+                try {
+                    // Using the LocalTime class to parse through a standard time format of 'HH:MM:SS:XM'
+                    time = LocalTime.parse((data[0]));
+
+                    // converting the LocalTime to an integer, will stored as an int that represents the millisecond of the day
+                    timeOfRequest = time.get(ChronoField.MILLI_OF_DAY); //TODO: should we declare these variables before we initialize them?
+
+                    //save current floor
+                    currentFloor = Integer.parseInt(data[1]);
+
+                    //save floor request
+                    floorRequest = Integer.parseInt(data[3]);
+                } catch (Exception e) {
+                    continue;
+                }
+
+                // Skips input line if invalid input
+                if (handleInputErrors(currentFloor, floorRequest, data[2])) {
+                    continue;
+                }
+
+                //Creating new InputData class for every line in the txt, storing it in the elevator ArrayList
                 elevatorQueue.add(new InputData(timeOfRequest, currentFloor, isGoingUp(data[2]), floorRequest));
             }
         } catch (NumberFormatException | FileNotFoundException e) {
@@ -154,12 +192,10 @@ public class Floor implements Runnable {
     private void initiateFloor() {
         long startTime = System.currentTimeMillis();
         long firstRequestTime = elevatorQueue.get(0).getTimeOfRequest();
-        boolean lastRequest = false; // tracks when the last request is being passed to the scheduler
-
-        while (elevatorQueue.size() != 0) {
-
-            if (elevatorQueue.size() == 1) { // If there is only one request left in the input file, set lastRequest to
-                                             // true
+        boolean lastRequest = false; //tracks when the last request is being passed to the scheduler
+        
+        while(elevatorQueue.size() != 0) {
+            if (elevatorQueue.size() == 1) { //If there is only one request left in the input file, set lastRequest to true
                 lastRequest = true;
             }
 
@@ -182,9 +218,6 @@ public class Floor implements Runnable {
                 elevatorQueue.remove(0);
             }
         }
-
-        // remove this to have the last command execute
-        // System.exit(1);
     }
 
     /**

@@ -60,6 +60,7 @@ public class Scheduler {
             try {
                 wait();
             } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
         InputData requestToGiveElevator = this.requestQueue.get(0); // TODO: maybe change requestQueue to currentRequest
@@ -74,89 +75,59 @@ public class Scheduler {
                 put(requestToGiveElevator, noMoreRequests);
             }
         };
-
+    
         return returnVals;
-
     }
 
     public int moveElevator(ArrayList<InputData> queue, int currentFloor) {
         boolean reachedDestination = false;
         System.out.println("Scheduler: Floor queues:" + this.floorQueues.toString());
 
-        // if the floor that the elevator is currently on has passengers waiting, pick
-        // them up
+        //if the floor that the elevator is currently on has passengers waiting, pick them up
         if ((currentFloor != 0) && (this.floorQueues.get(currentFloor).size() != 0)) {
-
-            System.out.println("Scheduler: there are people waiting for the elevator on this floor: " + currentFloor
-                    + " -> notfiy elevator to open doors ");
-            this.elevatorQueue.addAll(this.floorQueues.get(currentFloor)); // this adds all requests to current elevator
-            this.floorQueues.get(currentFloor).removeAll(elevatorQueue); // this removes all floor requests from current
-                                                                         // floor because passenger(s) have entered
-                                                                         // elevator
-            updateFloor(currentFloor);
-            return currentFloor; // do not move elevator
-
+            
+            System.out.println("Scheduler: there are people waiting for the elevator on this floor: " + currentFloor + " -> notfiy elevator to open doors ");
+            this.elevatorQueue.addAll(this.floorQueues.get(currentFloor)); //this adds all requests to current elevator
+            this.floorQueues.get(currentFloor).removeAll(elevatorQueue); //this removes all floor requests from current floor because passenger(s) have entered elevator
+            return currentFloor; //do not move elevator
         }
+        
+        /* next if takes care of the situation where the elevator has not picked up ANY passenger(s) */
+        if (this.elevatorQueue.size() == 0){ //if the elevator has not picked anyone up, go to floor of first request
+            System.out.println("Scheduler: Elevator is empty"); //TODO: take this out before handing in
 
-        /*
-         * next if takes care of the situation where the elevator has not picked up ANY
-         * passenger(s)
-         */
-        if (this.elevatorQueue.size() == 0) { // if the elevator has not picked anyone up, go to floor of first request
-            System.out.println("Scheduler: Elevator is empty"); // TODO: take this out before handing in
-
-            if ((currentFloor < queue.get(0).getFloor())) { // if elevator is below floor of first requset, move up,
-                                                            // else move down
+            if ((currentFloor < queue.get(0).getFloor())) { //if elevator is below floor of first requset, move up, else move down
                 System.out.println("Scheduler: elevator is below initial floor of first request in queue -> moving up");
-                updateFloor(currentFloor + 1);
-                return currentFloor + 1; // move elevator up
-            } else {
-                System.out
-                        .println("Scheduler: elevator is above initial floor of first request in queue -> moving down");
-                updateFloor(currentFloor - 1);
-                return currentFloor - 1; // move elevator down
+                return currentFloor + 1; //move elevator up
+            } else { 
+                System.out.println("Scheduler: elevator is above initial floor of first request in queue -> moving down");
+                return currentFloor - 1; //move elevator down
             }
-        }
+        } else { //else if elevator currently has passenger(s) in it that need to reach their destination floor
 
-        else { // else if elevator currently has passenger(s) in it that need to reach their
-               // destination floor
+            Iterator<InputData> iterator = this.elevatorQueue.iterator(); //go through the requests that are currently in the elevator and check if current floor is equal to any of the destination floors of passenger(s) in the elevator
 
-            Iterator<InputData> iterator = this.elevatorQueue.iterator(); // go through the requests that are currently
-                                                                          // in the elevator and check if current floor
-                                                                          // is equal to any of the destination floors
-                                                                          // of passenger(s) in the elevator
-            while (iterator.hasNext()) {
+            while (iterator.hasNext()) {  
                 InputData currPassenger = iterator.next();
+
                 if (currentFloor == currPassenger.getCarRequest()) {
-                    System.out.println(
-                            "Scheduler: elevator is at the destination of a passenger in the elevator -> notfiy elevator to open doors");
+                    System.out.println("Scheduler: elevator is at the destination of a passenger in the elevator -> notfiy elevator to open doors");
                     reachedDestination = true;
-                    iterator.remove(); // remove from elevator queue because passenger left
-                    queue.removeIf(request -> (request == currPassenger)); // remove from general main queue because
-                                                                           // passenger left
-
+                    iterator.remove(); //remove from elevator queue because passenger left
+                    queue.removeIf(request -> (request == currPassenger)); //remove from general main queue because passenger left
                 }
-
             }
+
             if (reachedDestination) {
-                updateFloor(currentFloor);
-                return currentFloor; // do not move to signal elevator to open/close doors
+                return currentFloor; //do not move to signal elevator to open/close doors
             }
 
-            if (currentFloor > queue.get(0).getCarRequest()) { // if elevator is above floor of the the destination of
-                                                               // the first request, move down, else move up
-
-                System.out.println(
-                        "Scheduler: elevator is above destination floor of first request in priority queue -> moving down");
-                updateFloor(currentFloor - 1);
-                return currentFloor - 1; // move elevator down
-
+            if (currentFloor > queue.get(0).getCarRequest()) { //if elevator is above floor of the the destination of the first request, move down, else move up
+                System.out.println("Scheduler: elevator is above destination floor of first request in priority queue -> moving down");
+                return currentFloor - 1; //move elevator down
             } else {
-
-                System.out.println(
-                        "Scheduler: elevator is below destination floor of first request in priority queue -> moving up");
-                updateFloor(currentFloor + 1);
-                return currentFloor + 1; // move elevator up
+                System.out.println("Scheduler: elevator is below destination floor of first request in priority queue -> moving up");
+                return currentFloor + 1; //move elevator up
             }
 
         }
@@ -165,7 +136,7 @@ public class Scheduler {
     private void updateFloor(int currentFloor) {
         this.currentFloor = currentFloor;
     }
-
+ 
     /**
      * The putter method for the Scheduler class puts the floor reqeuests that were
      * passed from Floor into {@link Scheduler#currentFloor} and
@@ -183,13 +154,13 @@ public class Scheduler {
             try {
                 wait();
             } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
         this.floorQueues.get(elevatorIntstruction.getFloor()).add(elevatorIntstruction); // adds request to
                                                                                          // corresponding floor queue
         this.requestQueue.add(elevatorIntstruction); // adds request to main request queue
         this.noMoreRequests = lastRequest;
-
         queueInUse = false;
         notifyAll();
     }

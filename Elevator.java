@@ -44,7 +44,7 @@ public class Elevator implements Runnable {
     public ArrayList<InputData> getRequestQueue() {
         return requestQueue;
     }
-
+ 
     /**
      * Default constructor for Elevator
      * 
@@ -70,21 +70,27 @@ public class Elevator implements Runnable {
     public void setDoorOpen(Boolean doorOpen) {
         this.doorOpen = doorOpen;
     }
-
+  
+    private void sleep(int time) {
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+  
     @Override
     /**
      * The run method for the Elevator class is inherited from the
      * Runnable interface. It runs the Thread when .start() is used
      */
     public void run() {
-
         String currentThreadName = Thread.currentThread().getName();
         Boolean noMoreRequestsComing = false;
         int oldCurrentFloor; // this keeps track of the previous floor visited by elevator
         System.out.println(currentThreadName + ": Current floor is: " + this.currentFloor + "\n");
 
         while (true) {
-
             oldCurrentFloor = this.currentFloor;
 
             if (!noMoreRequestsComing) { // if there are more requests to grab
@@ -111,38 +117,18 @@ public class Elevator implements Runnable {
                     System.out.println(currentThreadName + ": Motor stopped moving");
                     setDoorOpen(true);
                     System.out.println("Doors opening -> People are walking in/out");
-
-                    try {
-                        Thread.sleep(1000); // sleep for the amount of time it takes to open/close doors. Small time for
-                                            // testing
-                        // Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-
+                    this.sleep(2700); //sleep for the amount of time it takes to open the doors.
                     System.out.println("Doors are closing");
                     setDoorOpen(false);
                 } else {
-
                     setMotorMoving(true);
                     System.out.println(currentThreadName + ": Motor moving");
-
                 }
+    
+                this.sleep(7970); //sleep for the amount of time it takes to move between floors.
                 System.out.println(currentThreadName + ": Current floor is now: " + this.currentFloor + "\n");
-
-                try {
-                    Thread.sleep(3000); // sleep for the amount of time it takes to move between floors. Small time for
-                                        // testing
-                    // Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
             }
-
         }
-
     }
 
     public Boolean getMotorMoving() {
@@ -152,5 +138,4 @@ public class Elevator implements Runnable {
     public Boolean getDoorOpen() {
         return doorOpen;
     }
-
 }
