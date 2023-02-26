@@ -19,7 +19,7 @@ public class Scheduler {
     /* elevatorQueue is the queue of requests that are currently in the elevator */
     private ArrayList<InputData> elevatorQueue;
 
-    /* requestQueue used as priority queue of cu */
+    /* requestQueue used as priority queue of requests */
     private ArrayList<InputData> requestQueue;
 
     /* floorQueue is to keep track of people waiting for elevator on each floor */
@@ -43,36 +43,12 @@ public class Scheduler {
         this.noMoreRequests = false;
     }
 
+    public void setQueueInUse(boolean queueInUse) {
+        this.queueInUse = queueInUse;
+    }
+
     public boolean isQueueInUse() {
         return queueInUse;
-    }
-
-    /**
-     * Getter method used for testing purposes
-     * 
-     * @return True if there are no requests left.
-     * @author Michael Kyrollos
-     */
-    public boolean isNoMoreRequests() {
-        return noMoreRequests;
-    }
-
-    public ArrayList<InputData> getElevatorQueue() {
-        return elevatorQueue;
-    }
-
-    public ArrayList<InputData> getRequestQueue() {
-        return requestQueue;
-    }
-
-    /**
-     * Getter method used for testing purposes
-     * 
-     * @return The queue for each floor
-     * @author Michael Kyrollos
-     */
-    public Map<Integer, ArrayList<InputData>> getFloorQueues() {
-        return floorQueues;
     }
 
     /**
@@ -230,4 +206,35 @@ public class Scheduler {
     public synchronized int getNextFloor() {
         return currentFloor;
     }
+
+    /**
+     * Getter method used for testing purposes
+     * 
+     * @return The request queue
+     * @author Michael Kyrollos
+     */
+    public ArrayList<InputData> getRequestQueue() {
+        return requestQueue;
+    }
+
+    /**
+     * Getter method used for testing purposes
+     * 
+     * @return The queue for each floor
+     * @author Michael Kyrollos
+     */
+    public Map<Integer, ArrayList<InputData>> getFloorQueues() {
+        return floorQueues;
+    }
+
+    /**
+     * Getter method used for testing purposes
+     * 
+     * @return True if there are no requests left.
+     * @author Michael Kyrollos
+     */
+    public boolean isNoMoreRequests() {
+        return noMoreRequests;
+    }
+
 }

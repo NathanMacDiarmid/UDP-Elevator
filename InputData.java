@@ -21,6 +21,10 @@ public class InputData implements Comparable<InputData> {
         this.carRequest = carRequest;
     }
 
+    public Boolean getIsDirectionUp() {
+        return isDirectionUp;
+    }
+
     /**
      * Gets the time of request
      * 

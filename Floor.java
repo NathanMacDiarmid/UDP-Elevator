@@ -78,8 +78,8 @@ public class Floor implements Runnable {
      * elevator data.
      * Creates a usable format for the rest scheduler.
      */
-    public void readData() {
-        String path = new File("").getAbsolutePath() + "/" + "data.txt";
+    public void readData(String filename) {
+        String path = new File("").getAbsolutePath() + "/" + filename;
 
         try (Scanner input = new Scanner(new File(path))) {
             while (input.hasNextLine()) { // TODO: check each value to verify if they are valid before adding them to
@@ -119,6 +119,7 @@ public class Floor implements Runnable {
      * 
      * @param direction The Direction that has been parsed ("up" or "down")
      * @return true if "up" is the direction, false otherwise.
+     * @author Michael Kyrollos
      */
     public boolean isGoingUp(String direction) {
         if (direction.equals("up")) {
@@ -130,6 +131,8 @@ public class Floor implements Runnable {
 
     /**
      * Prints out the data that has been parsed from the "data.txt" file.
+     * 
+     * @author Michael Kyrollos
      */
     public void printInputData(ArrayList<InputData> queueToPrint) {
         for (InputData q : queueToPrint) {
@@ -144,11 +147,11 @@ public class Floor implements Runnable {
      * Runnable interface. It runs the Thread when .start() is used
      */
     public void run() {
+        this.readData("data.txt");
         initiateFloor();
     }
 
     private void initiateFloor() {
-        this.readData();
         long startTime = System.currentTimeMillis();
         long firstRequestTime = elevatorQueue.get(0).getTimeOfRequest();
         boolean lastRequest = false; // tracks when the last request is being passed to the scheduler

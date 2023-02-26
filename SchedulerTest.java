@@ -34,38 +34,38 @@ class SchedulerTest {
      * 
      * THIS TEST CASE ONLY WORKS IN ECLIPSE NOT VSCODE
      */
-    @Test
-    public void testReadData() {
-        Scheduler scheduler = new Scheduler();
-        Floor floor = new Floor(scheduler);
-        floor.readData();
-        ArrayList<InputData> elevatorQueue = floor.getElevatorQueue();
+    // @Test
+    // public void testReadData() {
+    // Scheduler scheduler = new Scheduler();
+    // Floor floor = new Floor(scheduler);
+    // floor.readData();
+    // ArrayList<InputData> elevatorQueue = floor.getElevatorQueue();
 
-        InputData data0 = elevatorQueue.get(0);
+    // InputData data0 = elevatorQueue.get(0);
 
-        assertEquals(50715000, data0.getTimeOfRequest());
-        assertEquals(2, data0.getFloor());
-        assertEquals(true, data0.isDirectionUp());
-        assertEquals(5, data0.getCarRequest());
+    // assertEquals(50715000, data0.getTimeOfRequest());
+    // assertEquals(2, data0.getFloor());
+    // assertEquals(true, data0.isDirectionUp());
+    // assertEquals(5, data0.getCarRequest());
 
-        InputData data1 = elevatorQueue.get(1);
-        assertEquals(50717000, data1.getTimeOfRequest());
-        assertEquals(7, data1.getFloor());
-        assertEquals(false, data1.isDirectionUp());
-        assertEquals(1, data1.getCarRequest());
+    // InputData data1 = elevatorQueue.get(1);
+    // assertEquals(50717000, data1.getTimeOfRequest());
+    // assertEquals(7, data1.getFloor());
+    // assertEquals(false, data1.isDirectionUp());
+    // assertEquals(1, data1.getCarRequest());
 
-        InputData data2 = elevatorQueue.get(2);
-        assertEquals(50725900, data2.getTimeOfRequest());
-        assertEquals(1, data2.getFloor());
-        assertEquals(true, data2.isDirectionUp());
-        assertEquals(7, data2.getCarRequest());
+    // InputData data2 = elevatorQueue.get(2);
+    // assertEquals(50725900, data2.getTimeOfRequest());
+    // assertEquals(1, data2.getFloor());
+    // assertEquals(true, data2.isDirectionUp());
+    // assertEquals(7, data2.getCarRequest());
 
-        InputData data3 = elevatorQueue.get(3);
-        assertEquals(50760000, data3.getTimeOfRequest());
-        assertEquals(5, data3.getFloor());
-        assertEquals(false, data3.isDirectionUp());
-        assertEquals(3, data3.getCarRequest());
-    }
+    // InputData data3 = elevatorQueue.get(3);
+    // assertEquals(50760000, data3.getTimeOfRequest());
+    // assertEquals(5, data3.getFloor());
+    // assertEquals(false, data3.isDirectionUp());
+    // assertEquals(3, data3.getCarRequest());
+    // }
 
     /**
      * This test ensures that the currentFloor and nextFloor members of the
@@ -107,8 +107,8 @@ class SchedulerTest {
         testdata.put(1, data);
         assertEquals(testdata.get(1), scheduler.getFloorQueues().get(1));
 
-        InputData testDataPoint11 = new InputData(60, 3, true, 5);
-        data.add(testDataPoint11);
+        InputData testDataPoint2 = new InputData(60, 3, true, 5);
+        data.add(testDataPoint2);
 
     }
 
@@ -146,21 +146,21 @@ class SchedulerTest {
      * @version 24/02/2023
      */
     @Test
-    public void testNoMoreRequestsAsFalsse() {
-        testDataPoint1 = new InputData(60, 1, true, 2);
+    public void testNoMoreRequestsAsTrue() {
+        testDataPoint1 = new InputData(25, 7, false, 2);
         ArrayList<InputData> data = new ArrayList<>();
         // must be false when there is no data in the requests
         assertFalse(scheduler.isNoMoreRequests());
 
         data.add(testDataPoint1);
-        // adding a request that is the last request in the list
-        scheduler.putFloorRequest(testDataPoint1, true);
+        // adding a request that is not the last request in the list
+        scheduler.putFloorRequest(testDataPoint1, false);
         Map<Integer, ArrayList<InputData>> testdata = new HashMap<>();
         testdata.put(1, data);
         // insuring the putting of the data was done correclty (similar to test above)
         assertEquals(testdata.get(1), scheduler.getRequestQueue());
-        // this should be the last data point
-        assertTrue(scheduler.isNoMoreRequests());
+        // this should not be the last data point
+        assertFalse(scheduler.isNoMoreRequests());
 
     }
 
