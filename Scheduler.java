@@ -1,11 +1,13 @@
 
-
 import java.util.*;
-
 
 public class Scheduler {
 
-    /** queueInUse represents when the elevator queue is being updated. True means it is being updated and added to be the floor, false means it is not being updated */
+    /**
+     * queueInUse represents when the elevator queue is being updated. True means it
+     * is being updated and added to be the floor, false means it is not being
+     * updated
+     */
     private boolean queueInUse;
 
     /* noMoreRequests tracks when the floor subsysytem will send last request */
@@ -17,20 +19,22 @@ public class Scheduler {
     /* elevatorQueue is the queue of requests that are currently in the elevator */
     private ArrayList<InputData> elevatorQueue;
 
-    /* requestQueue used as priority queue of requests*/
+    /* requestQueue used as priority queue of requests */
     private ArrayList<InputData> requestQueue;
 
     /* floorQueue is to keep track of people waiting for elevator on each floor */
-    private Map<Integer, ArrayList<InputData>> floorQueues = new HashMap<>() {{ 
-        put(1, new ArrayList<InputData>());
-        put(2, new ArrayList<InputData>());
-        put(3, new ArrayList<InputData>());
-        put(4, new ArrayList<InputData>());
-        put(5, new ArrayList<InputData>());
-        put(6, new ArrayList<InputData>());
-        put(7, new ArrayList<InputData>());
-    }};
-    
+    private Map<Integer, ArrayList<InputData>> floorQueues = new HashMap<Integer, ArrayList<InputData>>() {
+        {
+            put(1, new ArrayList<InputData>());
+            put(2, new ArrayList<InputData>());
+            put(3, new ArrayList<InputData>());
+            put(4, new ArrayList<InputData>());
+            put(5, new ArrayList<InputData>());
+            put(6, new ArrayList<InputData>());
+            put(7, new ArrayList<InputData>());
+        }
+    };
+
     public Scheduler() {
         this.queueInUse = true;
         this.elevatorQueue = new ArrayList<InputData>();
@@ -39,8 +43,17 @@ public class Scheduler {
         this.noMoreRequests = false;
     }
 
+    public void setQueueInUse(boolean queueInUse) {
+        this.queueInUse = queueInUse;
+    }
+
+    public boolean isQueueInUse() {
+        return queueInUse;
+    }
+
     /**
-     * getFloorRequest returns two values, the request sent by the floor subsystem, and whether that request is the last one
+     * getFloorRequest returns two values, the request sent by the floor subsystem,
+     * and whether that request is the last one
      */
     public synchronized Map<InputData, Boolean> getFloorRequest() {
         while (queueInUse) {
@@ -50,15 +63,19 @@ public class Scheduler {
                 e.printStackTrace();
             }
         }
-        InputData requestToGiveElevator = this.requestQueue.get(0); //TODO: maybe change requestQueue to currentRequest (as a non arrayList) because we are only accessing first element of this array list
+        InputData requestToGiveElevator = this.requestQueue.get(0); // TODO: maybe change requestQueue to currentRequest
+                                                                    // (as a non arrayList) because we are only
+                                                                    // accessing first element of this array list
         this.requestQueue.remove(0);
         queueInUse = true;
         notifyAll();
 
-        Map<InputData, Boolean> returnVals = new HashMap<>() {{
-            put(requestToGiveElevator, noMoreRequests);
-        }};
-
+        Map<InputData, Boolean> returnVals = new HashMap<InputData, Boolean>() {
+            {
+                put(requestToGiveElevator, noMoreRequests);
+            }
+        };
+    
         return returnVals;
     }
 
@@ -112,28 +129,37 @@ public class Scheduler {
                 System.out.println("Scheduler: elevator is below destination floor of first request in priority queue -> moving up");
                 return currentFloor + 1; //move elevator up
             }
+
         }
     }
 
+    private void updateFloor(int currentFloor) {
+        this.currentFloor = currentFloor;
+    }
+ 
     /**
      * The putter method for the Scheduler class puts the floor reqeuests that were
-     * passed from Floor into {@link Scheduler#currentFloor} and 
+     * passed from Floor into {@link Scheduler#currentFloor} and
      * {@link Scheduler#nextFloor} respectfully
+     * 
      * @param elevatorQueue the first InputData instance in the list of
-     * commands that were passed from Floor that hold the current time,
-     * floor the elevator was requested on, floor the elevator goes to,
-     * and whether the elevator is going up or down.
+     *                      commands that were passed from Floor that hold the
+     *                      current time,
+     *                      floor the elevator was requested on, floor the elevator
+     *                      goes to,
+     *                      and whether the elevator is going up or down.
      */
     public synchronized void putFloorRequest(InputData elevatorIntstruction, boolean lastRequest) {
-        while(!queueInUse) {
+        while (!queueInUse) {
             try {
                 wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        this.floorQueues.get(elevatorIntstruction.getFloor()).add(elevatorIntstruction); //adds request to corresponding floor queue
-        this.requestQueue.add(elevatorIntstruction); //adds request to main request queue
+        this.floorQueues.get(elevatorIntstruction.getFloor()).add(elevatorIntstruction); // adds request to
+                                                                                         // corresponding floor queue
+        this.requestQueue.add(elevatorIntstruction); // adds request to main request queue
         this.noMoreRequests = lastRequest;
         queueInUse = false;
         notifyAll();
@@ -147,9 +173,34 @@ public class Scheduler {
         return currentFloor;
     }
 
-    public int getNextFloor() {
-        return currentFloor;
+    /**
+     * Getter method used for testing purposes
+     * 
+     * @return The request queue
+     * @author Michael Kyrollos
+     */
+    public ArrayList<InputData> getRequestQueue() {
+        return requestQueue;
     }
+
+    /**
+     * Getter method used for testing purposes
+     * 
+     * @return The queue for each floor
+     * @author Michael Kyrollos
+     */
+    public Map<Integer, ArrayList<InputData>> getFloorQueues() {
+        return floorQueues;
+    }
+
+    /**
+     * Getter method used for testing purposes
+     * 
+     * @return True if there are no requests left.
+     * @author Michael Kyrollos
+     */
+    public boolean isNoMoreRequests() {
+        return noMoreRequests;
+    }
+
 }
-
-

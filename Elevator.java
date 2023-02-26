@@ -1,5 +1,4 @@
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,35 +8,46 @@ public class Elevator implements Runnable {
     private Scheduler scheduler;
 
     /* floorButtons represent the buttons inside the elevator */
-    private Map<Integer, Boolean> floorButtons = new HashMap<>() {{
-        put(1, false);
-        put(2, false);
-        put(3, false);
-        put(4, false);
-        put(5, false);
-        put(6, false);
-        put(7, false);
-    }};
+    private Map<Integer, Boolean> floorButtons = new HashMap<Integer, Boolean>() {
+        {
+            put(1, false);
+            put(2, false);
+            put(3, false);
+            put(4, false);
+            put(5, false);
+            put(6, false);
+            put(7, false);
+        }
+    };
 
     /* floorButtonsLamps represent the lamps on the buttons inside the elevator */
-    private Map<Integer, Boolean> floorButtonsLamps = new HashMap<>() {{ //TODO: can we just have one map that represents buttons and their lights (integer, boolean(pressed or not), String("light on"/"light off"))
-        put(1, false);
-        put(2, false);
-        put(3, false);
-        put(4, false);
-        put(5, false);
-        put(6, false);
-        put(7, false);
-    }};
+    private Map<Integer, Boolean> floorButtonsLamps = new HashMap<Integer, Boolean>() {
+        { // TODO: can we just have one map that represents buttons and their lights
+          // (integer, boolean(pressed or not), String("light on"/"light off"))
+            put(1, false);
+            put(2, false);
+            put(3, false);
+            put(4, false);
+            put(5, false);
+            put(6, false);
+            put(7, false);
+        }
+    };
 
     private Boolean motorMoving;
+
     private Boolean doorOpen;
 
     /* requestQueue is used as priority queue of requests */
     private ArrayList<InputData> requestQueue;
 
+    public ArrayList<InputData> getRequestQueue() {
+        return requestQueue;
+    }
+ 
     /**
      * Default constructor for Elevator
+     * 
      * @param scheduler the Scheduler instance that needs to be passed (Box class)
      */
     public Elevator(Scheduler scheduler) {
@@ -60,7 +70,7 @@ public class Elevator implements Runnable {
     public void setDoorOpen(Boolean doorOpen) {
         this.doorOpen = doorOpen;
     }
-
+  
     private void sleep(int time) {
         try {
             Thread.sleep(time);
@@ -68,7 +78,7 @@ public class Elevator implements Runnable {
             e.printStackTrace();
         }
     }
-    
+  
     @Override
     /**
      * The run method for the Elevator class is inherited from the
@@ -77,24 +87,32 @@ public class Elevator implements Runnable {
     public void run() {
         String currentThreadName = Thread.currentThread().getName();
         Boolean noMoreRequestsComing = false;
-        int oldCurrentFloor; //this keeps track of the previous floor visited by elevator
+        int oldCurrentFloor; // this keeps track of the previous floor visited by elevator
         System.out.println(currentThreadName + ": Current floor is: " + this.currentFloor + "\n");
-        
-        while (true) {
-            oldCurrentFloor = this.currentFloor; 
 
-            if (!noMoreRequestsComing) { //if there are more requests to grab
-                Map<InputData, Boolean> request = scheduler.getFloorRequest(); //grab them
-                for (InputData r: request.keySet()) {
+        while (true) {
+            oldCurrentFloor = this.currentFloor;
+
+            if (!noMoreRequestsComing) { // if there are more requests to grab
+
+                Map<InputData, Boolean> request = scheduler.getFloorRequest(); // grab them
+                for (InputData r : request.keySet()) {
                     requestQueue.add(r);
                     noMoreRequestsComing = request.get(r);
-                } 
+                }
+
             }
 
-            if (requestQueue.size() > 0) { //if there are currently requests to service
-                this.currentFloor = scheduler.moveElevator(requestQueue, this.currentFloor); //ask scheduler to notify elevator when it has arrived at destination floor and/or picked someone up along the way
-                
-                if (this.currentFloor == oldCurrentFloor) { //if oldCurrentFloor is equal to new current floor, elevator did not move
+            if (requestQueue.size() > 0) { // if there are currently requests to service
+
+                this.currentFloor = scheduler.moveElevator(requestQueue, this.currentFloor); // ask scheduler to notify
+                                                                                             // elevator when it has
+                                                                                             // arrived at destination
+                                                                                             // floor and/or picked
+                                                                                             // someone up along the way
+
+                if (this.currentFloor == oldCurrentFloor) { // if oldCurrentFloor is equal to new current floor,
+                                                            // elevator did not move
                     setMotorMoving(false);
                     System.out.println(currentThreadName + ": Motor stopped moving");
                     setDoorOpen(true);
@@ -106,10 +124,18 @@ public class Elevator implements Runnable {
                     setMotorMoving(true);
                     System.out.println(currentThreadName + ": Motor moving");
                 }
-
-                System.out.println(currentThreadName + ": Current floor is now: " + this.currentFloor + "\n");
+    
                 this.sleep(7970); //sleep for the amount of time it takes to move between floors.
+                System.out.println(currentThreadName + ": Current floor is now: " + this.currentFloor + "\n");
             }
         }
+    }
+
+    public Boolean getMotorMoving() {
+        return motorMoving;
+    }
+
+    public Boolean getDoorOpen() {
+        return doorOpen;
     }
 }

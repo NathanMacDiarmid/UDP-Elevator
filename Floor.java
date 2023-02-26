@@ -14,15 +14,16 @@ public class Floor implements Runnable {
     private String directionLamp;
     private boolean requestUpButtonLamp;
     private boolean requestDownButtonLamp;
-   
+
     /**
      * Default constructor for Floor class
+     * 
      * @param scheduler the Scheduler that is used as the middle man (Box class)
-     * Also initializes {@link #elevatorQueue} ArrayList
+     *                  Also initializes {@link #elevatorQueue} ArrayList
      */
     public Floor(Scheduler scheduler) {
         this.scheduler = scheduler;
-        this. elevatorQueue = new ArrayList<>();
+        this.elevatorQueue = new ArrayList<>();
     }
 
     public Boolean getRequestUpButton() {
@@ -41,12 +42,12 @@ public class Floor implements Runnable {
         this.requestDownButton = requestDownButton;
     }
 
-    public String getDirectionLamp(){
+    public String getDirectionLamp() {
         return directionLamp;
     }
 
-    public void setDirectionLamp(String directionLamp) { 
-        this.directionLamp = directionLamp; 
+    public void setDirectionLamp(String directionLamp) {
+        this.directionLamp = directionLamp;
     }
 
     public Boolean getRequestUpButtonLamp() {
@@ -93,8 +94,8 @@ public class Floor implements Runnable {
      * Reads a file named data.txt that is in the same directory and parses through elevator data. 
      * Creates a usable format for the rest scheduler. 
      */
-    public void readData() {
-        String path = new File("").getAbsolutePath() + "/" + "data.txt";
+    public void readData(String filename) {
+        String path = new File("").getAbsolutePath() + "/" + filename;
 
         try (Scanner input = new Scanner(new File(path))) {
             while (input.hasNextLine()) { //TODO: check each value to verify if they are valid before adding them to elevatorQueue
@@ -142,17 +143,21 @@ public class Floor implements Runnable {
             e.printStackTrace();
         }
 
-        // InputData.java implements the Comparable class, the 'sort' will be calling the compareTo()
-        // It is sorted in ascending order based on the 'timeOfRequest' of the request. 
+        // InputData.java implements the Comparable class, the 'sort' will be calling
+        // the compareTo()
+        // It is sorted in ascending order based on the 'timeOfRequest' of the request.
         Collections.sort(elevatorQueue);
         printInputData(elevatorQueue);
     }
 
     /**
-     * Determines the direction button pressed based on String representation 
-     * Assumes that the data in the txt is in valid format and following our standard 
+     * Determines the direction button pressed based on String representation
+     * Assumes that the data in the txt is in valid format and following our
+     * standard
+     * 
      * @param direction The Direction that has been parsed ("up" or "down")
-     * @return true if "up" is the direction, false otherwise. 
+     * @return true if "up" is the direction, false otherwise.
+     * @author Michael Kyrollos
      */
     public boolean isGoingUp(String direction) {
         if (direction.equals("up")) {
@@ -162,8 +167,10 @@ public class Floor implements Runnable {
         }
     }
 
-    /** 
-     * Prints out the data that has been parsed from the "data.txt" file. 
+    /**
+     * Prints out the data that has been parsed from the "data.txt" file.
+     * 
+     * @author Michael Kyrollos
      */
     public void printInputData(ArrayList<InputData> queueToPrint) {
         for (InputData q : queueToPrint) {
@@ -178,7 +185,11 @@ public class Floor implements Runnable {
      * Runnable interface. It runs the Thread when .start() is used
      */
     public void run() {
-        this.readData();
+        this.readData("data.txt");
+        initiateFloor();
+    }
+
+    private void initiateFloor() {
         long startTime = System.currentTimeMillis();
         long firstRequestTime = elevatorQueue.get(0).getTimeOfRequest();
         boolean lastRequest = false; //tracks when the last request is being passed to the scheduler
@@ -187,21 +198,22 @@ public class Floor implements Runnable {
             if (elevatorQueue.size() == 1) { //If there is only one request left in the input file, set lastRequest to true
                 lastRequest = true;
             }
-            
+
             long timeOfR = elevatorQueue.get(0).getTimeOfRequest();
             long elapsedTime = System.currentTimeMillis() - startTime;
 
             if ((timeOfR - firstRequestTime) <= elapsedTime) {
-                if (elevatorQueue.get(0).isDirectionUp()) { 
+                if (elevatorQueue.get(0).isDirectionUp()) {
                     setDirectionLamp("up");
-                    setRequestUpButtonLamp(true); 
+                    setRequestUpButtonLamp(true);
                     setRequestUpButton(true);
                 } else {
                     setDirectionLamp("down");
                     setRequestDownButtonLamp(true);
                     setRequestDownButton(true);
                 }
-                System.out.println("Floor: Someone on floor " + elevatorQueue.get(0).getFloor() + " has pressed the " + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on");
+                System.out.println("Floor: Someone on floor " + elevatorQueue.get(0).getFloor() + " has pressed the "
+                        + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on");
                 scheduler.putFloorRequest(elevatorQueue.get(0), lastRequest);
                 elevatorQueue.remove(0);
             }
@@ -212,7 +224,7 @@ public class Floor implements Runnable {
      * The following method is ONLY FOR TESTING PURPOSES and
      * should not be included in commercial product.
      */
-    public ArrayList<InputData> getElevatorQueue(){
+    public ArrayList<InputData> getElevatorQueue() {
         return elevatorQueue;
     }
 }
