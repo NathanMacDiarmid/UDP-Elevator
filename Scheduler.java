@@ -108,11 +108,12 @@ public class Scheduler {
             if ((currentFloor < queue.get(0).getFloor())) { // if elevator is below floor of first requset, move up,
                                                             // else move down
                 System.out.println("Scheduler: elevator is below initial floor of first request in queue -> moving up");
+                updateFloor(currentFloor + 1);
                 return currentFloor + 1; // move elevator up
             } else {
                 System.out
                         .println("Scheduler: elevator is above initial floor of first request in queue -> moving down");
-                updateFloor(currentFloor);
+                updateFloor(currentFloor - 1);
                 return currentFloor - 1; // move elevator down
             }
         }
@@ -148,7 +149,6 @@ public class Scheduler {
                 System.out.println(
                         "Scheduler: elevator is above destination floor of first request in priority queue -> moving down");
                 updateFloor(currentFloor - 1);
-
                 return currentFloor - 1; // move elevator down
 
             } else {
@@ -156,7 +156,6 @@ public class Scheduler {
                 System.out.println(
                         "Scheduler: elevator is below destination floor of first request in priority queue -> moving up");
                 updateFloor(currentFloor + 1);
-
                 return currentFloor + 1; // move elevator up
             }
 
@@ -200,10 +199,6 @@ public class Scheduler {
      * should not be included in commercial product.
      */
     public int getCurrentFloor() {
-        return currentFloor;
-    }
-
-    public synchronized int getNextFloor() {
         return currentFloor;
     }
 

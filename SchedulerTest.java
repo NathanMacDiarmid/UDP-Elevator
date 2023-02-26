@@ -4,9 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalTime;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 class SchedulerTest {
 
@@ -125,4 +128,36 @@ class SchedulerTest {
 
     }
 
+    /**
+     * Helper function helping when writing test cases that allows the program to be
+     * to sleep.
+     * 
+     * @param time The amount of time for the program to sleep in seconds
+     * @author Michael Kyrollos
+     */
+    private void sleepProgram(double time) {
+        try {
+            TimeUnit.SECONDS.sleep((long) time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Helper function helping when writing test cases that involve time conversion,
+     * allows a more readable format.
+     * 
+     * @param hour       The hour part of the time
+     * @param minute     The second part of the time
+     * @param second     The minute part of the time
+     * @param nanosecond The nanosecond part of the time
+     * @return The time reprsented as a an integer
+     * @author Michael Kyrollos
+     */
+    public int convertTimeToLong(int hour, int minute, int second, int nanosecond) {
+        LocalTime time = LocalTime.of(hour, minute, second, nanosecond);
+        // converting the LocalTime to an integer, will stored as an int that represents
+        // the millisecond of the day
+        return time.get(ChronoField.MILLI_OF_DAY);
+    }
 }

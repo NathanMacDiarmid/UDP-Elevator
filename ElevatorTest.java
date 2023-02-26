@@ -1,15 +1,13 @@
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalTime;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 class ElevatorTest {
     private Scheduler scheduler;
@@ -30,91 +28,81 @@ class ElevatorTest {
     }
 
     @Test
-    void testGetCurrentFloor() throws InterruptedException {
-        Elevator controller = new Elevator(scheduler);
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        // create a new elevator instruction to add to the queue
-
-        // execute the add request logic on a separate thread
-        // ensure that the instruction was added to the floor queue and the main request
-        // queue
-        Thread.sleep(1000); // wait for the instruction to be added
-        // assertTrue(controller.getFloorQueue(1).contains(instruction));
-    }
-
-    @Test
     public void testNoMoreRequestsAsFalsse() {
-        scheduler.setQueueInUse(false);
-        testDataPoint1 = new InputData(60, 1, true, 2);
-        ArrayList<InputData> data = new ArrayList<>();
-        data.add(testDataPoint1);
-        scheduler.putFloorRequest(testDataPoint1, false);
-        Map<Integer, ArrayList<InputData>> testdata = new HashMap<>();
-        testdata.put(1, data);
-        assertEquals(testdata.get(1), scheduler.getFloorQueues().get(1));
+        elevatorThread.start();
+        floorThread.start();
+        sleepProgram(10);
 
-        InputData testDataPoint2 = new InputData(60, 3, true, 5);
-        data.add(testDataPoint2);
-        elevator.initiateElevator();
-        elevator.getRequestQueue().add(testDataPoint1);
-        assertEquals(1, elevator.getRequestQueue().size());
+        ArrayList<InputData> expectedList = new ArrayList<>();
+        expectedList.add(new InputData(convertTimeToLong(16, 48, 00, 0), 1, true, 4));
+
+        expectedList.add(new InputData(convertTimeToLong(16, 48, 04, 0), 3, true, 5));
+
+        assertEquals(expectedList.get(0), elevator.getRequestQueue().get(0));
 
     }
 
     @Test
     void testGetDoorOpen() {
-        assertEquals(false, elevator.getDoorOpen());
+        elevatorThread.start();
+        floorThread.start();
+        // make the program sleep for a few seconds allowing the assert statements to
+        // get accurate data
+        sleepProgram(7);
+        assertFalse(elevator.getDoorOpen());
     }
 
     @Test
-    void testGetFloorButtons() {
-
+    void testGetMotorMoving() {
+        elevatorThread.start();
+        floorThread.start();
+        // make the program sleep for a few seconds allowing the assert statements to
+        // get accurate data
+        sleepProgram(7);
+        assertFalse(elevator.getMotorMoving());
     }
 
-    // @Test
-    // void testGetFloorButtonsLamps() {
+    @Test
+    void testGetMotorMovingTrue() {
+        elevatorThread.start();
+        floorThread.start();
+        // make the program sleep for a few seconds allowing the assert statements to
+        // get accurate data
+        sleepProgram(2);
+        assertTrue(elevator.getMotorMoving());
+    }
 
-    // }
+    /**
+     * Helper function helping when writing test cases that allows the program to be
+     * to sleep.
+     * 
+     * @param time The amount of time for the program to sleep in seconds
+     * @author Michael Kyrollos
+     */
+    private void sleepProgram(double time) {
+        try {
+            TimeUnit.SECONDS.sleep((long) time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
-    // @Test
-    // void testGetMotorMoving() {
-
-    // }
-
-    // @Test
-    // void testGetRequestQueue() {
-
-    // }
-
-    // @Test
-    // void testGetScheduler() {
-
-    // }
-
-    // @Test
-    // void testRun() {
-
-    // }
-
-    // @Test
-    // void testSetDoorOpen() {
-
-    // }
-
-    // @Test
-    // void testSetFloorButton() {
-
-    // }
-
-    // @Test
-    // void testSetFloorButtonLamps() {
-
-    // }
-
-    // @Test
-    // void testSetMotorMoving() {
-
-    // }
+    /**
+     * Helper function helping when writing test cases that involve time conversion,
+     * allows a more readable format.
+     * 
+     * @param hour       The hour part of the time
+     * @param minute     The second part of the time
+     * @param second     The minute part of the time
+     * @param nanosecond The nanosecond part of the time
+     * @return The time reprsented as a an integer
+     * @author Michael Kyrollos
+     */
+    public int convertTimeToLong(int hour, int minute, int second, int nanosecond) {
+        LocalTime time = LocalTime.of(hour, minute, second, nanosecond);
+        // converting the LocalTime to an integer, will stored as an int that represents
+        // the millisecond of the day
+        return time.get(ChronoField.MILLI_OF_DAY);
+    }
 
 }

@@ -35,10 +35,15 @@ public class Elevator implements Runnable {
     };
 
     private Boolean motorMoving;
+
     private Boolean doorOpen;
 
     /* requestQueue is used as priority queue of requests */
     private ArrayList<InputData> requestQueue;
+
+    public ArrayList<InputData> getRequestQueue() {
+        return requestQueue;
+    }
 
     /**
      * Default constructor for Elevator
@@ -138,6 +143,14 @@ public class Elevator implements Runnable {
 
         }
 
+    }
+
+    public Boolean getMotorMoving() {
+        return motorMoving;
+    }
+
+    public Boolean getDoorOpen() {
+        return doorOpen;
     }
 
 }
