@@ -36,7 +36,6 @@ public class Elevator implements Runnable {
     /* requestQueue is used as priority queue of requests */
     private ArrayList<InputData> requestQueue;
 
-
     /**
      * Default constructor for Elevator
      * @param scheduler the Scheduler instance that needs to be passed (Box class)
@@ -46,20 +45,28 @@ public class Elevator implements Runnable {
         this.requestQueue = new ArrayList<InputData>();
     }
 
-    public void setFloorButton(Integer floor, Boolean buttonPressed){
+    public void setFloorButton(Integer floor, Boolean buttonPressed) {
         floorButtons.replace(floor, buttonPressed);
     }
 
-    public void setFloorButtonLamps(Integer floor, Boolean buttonLampOn){
+    public void setFloorButtonLamps(Integer floor, Boolean buttonLampOn) {
         floorButtonsLamps.replace(floor, buttonLampOn);
     }
 
-    public void setMotorMoving(Boolean motorMoving){
+    public void setMotorMoving(Boolean motorMoving) {
         this.motorMoving = motorMoving;
     }
 
-    public void setDoorOpen(Boolean doorOpen){
+    public void setDoorOpen(Boolean doorOpen) {
         this.doorOpen = doorOpen;
+    }
+
+    private void sleep(int time) {
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
     
     @Override
@@ -68,66 +75,41 @@ public class Elevator implements Runnable {
      * Runnable interface. It runs the Thread when .start() is used
      */
     public void run() {
-
         String currentThreadName = Thread.currentThread().getName();
         Boolean noMoreRequestsComing = false;
         int oldCurrentFloor; //this keeps track of the previous floor visited by elevator
         System.out.println(currentThreadName + ": Current floor is: " + this.currentFloor + "\n");
         
         while (true) {
-
             oldCurrentFloor = this.currentFloor; 
 
-            if(!noMoreRequestsComing){ //if there are more requests to grab
-
+            if (!noMoreRequestsComing) { //if there are more requests to grab
                 Map<InputData, Boolean> request = scheduler.getFloorRequest(); //grab them
-                for(InputData r: request.keySet()){
+                for (InputData r: request.keySet()) {
                     requestQueue.add(r);
                     noMoreRequestsComing = request.get(r);
-                }
-                
+                } 
             }
 
-            if(requestQueue.size() > 0){ //if there are currently requests to service
-
+            if (requestQueue.size() > 0) { //if there are currently requests to service
                 this.currentFloor = scheduler.moveElevator(requestQueue, this.currentFloor); //ask scheduler to notify elevator when it has arrived at destination floor and/or picked someone up along the way
-        
-                if(this.currentFloor == oldCurrentFloor){ //if oldCurrentFloor is equal to new current floor, elevator did not move
+                
+                if (this.currentFloor == oldCurrentFloor) { //if oldCurrentFloor is equal to new current floor, elevator did not move
                     setMotorMoving(false);
                     System.out.println(currentThreadName + ": Motor stopped moving");
                     setDoorOpen(true);
                     System.out.println("Doors opening -> People are walking in/out");
-                    
-                    try {
-                        Thread.sleep(1000); //sleep for the amount of time it takes to open/close doors. Small time for testing
-                        //Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-
+                    this.sleep(2700); //sleep for the amount of time it takes to open the doors.
                     System.out.println("Doors are closing");
                     setDoorOpen(false);
-                }else{
-
+                } else {
                     setMotorMoving(true);
                     System.out.println(currentThreadName + ": Motor moving");
-                    
                 }
+
                 System.out.println(currentThreadName + ": Current floor is now: " + this.currentFloor + "\n");
-
-                try {
-                    Thread.sleep(3000); //sleep for the amount of time it takes to move between floors. Small time for testing
-                    //Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                this.sleep(7970); //sleep for the amount of time it takes to move between floors.
             }
-
         }
-
     }
-
-    
 }

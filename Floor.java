@@ -1,13 +1,5 @@
-
-
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.io.BufferedReader;
 import java.io.File;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoField;
 import java.util.*;
@@ -33,19 +25,19 @@ public class Floor implements Runnable {
         this. elevatorQueue = new ArrayList<>();
     }
 
-    public Boolean getRequestUpButton(){
+    public Boolean getRequestUpButton() {
         return requestUpButton;
     }
 
-    public void setRequestUpButton(Boolean requestUpButton){
+    public void setRequestUpButton(Boolean requestUpButton) {
         this.requestUpButton = requestUpButton;
     }
 
-    public Boolean getRequestDownButton(){
+    public Boolean getRequestDownButton() {
         return requestDownButton;
     }
 
-    public void setRequestDownButton(Boolean requestDownButton){
+    public void setRequestDownButton(Boolean requestDownButton) {
         this.requestDownButton = requestDownButton;
     }
 
@@ -53,24 +45,48 @@ public class Floor implements Runnable {
         return directionLamp;
     }
 
-    public void setDirectionLamp(String directionLamp){ 
+    public void setDirectionLamp(String directionLamp) { 
         this.directionLamp = directionLamp; 
     }
 
-    public Boolean getRequestUpButtonLamp(){
+    public Boolean getRequestUpButtonLamp() {
         return requestUpButtonLamp;
     }
 
-    public void setRequestUpButtonLamp(Boolean isOn){
+    public void setRequestUpButtonLamp(Boolean isOn) {
         requestUpButtonLamp = isOn;
     }
 
-    public Boolean getRequestDownButtonLamp(){
+    public Boolean getRequestDownButtonLamp() {
         return requestDownButtonLamp;
     }
 
-    public void setRequestDownButtonLamp(Boolean isOn){
+    public void setRequestDownButtonLamp(Boolean isOn) {
         this.requestDownButtonLamp = isOn;
+    }
+
+    /**
+     * Handles invalid input requests when parsing the data in data.txt
+     * @param currentFloor the floor being requested from in the data.txt file
+     * @param floorRequest the floor destination in the data.txt file
+     * @param direction the direction the elevator is going
+     * @return true if any of these inputs are invalid (negative, greater than 7 or not "up" or "down")
+     * @return false otherwise
+     */
+    private boolean handleInputErrors(int currentFloor, int floorRequest, String direction) {
+        if (currentFloor < 0 || currentFloor > 7) {
+            return true;
+        }
+
+        if (floorRequest < 0 || floorRequest > 7) {
+            return true;
+        }
+
+        if (!direction.equals("up") && !direction.equals("down")) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -82,16 +98,43 @@ public class Floor implements Runnable {
 
         try (Scanner input = new Scanner(new File(path))) {
             while (input.hasNextLine()) { //TODO: check each value to verify if they are valid before adding them to elevatorQueue
+
                 // Values are space-separated 
                 String[] data = input.nextLine().split(" ");
-                // Using the LocalTime class to parse through a standard time format of 'HH:MM:SS:XM'
-                LocalTime time = LocalTime.parse((data[0]));
-                // converting the LocalTime to an integer, will stored as an int that represents the millisecond of the day
-                int timeOfRequest = time.get(ChronoField.MILLI_OF_DAY); //TODO: should we declare these variables before we initialize them?
-                //save current floor
-                int currentFloor = Integer.parseInt(data[1]);
-                //save floor request
-                int floorRequest = Integer.parseInt(data[3]);
+
+                LocalTime time;
+                int timeOfRequest;
+                int currentFloor;
+                int floorRequest;
+
+                // Checks to make sure that only 4 pieces of data are passed from data.txt (time of request, current floor, direction, floor destination)
+                // If more than 4 pieces are passed, it goes to the next line
+                if (data.length > 4) {
+                    continue;
+                }
+
+                // This try catch block handles if the input data are correct types, otherwise, goes to next line in data.txt
+                try {
+                    // Using the LocalTime class to parse through a standard time format of 'HH:MM:SS:XM'
+                    time = LocalTime.parse((data[0]));
+
+                    // converting the LocalTime to an integer, will stored as an int that represents the millisecond of the day
+                    timeOfRequest = time.get(ChronoField.MILLI_OF_DAY); //TODO: should we declare these variables before we initialize them?
+
+                    //save current floor
+                    currentFloor = Integer.parseInt(data[1]);
+
+                    //save floor request
+                    floorRequest = Integer.parseInt(data[3]);
+                } catch (Exception e) {
+                    continue;
+                }
+
+                // Skips input line if invalid input
+                if (handleInputErrors(currentFloor, floorRequest, data[2])) {
+                    continue;
+                }
+
                 //Creating new InputData class for every line in the txt, storing it in the elevator ArrayList
                 elevatorQueue.add(new InputData(timeOfRequest, currentFloor, isGoingUp(data[2]), floorRequest));
             }
@@ -141,8 +184,7 @@ public class Floor implements Runnable {
         boolean lastRequest = false; //tracks when the last request is being passed to the scheduler
         
         while(elevatorQueue.size() != 0) {
-
-            if(elevatorQueue.size() == 1){ //If there is only one request left in the input file, set lastRequest to true
+            if (elevatorQueue.size() == 1) { //If there is only one request left in the input file, set lastRequest to true
                 lastRequest = true;
             }
             
@@ -150,23 +192,20 @@ public class Floor implements Runnable {
             long elapsedTime = System.currentTimeMillis() - startTime;
 
             if ((timeOfR - firstRequestTime) <= elapsedTime) {
-                if(elevatorQueue.get(0).isDirectionUp()){ 
-                        setDirectionLamp("up");
-                        setRequestUpButtonLamp(true); 
-                        setRequestUpButton(true);
+                if (elevatorQueue.get(0).isDirectionUp()) { 
+                    setDirectionLamp("up");
+                    setRequestUpButtonLamp(true); 
+                    setRequestUpButton(true);
                 } else {
-                        setDirectionLamp("down");
-                        setRequestDownButtonLamp(true);
-                        setRequestDownButton(true);
+                    setDirectionLamp("down");
+                    setRequestDownButtonLamp(true);
+                    setRequestDownButton(true);
                 }
                 System.out.println("Floor: Someone on floor " + elevatorQueue.get(0).getFloor() + " has pressed the " + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on");
                 scheduler.putFloorRequest(elevatorQueue.get(0), lastRequest);
                 elevatorQueue.remove(0);
             }
         }
-       
-        // remove this to have the last command execute
-       //System.exit(1);
     }
 
     /**
