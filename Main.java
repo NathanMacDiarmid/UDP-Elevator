@@ -1,4 +1,6 @@
-
+/**
+ * @author Nathan MacDiarmid 101098993
+ */
 public class Main {
     public static void main(String[] args) {
 

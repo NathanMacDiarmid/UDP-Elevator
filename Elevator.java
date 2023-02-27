@@ -1,11 +1,19 @@
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class represents the Elevator sub-system
+ * It moves between floors based on instructions passed from data.txt
+ */
 public class Elevator implements Runnable {
     private int currentFloor = 0;
     private Scheduler scheduler;
+    private Boolean motorMoving;
+    private Boolean doorOpen;
+
+    /* requestQueue is used as priority queue of requests */
+    private ArrayList<InputData> requestQueue;
 
     /* floorButtons represent the buttons inside the elevator */
     private Map<Integer, Boolean> floorButtons = new HashMap<Integer, Boolean>() {
@@ -33,17 +41,6 @@ public class Elevator implements Runnable {
             put(7, false);
         }
     };
-
-    private Boolean motorMoving;
-
-    private Boolean doorOpen;
-
-    /* requestQueue is used as priority queue of requests */
-    private ArrayList<InputData> requestQueue;
-
-    public ArrayList<InputData> getRequestQueue() {
-        return requestQueue;
-    }
  
     /**
      * Default constructor for Elevator
@@ -53,6 +50,11 @@ public class Elevator implements Runnable {
     public Elevator(Scheduler scheduler) {
         this.scheduler = scheduler;
         this.requestQueue = new ArrayList<InputData>();
+    }
+
+    // The following methods are getters and setters for each of the attributes
+    public ArrayList<InputData> getRequestQueue() {
+        return requestQueue;
     }
 
     public void setFloorButton(Integer floor, Boolean buttonPressed) {
@@ -70,7 +72,20 @@ public class Elevator implements Runnable {
     public void setDoorOpen(Boolean doorOpen) {
         this.doorOpen = doorOpen;
     }
+
+    public Boolean getMotorMoving() {
+        return motorMoving;
+    }
+
+    public Boolean getDoorOpen() {
+        return doorOpen;
+    }
   
+    /**
+     * This makes the program sleep for a provided duration of time
+     * @param time in milliseconds (2000 is 2 seconds)
+     * @author Nathan MacDiarmid 101098993
+     */
     private void sleep(int time) {
         try {
             Thread.sleep(time);
@@ -83,6 +98,8 @@ public class Elevator implements Runnable {
     /**
      * The run method for the Elevator class is inherited from the
      * Runnable interface. It runs the Thread when .start() is used
+     * @author Nathan MacDiarmid 101098993
+     * @author Juanita Rodelo 101141857
      */
     public void run() {
         String currentThreadName = Thread.currentThread().getName();
@@ -105,14 +122,10 @@ public class Elevator implements Runnable {
 
             if (requestQueue.size() > 0) { // if there are currently requests to service
 
-                this.currentFloor = scheduler.moveElevator(requestQueue, this.currentFloor); // ask scheduler to notify
-                                                                                             // elevator when it has
-                                                                                             // arrived at destination
-                                                                                             // floor and/or picked
-                                                                                             // someone up along the way
+                // ask scheduler to notify elevator when it has arrived at destination floor and/or picked someone up along the way
+                this.currentFloor = scheduler.moveElevator(requestQueue, this.currentFloor);
 
-                if (this.currentFloor == oldCurrentFloor) { // if oldCurrentFloor is equal to new current floor,
-                                                            // elevator did not move
+                if (this.currentFloor == oldCurrentFloor) { // if oldCurrentFloor is equal to new current floor, elevator did not move
                     setMotorMoving(false);
                     System.out.println(currentThreadName + ": Motor stopped moving");
                     setDoorOpen(true);
@@ -129,13 +142,5 @@ public class Elevator implements Runnable {
                 System.out.println(currentThreadName + ": Current floor is now: " + this.currentFloor + "\n");
             }
         }
-    }
-
-    public Boolean getMotorMoving() {
-        return motorMoving;
-    }
-
-    public Boolean getDoorOpen() {
-        return doorOpen;
     }
 }
