@@ -9,7 +9,7 @@ import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+// import java.util.concurrent.TimeUnit;
 
 class SchedulerTest {
 
@@ -132,19 +132,21 @@ class SchedulerTest {
     }
 
     /**
+     * SAVING FOR FUTURE ITERATIONS
+     * 
      * Helper function helping when writing test cases that allows the program to be
      * to sleep.
      * 
      * @param time The amount of time for the program to sleep in seconds
      * @author Michael Kyrollos
      */
-    private void sleepProgram(double time) {
+    /*private void sleepProgram(double time) {
         try {
             TimeUnit.SECONDS.sleep((long) time);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
     /**
      * Helper function helping when writing test cases that involve time conversion,
