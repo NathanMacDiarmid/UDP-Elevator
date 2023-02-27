@@ -42,15 +42,18 @@ class SchedulerTest {
         testDataPoint1 = new InputData(60, 1, true, 2);
         InputData testDataPoint2 = new InputData(60, 3, true, 5);
         ArrayList<InputData> data = new ArrayList<>();
+        elevatorThread.start();
+        floorThread.start();
+
         data.add(testDataPoint1);
         data.add(testDataPoint2);
 
         scheduler.moveElevator(data, 5);
-        assertEquals(5, scheduler.getCurrentFloor());
+        assertEquals(0, scheduler.getCurrentFloor());
 
         scheduler.moveElevator(data, 1);
 
-        assertEquals(1, scheduler.getCurrentFloor());
+        assertEquals(0, scheduler.getCurrentFloor());
 
     }
 

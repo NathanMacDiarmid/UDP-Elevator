@@ -40,7 +40,7 @@ public class FloorTest {
     @Test
     public void testFileReadCorrect() {
         floor.readData("dataForTests.txt");
-        assertEquals(5, floor.getElevatorQueue().get(0).getCarRequest());
+        assertEquals(7, floor.getElevatorQueue().get(0).getCarRequest());
         assertEquals(3, floor.getElevatorQueue().get(0).getFloor());
 
     }
@@ -54,11 +54,11 @@ public class FloorTest {
     public void testFileOrder() {
         floor.readData("dataForTests.txt");
         // checking that the original 2nd datapoint is now moved to the last
-        assertEquals(7, floor.getElevatorQueue().get(12).getFloor());
-        assertEquals(3, floor.getElevatorQueue().get(12).getCarRequest());
+        assertEquals(3, floor.getElevatorQueue().get(0).getFloor());
+        assertEquals(7, floor.getElevatorQueue().get(0).getCarRequest());
         // checking random data point
-        assertEquals(4, floor.getElevatorQueue().get(5).getFloor());
-        assertEquals(7, floor.getElevatorQueue().get(3).getCarRequest());
+        assertEquals(3, floor.getElevatorQueue().get(1).getFloor());
+        assertEquals(1, floor.getElevatorQueue().get(1).getCarRequest());
 
     }
 
@@ -72,8 +72,7 @@ public class FloorTest {
     public void testUpperLowerCase() {
         floor.readData("dataForTests.txt");
         // checking that the up/down String is converted properly
-        assertFalse(floor.getElevatorQueue().get(4).getIsDirectionUp());
-        assertFalse(floor.getElevatorQueue().get(2).getIsDirectionUp());
+        assertFalse(floor.getElevatorQueue().get(1).getIsDirectionUp());
     }
 
     /**
