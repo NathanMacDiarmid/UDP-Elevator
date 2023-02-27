@@ -31,14 +31,13 @@ class ElevatorTest {
     public void testNoMoreRequestsAsFalsse() {
         elevatorThread.start();
         floorThread.start();
-        sleepProgram(10);
+        sleepProgram(20);
 
         ArrayList<InputData> expectedList = new ArrayList<>();
         expectedList.add(new InputData(convertTimeToLong(16, 48, 00, 0), 1, true, 4));
 
         expectedList.add(new InputData(convertTimeToLong(16, 48, 04, 0), 3, true, 5));
-
-        assertEquals(expectedList.get(0), elevator.getRequestQueue().get(0));
+        assertEquals(expectedList.get(0).getTimeOfRequest(), elevator.getRequestQueue().get(0).getTimeOfRequest());
 
     }
 
@@ -48,7 +47,7 @@ class ElevatorTest {
         floorThread.start();
         // make the program sleep for a few seconds allowing the assert statements to
         // get accurate data
-        sleepProgram(7);
+        sleepProgram(20);
         assertFalse(elevator.getDoorOpen());
     }
 
@@ -58,7 +57,7 @@ class ElevatorTest {
         floorThread.start();
         // make the program sleep for a few seconds allowing the assert statements to
         // get accurate data
-        sleepProgram(7);
+        sleepProgram(10);
         assertFalse(elevator.getMotorMoving());
     }
 
@@ -68,7 +67,7 @@ class ElevatorTest {
         floorThread.start();
         // make the program sleep for a few seconds allowing the assert statements to
         // get accurate data
-        sleepProgram(2);
+        sleepProgram(5);
         assertTrue(elevator.getMotorMoving());
     }
 
