@@ -17,15 +17,15 @@ public class Floor implements Runnable {
 
     /**
      * Default constructor for Floor class
-     * 
      * @param scheduler the Scheduler that is used as the middle man (Box class)
-     *                  Also initializes {@link #elevatorQueue} ArrayList
+     * Also initializes {@link #elevatorQueue} ArrayList
      */
     public Floor(Scheduler scheduler) {
         this.scheduler = scheduler;
         this.elevatorQueue = new ArrayList<>();
     }
 
+    // The following methods are getters and setters for each of the attributes
     public Boolean getRequestUpButton() {
         return requestUpButton;
     }
@@ -67,12 +67,21 @@ public class Floor implements Runnable {
     }
 
     /**
+     * The following method is ONLY FOR TESTING PURPOSES and
+     * should not be included in commercial product.
+     */
+    public ArrayList<InputData> getElevatorQueue() {
+        return elevatorQueue;
+    }
+
+    /**
      * Handles invalid input requests when parsing the data in data.txt
      * @param currentFloor the floor being requested from in the data.txt file
      * @param floorRequest the floor destination in the data.txt file
      * @param direction the direction the elevator is going
      * @return true if any of these inputs are invalid (negative, greater than 7 or not "up" or "down")
      * @return false otherwise
+     * @author Nathan MacDiarmid 101098993
      */
     private boolean handleInputErrors(int currentFloor, int floorRequest, String direction) {
         if (currentFloor < 0 || currentFloor > 7) {
@@ -92,7 +101,9 @@ public class Floor implements Runnable {
 
     /**
      * Reads a file named data.txt that is in the same directory and parses through elevator data. 
-     * Creates a usable format for the rest scheduler. 
+     * Creates a usable format for the rest scheduler.
+     * @author Michael Kyrollos 101183521
+     * @author Nathan MacDiarmid 101098993
      */
     public void readData(String filename) {
         String path = new File("").getAbsolutePath() + "/" + filename;
@@ -183,12 +194,23 @@ public class Floor implements Runnable {
     /**
      * The run method for the Floor class is inherited from the
      * Runnable interface. It runs the Thread when .start() is used
+     * @author Nathan MacDiarmid 101098993
+     * @author Michael Kyrollos 101183521
+     * @author Juanita Rodelo 101141857
+     * @author Matthew Belanger 101144323
      */
     public void run() {
         this.readData("data.txt");
         initiateFloor();
     }
 
+    /**
+     * The functionality behind the {@link #run()} method
+     * @author Nathan MacDiarmid 101098993
+     * @author Michael Kyrollos 101183521
+     * @author Juanita Rodelo 101141857
+     * @author Matthew Belanger 101144323
+     */
     private void initiateFloor() {
         long startTime = System.currentTimeMillis();
         long firstRequestTime = elevatorQueue.get(0).getTimeOfRequest();
@@ -218,13 +240,5 @@ public class Floor implements Runnable {
                 elevatorQueue.remove(0);
             }
         }
-    }
-
-    /**
-     * The following method is ONLY FOR TESTING PURPOSES and
-     * should not be included in commercial product.
-     */
-    public ArrayList<InputData> getElevatorQueue() {
-        return elevatorQueue;
     }
 }
