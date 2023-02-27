@@ -39,7 +39,7 @@ Users are notified when the elevator has finished a request/move and where that 
 Open the settings.json file in VS code and modify according to the image below.
 ![image](https://user-images.githubusercontent.com/83596468/221445499-d3fae8da-e41a-457e-83e5-9443eeff65b3.png)
 
-### How to run the program (if you are using VS Code, scroll to the bottom)
+### How to run the program
 
 1. Open Eclipse and create a new project (File -> New -> Java Project) 
 ![image](https://user-images.githubusercontent.com/83596468/216786219-4e559573-85a0-4100-81df-c2c23d15ea32.png)
