@@ -3,27 +3,29 @@ Elevator Control System and Simulator
 
 Iteration 1 simulates a elevator using java threads represented with string prompts in the terminal. 
 Users are notified when the elevator has finished a request/move and where that request is. 
+Iteration 2 has the goal of adding the state machines for the scheduler and elevator subsystems assuming that
+there is only one elevator. 
 
 ## Contributions:
 🥇 Amanda Piazza (101143004)
-  * UML class and sequence diagram
-  * README
+
+  * Floor and Elevator Subsystems, sequence diagram
      
 🥇 Juanita Rodelo (101141857) 
 
-   * UML class and sequence diagram
+   * Floor and Elevator Subsystems: 
      
 🥇 Matthew Belanger (101144323)
 
-   * UnitTests
+   * UML Diagrams
      
 🥇 Michael Kyrollos (101183521)  
 
-   * Parsing and importing the txt, README    
+   * README, unit testing  
      
 🥇 Nathan MacDiarmid (101098993) 
 
-   * Communication between floor, elevator, and scheduler
+   * implementation of state machine 
 
 ### Structure 
    * Floor.java accepts events from InputData.java. Each event consists of the current time, the floor request, 
@@ -33,7 +35,8 @@ Users are notified when the elevator has finished a request/move and where that 
    with an event in elevatorQueue ArrayList. The move is executed and the new data is sent to Scheduler.java.
 
    * Scheduler.java is a organized messanger between Floor.java and Elevator.java. It accepts events from Floor.java
-   and sends this event to Elevator.java. New data is recieved from Elevator.java and is sent to Floor.java. 
+   and sends this event to Elevator.java. New data is recieved from Elevator.java and is sent to Floor.java. Implements the state machine
+   
 
 ## Running the test cases in VS Code 
 Open the settings.json file in VS code and modify according to the image below.
