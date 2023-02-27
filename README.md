@@ -35,6 +35,10 @@ Users are notified when the elevator has finished a request/move and where that 
    * Scheduler.java is a organized messanger between Floor.java and Elevator.java. It accepts events from Floor.java
    and sends this event to Elevator.java. New data is recieved from Elevator.java and is sent to Floor.java. 
 
+## Running the test cases in VS Code 
+Open the settings.json file in VS code and modify according to the image below.
+![image](https://user-images.githubusercontent.com/83596468/221445499-d3fae8da-e41a-457e-83e5-9443eeff65b3.png)
+
 ### How to run the program (if you are using VS Code, scroll to the bottom)
 
 1. Open Eclipse and create a new project (File -> New -> Java Project) 
@@ -85,7 +89,3 @@ If there is an *x* symbol beside `UnitTests.java`, follow the intructions below.
 ![image](https://user-images.githubusercontent.com/83596468/216787518-42d8ac40-b375-4fc7-a69d-2f32f2eca610.png)
 
 4. Navigate to the *module-info.java* file and open it. Hover over the red underlined code and click on the option to change the build path. The tests should be working now. 
-
-## Running the test cases in VS Code 
-Open the settings.json file in VS code and modify according to the image below.
-![image](https://user-images.githubusercontent.com/83596468/221445499-d3fae8da-e41a-457e-83e5-9443eeff65b3.png)
