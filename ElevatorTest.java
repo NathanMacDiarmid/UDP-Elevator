@@ -15,7 +15,6 @@ class ElevatorTest {
     private Thread floorThread;
     private Elevator elevator;
     private Floor floor;
-    private InputData testDataPoint1;
 
     @BeforeEach
     public void setUp() {
