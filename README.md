@@ -47,14 +47,14 @@ Open the settings.json file in VS code and modify according to the image below.
 1. Open Eclipse and create a new project (File -> New -> Java Project) 
 ![image](https://user-images.githubusercontent.com/83596468/216786219-4e559573-85a0-4100-81df-c2c23d15ea32.png)
 
-2. Name the project `Iteration1` and click Finish
+2. Name the project `Iteration2` and click Finish
 ![image](https://user-images.githubusercontent.com/83596468/216786386-3ffaf643-faab-4255-9908-d77b35eca975.png)
 
 
-3. Create a package by right clicking on the `/src` directory within the project folder in Eclipse, name it `Iteration1`
+3. Create a package by right clicking on the `/src` directory within the project folder in Eclipse, name it `Iteration2`
 ![image](https://user-images.githubusercontent.com/83596468/216786372-91076533-1801-4994-bf42-1e1a536fa466.png)
 
-4. Unzip `LA1G6_Iteration1.zip`
+4. Unzip `LA1G6_Iteration2.zip`
 
 5. Right click on the package and click import. 
 ![image](https://user-images.githubusercontent.com/83596468/216786495-5d985799-9387-400c-9259-7408bfebccbc.png)
@@ -62,7 +62,7 @@ Open the settings.json file in VS code and modify according to the image below.
  6. Import as *File Systems*
 ![image](https://user-images.githubusercontent.com/83596468/216786536-9a76c9f4-8cd5-4bbf-a2cf-cd02b018e413.png)
 
-7. Locate the directory in which the `Java` src files can be found. (From the Extracted zip in Step 4). From the GitHub Repo, it would be *\SYSC3303A-Project\Iteration1\src\Iteration1*
+7. Locate the directory in which the `Java` src files can be found. (From the Extracted zip in Step 4). From the GitHub Repo, it would be *\SYSC3303A-Project\Iteration2\src\Iteration2*
 ![image](https://user-images.githubusercontent.com/83596468/216787074-54510204-1e15-4962-bf5e-0ccc8cf7e359.png)
 
 Include the following files 
