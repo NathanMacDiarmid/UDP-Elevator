@@ -1,4 +1,8 @@
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.*;
 
 public class Scheduler {
@@ -21,6 +25,10 @@ public class Scheduler {
 
     /* requestQueue used as priority queue of requests */
     private ArrayList<InputData> requestQueue;
+
+    private DatagramPacket sendPacket, receivePacket23, receivePacket69;
+    private DatagramSocket sendSocket, receiveSocket23, receiveSocket69;
+    private byte[] data = new byte[100];
 
     /* floorQueue is to keep track of people waiting for elevator on each floor */
     private Map<Integer, ArrayList<InputData>> floorQueues = new HashMap<Integer, ArrayList<InputData>>() {
@@ -45,6 +53,14 @@ public class Scheduler {
         this.requestQueue = new ArrayList<InputData>();
         this.currentFloor = 0;
         this.noMoreRequests = false;
+        try {
+            this.sendSocket = new DatagramSocket();
+            this.receiveSocket23 = new DatagramSocket(23);
+            this.receiveSocket69 = new DatagramSocket(69);
+        } catch (SocketException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     public void setQueueInUse(boolean queueInUse) {
@@ -210,5 +226,16 @@ public class Scheduler {
         this.noMoreRequests = lastRequest;
         queueInUse = false;
         notifyAll();
+    }
+
+    public void receiveFloorRequest() {
+        receivePacket23 = new DatagramPacket(data, data.length);
+
+        try {
+            receiveSocket23.receive(receivePacket23);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 }

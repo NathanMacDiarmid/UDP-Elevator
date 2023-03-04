@@ -1,4 +1,10 @@
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.io.File;
 import java.time.LocalTime;
 import java.time.temporal.ChronoField;
@@ -19,6 +25,10 @@ public class Floor implements Runnable {
     private boolean requestUpButtonLamp;
     private boolean requestDownButtonLamp;
 
+    // Datagram stuff for sending and receiving over UDP
+    private DatagramPacket sendPacket, receivePacket;
+    private DatagramSocket sendReceiveSocket;
+
     /**
      * Default constructor for Floor class
      * @param scheduler the Scheduler that is used as the middle man (Box class)
@@ -27,6 +37,14 @@ public class Floor implements Runnable {
     public Floor(Scheduler scheduler) {
         this.scheduler = scheduler;
         this.elevatorQueue = new ArrayList<>();
+        
+        // Initializes the send and receive socket for the Floor
+        try {
+            sendReceiveSocket = new DatagramSocket();
+        } catch (SocketException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     // The following methods are getters and setters for each of the attributes
@@ -113,7 +131,7 @@ public class Floor implements Runnable {
         String path = new File("").getAbsolutePath() + "/" + filename;
 
         try (Scanner input = new Scanner(new File(path))) {
-            while (input.hasNextLine()) { //TODO: check each value to verify if they are valid before adding them to elevatorQueue
+            while (input.hasNextLine()) { // Check each value to verify if they are valid before adding them to elevatorQueue
 
                 // Values are space-separated 
                 String[] data = input.nextLine().split(" ");
@@ -243,6 +261,25 @@ public class Floor implements Runnable {
                 scheduler.putFloorRequest(elevatorQueue.get(0), lastRequest);
                 elevatorQueue.remove(0);
             }
+        }
+    }
+
+    public void sendData(InputData request, boolean lastRequest) {
+        String sendRequest = request.toString();
+        byte[] byteReq = sendRequest.getBytes();
+
+        try {
+            sendPacket = new DatagramPacket(byteReq, byteReq.length, InetAddress.getLocalHost(), 23);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        try {
+            sendReceiveSocket.send(sendPacket);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 }
