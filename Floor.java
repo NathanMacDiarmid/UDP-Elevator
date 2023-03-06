@@ -264,22 +264,165 @@ public class Floor implements Runnable {
         }
     }
 
-    public void sendData(InputData request, boolean lastRequest) {
-        String sendRequest = request.toString();
-        byte[] byteReq = sendRequest.getBytes();
+    /**
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
+    * Send an instruction to the scheduler through specified port
+    * In this case, it is port 23 the destination
+    * @param request the InputData request that holds request information
+    * @param lastRequest the last request in the elevatorQueue, boolean
+    */
+    public void sendInstruction(InputData request, boolean lastRequest) {
+        // Prepares the message to be sent by forming a byte array
+        String stringReq = request.toString();
+        byte[] msg = stringReq.getBytes();
+        System.out.println("Floor: sending a packet containing: " + stringReq);
 
+        // Creates the DatagramPacket to be sent to port 23
         try {
-            sendPacket = new DatagramPacket(byteReq, byteReq.length, InetAddress.getLocalHost(), 23);
+            sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), 23);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             System.exit(1);
         }
 
+        System.out.println("To host: " + sendPacket.getAddress());
+        System.out.println("Destination host port: " + sendPacket.getPort());
+        int len = sendPacket.getLength();
+        System.out.println("Length: " + len);
+
+        // Sends the DatagramPacket over port 23
         try {
             sendReceiveSocket.send(sendPacket);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
         }
+        System.out.println("Floor: Packet sent.\n");
+    }
+
+    /**
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
+    * Sends the request for the data that is held by the Host
+    */
+    public void sendRequest() {
+        // Prepares the message to be sent by forming a byte array
+        String message = "Can I get the deats?";
+        byte[] msg = message.getBytes();
+
+        System.out.println("Floor: sending a packet containing: " + message);
+
+        // Creates the DatagramPacket to be sent to port 23
+        try {
+            sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), 23);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        System.out.println("To host: " + sendPacket.getAddress());
+        System.out.println("Destination host port: " + sendPacket.getPort());
+        int len = sendPacket.getLength();
+        System.out.println("Length: " + len);
+
+        // Sends the DatagramPacket over port 23
+        try {
+            sendReceiveSocket.send(sendPacket);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        System.out.println("Floor: Request sent.\n");
+    }
+
+    /**
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
+    * Receive method for Floor receives a message from the specified port
+    * In this case, it is port 23
+    */
+    public void receiveStatus() {
+        // Prepares the byte array for arrival
+        // It is only of length 4 because the server only sends a byte
+        // array of 4 in return
+        byte data[] = new byte[4];
+        receivePacket = new DatagramPacket(data, data.length);
+
+        // Receives the DatagramPacket on the send and receive socket
+        try {
+            sendReceiveSocket.receive(receivePacket);
+        } catch(IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        System.out.println("Floor: Packet received:");
+        System.out.println("From host: " + receivePacket.getAddress());
+        System.out.println("Host port: " + receivePacket.getPort());
+        int len = receivePacket.getLength();
+        System.out.println("Length: " + len);
+        System.out.print("Containing: ");
+
+        String received = new String(data,0,len);   
+        System.out.println(received);
+        System.out.println();
+    }
+
+    /**
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
+    * Receives the acknowledgement from the Scheduler that it has received the message
+    * and accepted the data.
+    */
+    public void receiveAcknowledgement() {
+        // Prepares the byte array for arrival
+        // It is only of length 40 because the host only sends a byte
+        // array of 40 in return ("The host has accepted the message.")
+        byte data[] = new byte[40];
+        receivePacket = new DatagramPacket(data, data.length);
+
+        // Receives the DatagramPacket on the send and receive socket
+        try {
+            sendReceiveSocket.receive(receivePacket);
+        } catch(IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        System.out.println("Floor: Packet received:");
+        System.out.println("From host: " + receivePacket.getAddress());
+        System.out.println("Host port: " + receivePacket.getPort());
+        int len = receivePacket.getLength();
+        System.out.println("Length: " + len);
+        System.out.print("Containing: ");
+        String received = new String(data,0,len);   
+        System.out.println(received);
+        System.out.println();
+    }
+
+    /**
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
+    * Closes the open sockets when program ends
+    */
+    public void closeSocket() {
+        sendReceiveSocket.close();
+    }
+
+    /**
+     * Currently sends all requests in floor
+     * Handles number of requests in queue abstractly
+     * @param args
+     */
+    public static void main(String args[]) {
+        Floor floor = new Floor(null);
+        floor.readData("data.txt");
+        for (int i = 0; i < floor.getElevatorQueue().size(); i++) {
+            floor.sendInstruction(floor.getElevatorQueue().get(i), false);
+            floor.receiveAcknowledgement();
+            floor.sendRequest();
+            floor.receiveStatus();
+        }
+        floor.closeSocket();
     }
 }
