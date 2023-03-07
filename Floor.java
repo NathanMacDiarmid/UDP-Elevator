@@ -14,7 +14,7 @@ import java.util.*;
 Floor.java accepts events from InputData.java. Each event consists of the current time, the floor request, 
    the direction of travel and the car button pressed. These events are sent to Scheduler.java
    */ 
-public class Floor implements Runnable {
+public class Floor  {
 
     // All requests will be stored in this sorted ArrayList
     private ArrayList<InputData> elevatorQueue;
@@ -210,7 +210,6 @@ public class Floor implements Runnable {
         System.out.println();
     }
 
-    @Override
     /**
      * The run method for the Floor class is inherited from the
      * Runnable interface. It runs the Thread when .start() is used
@@ -219,10 +218,10 @@ public class Floor implements Runnable {
      * @author Juanita Rodelo 101141857
      * @author Matthew Belanger 101144323
      */
-    public void run() {
-        this.readData("data.txt");
-        initiateFloor();
-    }
+    // public void run() {
+    //     this.readData("data.txt");
+    //     initiateFloor();
+    // }
 
     /**
      * The functionality behind the {@link #run()} method
@@ -256,13 +255,14 @@ public class Floor implements Runnable {
                 }
                 System.out.println("Floor: Someone on floor " + elevatorQueue.get(0).getFloor() + " has pressed the "
                         + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on");
+                
                 this.sendInstruction(getElevatorQueue().get(0), lastRequest);
                 this.receiveAcknowledgement();
 
                 // TODO after implementing communication between floor and elevators
                 // Check these two methods to make sure they actually work properly
-                this.sendHasElevatorArrived();
-                this.receiveStatus();
+                //this.sendHasElevatorArrived();
+                //this.receiveStatus();
 
                 elevatorQueue.remove(0);
             }
