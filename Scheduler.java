@@ -3,7 +3,11 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.time.LocalTime;
+import java.time.temporal.ChronoField;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Scheduler {
 
@@ -12,7 +16,7 @@ public class Scheduler {
      * is being updated and added to be the floor, false means it is not being
      * updated
      */
-    private boolean queueInUse;
+    private boolean queueInUse; 
 
     /* noMoreRequests tracks when the floor subsysytem will send last request */
     private boolean noMoreRequests;
@@ -29,6 +33,7 @@ public class Scheduler {
     private DatagramPacket sendPacket, receivePacket23, receivePacket69;
     private DatagramSocket sendAndReceiveSocket, receiveSocket23, receiveSocket69;
     private byte[] data = new byte[100];
+    private int numOfCars;
 
     /* floorQueue is to keep track of people waiting for elevator on each floor */
     private Map<Integer, ArrayList<InputData>> floorQueues = new HashMap<Integer, ArrayList<InputData>>() {
@@ -43,16 +48,29 @@ public class Scheduler {
         }
     };
 
+    // Holds the current locations of each elevator
+
+    // TODO add an integer for how many people are in the elevator
+    private Map<Integer, Integer> elevatorLocations;
+
     /**
      * Default constructor for Scheduler
      * Initializes all of the attributes
      */
-    public Scheduler() {
+    public Scheduler(int numOfCars) {
+
+        this.numOfCars = numOfCars;
         this.queueInUse = true;
         this.elevatorQueue = new ArrayList<InputData>();
         this.requestQueue = new ArrayList<InputData>();
         this.currentFloor = 0;
         this.noMoreRequests = false;
+
+        // for each elevator car, initialize current floor to 0
+        for(int i = 1; i < this.numOfCars + 1; i++){
+            this.elevatorLocations.put(i, 0);
+        }
+
         try {
             this.sendAndReceiveSocket = new DatagramSocket();
             this.receiveSocket23 = new DatagramSocket(23);
@@ -61,6 +79,7 @@ public class Scheduler {
             e.printStackTrace();
             System.exit(1);
         }
+        
     }
 
     public void setQueueInUse(boolean queueInUse) {
@@ -147,6 +166,8 @@ public class Scheduler {
      * @author Matthew Belanger 101144323
      * @author Amanda Piazza 101143004
      */
+
+     // TODO possibly move this to Elevator class
     public int moveElevator(ArrayList<InputData> queue, int currentFloor) {
         boolean reachedDestination = false;
         System.out.println("Scheduler: Floor queues:" + this.floorQueues.toString());
@@ -229,87 +250,19 @@ public class Scheduler {
     }
 
     /**
-    * @author Nathan MacDiarmid 101098993
-    * @author Amanda Piazza 101143004
-    * Send method that sends the instruction to the Elevator to the specified port
-    * In this case, the specified port is port 69
-    */
-    public void sendToElevator() {
-        // Initializes the DatagramPacket to be sent to the server
-        sendPacket = new DatagramPacket(data, receivePacket23.getLength(),
-        receivePacket23.getAddress(), receivePacket69.getPort());
-
-        System.out.println( "Scheduler: Sending packet:");
-        System.out.println("To host: " + sendPacket.getAddress());
-        System.out.println("Destination host port: " + sendPacket.getPort());
-        int len = sendPacket.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing: ");
-        System.out.println(new String(sendPacket.getData(),0,len));
-        System.out.println();
-
-        // Sends the DatagramPacket to the Server
-        try {
-            sendAndReceiveSocket.send(sendPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        System.out.println("Scheduler: packet sent to Elevator");
-
-        // Clears the request pipeline
-        for (int i = 0; i < data.length; i++) {
-            data[i] = 0;
-        }
-    }
-
-    /**
-    * @author Nathan MacDiarmid 101098993
-    * @author Amanda Piazza 101143004
-    * Sends to acknowledgement to the Elevator that the data has been
-    * received and accepted by the Scheduler.
-    */
-    public void sendElevatorAcknowledgement() {
-        String message = "The Scheduler is sending deats shortly.";
-        byte[] msg = message.getBytes(); 
-
-        // Initializes the DatagramPacket to send to the Server
-        sendPacket = new DatagramPacket(msg, msg.length,
-        receivePacket69.getAddress(), receivePacket69.getPort());
-
-        System.out.println( "Scheduler: Sending packet acknowledgment to Elevator:");
-        System.out.println("To host: " + sendPacket.getAddress());
-        System.out.println("Destination host port: " + sendPacket.getPort());
-        int len = sendPacket.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing: ");
-        System.out.println(new String(sendPacket.getData(),0,len));
-        System.out.println();
-
-        // Sends the DatagramPacket to the Client
-        try {
-            sendAndReceiveSocket.send(sendPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
-
-    /**
-    * @author Nathan MacDiarmid 101098993
-    * @author Amanda Piazza 101143004
-    * Receive method for Scheduler that receives from the Elevator
-    */
-    public void receiveFromElevator() {
-        // Initializes the receive DatagramPacket to be able to receive the message
-        receivePacket69 = new DatagramPacket(data, data.length);
+     * @author Nathan MacDiarmid 101098993
+     * @author Amanda Piazza 101143004
+     * Receive method for Host that receives the message from the floor
+     */
+    public void receiveInstructionFromFloor() {
+        // Initializes the DatagramPacket to be received from the floor
+        receivePacket23 = new DatagramPacket(data, data.length);
         System.out.println("Scheduler: Waiting for Packet.\n");
 
-        // Receives the DatagramPacket
+        // Receives the DatagramPacket from the floor
         try {        
             System.out.println("Waiting...");
-            sendAndReceiveSocket.receive(receivePacket69);
+            receiveSocket23.receive(receivePacket23);
         } catch (IOException e) {
             System.out.print("IO Exception: likely:");
             System.out.println("Receive Socket Timed Out.\n" + e);
@@ -317,83 +270,17 @@ public class Scheduler {
             System.exit(1);
         }
 
-        System.out.println("Scheduler: Packet received from Elevator:");
-        System.out.println("From host: " + receivePacket69.getAddress());
-        System.out.println("Host port: " + receivePacket69.getPort());
-        int len = receivePacket69.getLength();
+        System.out.println("Scheduler: Packet received from Floor:");
+        System.out.println("From host: " + receivePacket23.getAddress());
+        System.out.println("Host port: " + receivePacket23.getPort());
+        int len = receivePacket23.getLength();
         System.out.println("Length: " + len);
         System.out.print("Containing: " );
 
-        String received = new String(data,0,len);   
+        String received = new String(data, 0, len);   
+        translateStringInstruction(received);
         System.out.println(received);
         System.out.println();
-    }
-
-    /**
-     * @author Nathan MacDiarmid 101098993
-     * @author Amanda Piazza 101143004
-     * Receives the Elevators request for information before
-     * being sent to the Elevator
-     */
-    public void receiveElevatorRequest() {
-        // Initializes the DatagramPacket to be received from the Server
-        byte[] request = new byte[20];
-        receivePacket69 = new DatagramPacket(request, request.length);
-        System.out.println("Scheduler: Waiting for Packet.\n");
-
-        // Receives the DatagramPacket from the Server
-        try {        
-            System.out.println("Waiting...");
-            receiveSocket69.receive(receivePacket69);
-        } catch (IOException e) {
-            System.out.print("IO Exception: likely:");
-            System.out.println("Receive Socket Timed Out.\n" + e);
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        System.out.println("Scheduler: Packet received from Elevator:");
-        System.out.println("From host: " + receivePacket69.getAddress());
-        System.out.println("Host port: " + receivePacket69.getPort());
-        int len = receivePacket69.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing: " );
-
-        String received = new String(request);   
-        System.out.println(received + "\n");
-    }
-
-    /**
-     * @author Nathan MacDiarmid 101098993
-     * @author Amanda Piazza 101143004
-     * Send method for Shceduler that sends the message to the Floor
-     */
-    public void sendToFloor() {
-        // Initializes the DatagramPacket to send to the Floor
-        sendPacket = new DatagramPacket(data, receivePacket69.getLength(),
-        receivePacket23.getAddress(), receivePacket23.getPort());
-
-        System.out.println( "Scheduler: Sending packet:");
-        System.out.println("To host: " + sendPacket.getAddress());
-        System.out.println("Destination host port: " + sendPacket.getPort());
-        int len = sendPacket.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing: ");
-        System.out.println(new String(sendPacket.getData(),0,len));
-        System.out.println();
-
-        // Sends the DatagramPacket to the Floor
-        try {
-            sendAndReceiveSocket.send(sendPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        System.out.println("Scheduler: packet sent to Floor");
-        for (int i = 0; i < data.length; i++) {
-            data[i] = 0;
-        }
     }
 
     /**
@@ -431,17 +318,19 @@ public class Scheduler {
     /**
      * @author Nathan MacDiarmid 101098993
      * @author Amanda Piazza 101143004
-     * Receive method for Host that receives the message from the floor
+     * Receives the Elevators request for information before
+     * being sent to the Elevator
      */
-    public void receiveFromFloor() {
-        // Initializes the DatagramPacket to be received from the floor
-        receivePacket23 = new DatagramPacket(data, data.length);
+    public void receiveElevatorRequest() {
+        // Initializes the DatagramPacket to be received from the Server
+        byte[] request = new byte[20];
+        receivePacket69 = new DatagramPacket(request, request.length);
         System.out.println("Scheduler: Waiting for Packet.\n");
 
-        // Receives the DatagramPacket from the floor
+        // Receives the DatagramPacket from the Server
         try {        
             System.out.println("Waiting...");
-            receiveSocket23.receive(receivePacket23);
+            receiveSocket69.receive(receivePacket69);
         } catch (IOException e) {
             System.out.print("IO Exception: likely:");
             System.out.println("Receive Socket Timed Out.\n" + e);
@@ -449,10 +338,79 @@ public class Scheduler {
             System.exit(1);
         }
 
-        System.out.println("Scheduler: Packet received from Floor:");
-        System.out.println("From host: " + receivePacket23.getAddress());
-        System.out.println("Host port: " + receivePacket23.getPort());
-        int len = receivePacket23.getLength();
+        System.out.println("Scheduler: Packet received from Elevator:");
+        System.out.println("From host: " + receivePacket69.getAddress());
+        System.out.println("Host port: " + receivePacket69.getPort());
+        int len = receivePacket69.getLength();
+        System.out.println("Length: " + len);
+        System.out.print("Containing: " );
+
+        String received = new String(request);   
+        System.out.println(received + "\n");
+    }
+
+    /**
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
+    * Send method that sends the instruction to the Elevator to the specified port
+    * In this case, the specified port is port 69
+    */
+    public void sendToElevator() {
+        // Initializes the DatagramPacket to be sent to the server
+        
+        sendPacket = new DatagramPacket(data, receivePacket23.getLength(),
+        receivePacket23.getAddress(), receivePacket69.getPort());
+
+        System.out.println( "Scheduler: Sending packet:");
+        System.out.println("To host: " + sendPacket.getAddress());
+        System.out.println("Destination host port: " + sendPacket.getPort());
+        int len = sendPacket.getLength();
+        System.out.println("Length: " + len);
+        System.out.print("Containing: ");
+        System.out.println(new String(sendPacket.getData(),0,len));
+        System.out.println();
+
+        // Sends the DatagramPacket to the Server
+        try {
+            sendAndReceiveSocket.send(sendPacket);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        System.out.println("Scheduler: packet sent to Elevator");
+
+        // Clears the request pipeline
+        for (int i = 0; i < data.length; i++) {
+            data[i] = 0;
+        }
+    }
+
+    /**
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
+    * Receive method for Scheduler that receives from the Elevator
+    */
+    public void receiveFromElevator() {
+        // Initializes the receive DatagramPacket to be able to receive the message
+        receivePacket69 = new DatagramPacket(data, data.length);
+        System.out.println("Scheduler: Waiting for Packet.\n");
+
+        // Receives the DatagramPacket
+        try {        
+            System.out.println("Waiting...");
+            sendAndReceiveSocket.receive(receivePacket69);
+        } catch (IOException e) {
+            System.out.print("IO Exception: likely:");
+            System.out.println("Receive Socket Timed Out.\n" + e);
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        System.out.println("Scheduler: Packet received from Elevator:");
+        System.out.println("From host: " + receivePacket69.getAddress());
+        System.out.println("Host port: " + receivePacket69.getPort());
+        int len = receivePacket69.getLength();
         System.out.println("Length: " + len);
         System.out.print("Containing: " );
 
@@ -462,12 +420,46 @@ public class Scheduler {
     }
 
     /**
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
+    * Sends to acknowledgement to the Elevator that the data has been
+    * received and accepted by the Scheduler.
+    */
+    public void sendElevatorAcknowledgement() {
+        String message = "The Scheduler is sending deats shortly.";
+        byte[] msg = message.getBytes(); 
+
+        // Initializes the DatagramPacket to send to the Server
+        sendPacket = new DatagramPacket(msg, msg.length,
+        receivePacket69.getAddress(), receivePacket69.getPort());
+
+        System.out.println( "Scheduler: Sending packet acknowledgment to Elevator:");
+        System.out.println("To host: " + sendPacket.getAddress());
+        System.out.println("Destination host port: " + sendPacket.getPort());
+        int len = sendPacket.getLength();
+        System.out.println("Length: " + len);
+        System.out.print("Containing: ");
+        System.out.println(new String(sendPacket.getData(),0,len));
+        System.out.println();
+
+        // Sends the DatagramPacket to the Client
+        try {
+            sendAndReceiveSocket.send(sendPacket);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    /**
      * @author Nathan MacDiarmid 101098993
      * @author Amanda Piazza 101143004
      * Receives the Floors request for information before
      * being sent to the Floor
      */
-    public void receiveFloorRequest() {
+
+     // TODO look at possibly removing this as we may not need to reply to Floor
+     public void receiveFloorRequest() {
         // Initializes the DatagramPacket to be received from the Floor
         byte[] request = new byte[20];
         receivePacket23 = new DatagramPacket(request, request.length);
@@ -496,6 +488,70 @@ public class Scheduler {
     }
 
     /**
+     * @author Nathan MacDiarmid 101098993
+     * @author Amanda Piazza 101143004
+     * Send method for Scheduler that sends the message to the Floor
+     */
+    public void sendStatusToFloor() {
+        // Initializes the DatagramPacket to send to the Floor
+        sendPacket = new DatagramPacket(data, receivePacket69.getLength(),
+        receivePacket23.getAddress(), receivePacket23.getPort());
+
+        System.out.println( "Scheduler: Sending packet:");
+        System.out.println("To host: " + sendPacket.getAddress());
+        System.out.println("Destination host port: " + sendPacket.getPort());
+        int len = sendPacket.getLength();
+        System.out.println("Length: " + len);
+        System.out.print("Containing: ");
+        System.out.println(new String(sendPacket.getData(),0,len));
+        System.out.println();
+
+        // Sends the DatagramPacket to the Floor
+        try {
+            sendAndReceiveSocket.send(sendPacket);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        System.out.println("Scheduler: packet sent to Floor");
+        for (int i = 0; i < data.length; i++) {
+            data[i] = 0;
+        }
+    }
+
+    public void translateStringInstruction(String instruction) {
+        // String format: InputData [currentTime=16:48:10.0, floor=6, isDirectionUp=false, car button=3]: true
+
+        InputData request;
+        int currentTime;
+        int floor;
+        boolean isDirectionUp;
+        int carButton;
+        boolean lastRequest;
+        Pattern pattern = Pattern.compile("\\[currentTime=(\\d+:\\d+:\\d+\\.\\d+), floor=(\\d+), isDirectionUp=(\\w+), car button=(\\d+)\\]: (\\w+)");
+        Matcher matcher = pattern.matcher(instruction);
+        LocalTime time;
+        
+        //parse through the pattern to extract data for the given request 
+        if (matcher.find()) { //TODO: add try-catch around this parsing
+            time = LocalTime.parse((matcher.group(1)));
+            currentTime = time.get(ChronoField.MILLI_OF_DAY);
+            floor = Integer.parseInt(matcher.group(2));
+            isDirectionUp = Boolean.parseBoolean(matcher.group(3));
+            carButton = Integer.parseInt(matcher.group(4));
+            lastRequest =  Boolean.parseBoolean(matcher.group(5));
+
+            request = new InputData(currentTime, floor, isDirectionUp, carButton);
+            
+            //Add request to elevatorQueue
+            this.floorQueues.get(request.getFloor()).add(request); // adds request to corresponding floor queue
+            this.requestQueue.add(request); // adds request to main request queue
+            this.noMoreRequests = lastRequest;
+        }
+    }
+
+    /**
     * @author Nathan MacDiarmid 101098993
     * Closes the open sockets when program ends
     */
@@ -511,16 +567,16 @@ public class Scheduler {
      * @param args
      */
     public static void main(String args[]) {
-        Scheduler scheduler = new Scheduler();
+        Scheduler scheduler = new Scheduler(3);
         for (int i = 0; i < 3; i++) {
-            scheduler.receiveFromFloor();
+            scheduler.receiveInstructionFromFloor();
             scheduler.sendFloorAcknowledgement();
             scheduler.receiveElevatorRequest();
             scheduler.sendToElevator();
             scheduler.receiveFromElevator();
             scheduler.sendElevatorAcknowledgement();
             scheduler.receiveFloorRequest();
-            scheduler.sendToFloor();
+            scheduler.sendStatusToFloor();
         }
         scheduler.closeSockets();
     }

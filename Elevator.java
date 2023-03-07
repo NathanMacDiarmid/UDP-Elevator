@@ -56,7 +56,8 @@ public class Elevator implements Runnable {
      * 
      * @param scheduler the Scheduler instance that needs to be passed (Box class)
      */
-    public Elevator(Scheduler scheduler) {
+    public Elevator(Scheduler scheduler, int startFloor) { //add startFloor to the constructor
+        this.currentFloor = startFloor;
         this.scheduler = scheduler;
         this.requestQueue = new ArrayList<InputData>();
         try {
@@ -162,6 +163,76 @@ public class Elevator implements Runnable {
     /**
     * @author Nathan MacDiarmid 101098993
     * @author Amanda Piazza 101143004
+    * Sends the request for the data that is held by the Scheduler
+    */
+    public void sendRequest() {
+        // Prepares the message to be sent by forming a byte array
+        String message = "Can I get the deats?";
+        byte[] msg = message.getBytes();
+
+        System.out.println("Elevator: sending a packet containing: " + message);
+
+        // Creates the DatagramPacket to be sent to port 23
+        try {
+            sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), 69);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        System.out.println("To host: " + sendPacket.getAddress());
+        System.out.println("Destination host port: " + sendPacket.getPort());
+        int len = sendPacket.getLength();
+        System.out.println("Length: " + len);
+
+        // Sends the DatagramPacket over port 23
+        try {
+            sendAndReceiveSocket.send(sendPacket);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        System.out.println("Elevator: Request sent.\n");
+ }
+
+ /**
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
+    * Receive method for Elevator receives the message
+    * from wherever the message was sent from
+    */
+    public void receiveInstruction() {
+        // Initializes the receive DatagramPacket
+        receivePacket = new DatagramPacket(data, data.length);
+        System.out.println("Elevator: Waiting for Packet.\n");
+
+        // Receives the DatagramPacket
+        try {        
+            System.out.println("Waiting...");
+            sendAndReceiveSocket.receive(receivePacket);
+        } catch (IOException e) {
+            System.out.print("IO Exception: likely:");
+            System.out.println("Receive Socket Timed Out.\n" + e);
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        System.out.println("Elevator: Packet received:");
+        System.out.println("From host: " + receivePacket.getAddress());
+        System.out.println("Host port: " + receivePacket.getPort());
+        int len = receivePacket.getLength();
+        System.out.println("Length: " + len);
+        System.out.print("Containing: " );
+
+        String received = new String(data,0,len);   
+        System.out.println(received);
+        System.out.println();
+    }
+
+    /**
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
     * Send method for the Elevator sends the emoji message
     * back to wherever the message received came from
     */
@@ -211,76 +282,6 @@ public class Elevator implements Runnable {
     /**
     * @author Nathan MacDiarmid 101098993
     * @author Amanda Piazza 101143004
-    * Sends the request for the data that is held by the Scheduler
-    */
-    public void sendRequest() {
-        // Prepares the message to be sent by forming a byte array
-        String message = "Can I get the deats?";
-        byte[] msg = message.getBytes();
-
-        System.out.println("Elevator: sending a packet containing: " + message);
-
-        // Creates the DatagramPacket to be sent to port 23
-        try {
-            sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), 69);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        System.out.println("To host: " + sendPacket.getAddress());
-        System.out.println("Destination host port: " + sendPacket.getPort());
-        int len = sendPacket.getLength();
-        System.out.println("Length: " + len);
-
-        // Sends the DatagramPacket over port 23
-        try {
-            sendAndReceiveSocket.send(sendPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        System.out.println("Elevator: Request sent.\n");
- }
-
-   /**
-    * @author Nathan MacDiarmid 101098993
-    * @author Amanda Piazza 101143004
-    * Receive method for Elevator receives the message
-    * from wherever the message was sent from
-    */
-    public void receiveInstruction() {
-        // Initializes the receive DatagramPacket
-        receivePacket = new DatagramPacket(data, data.length);
-        System.out.println("Elevator: Waiting for Packet.\n");
-
-        // Receives the DatagramPacket
-        try {        
-            System.out.println("Waiting...");
-            sendAndReceiveSocket.receive(receivePacket);
-        } catch (IOException e) {
-            System.out.print("IO Exception: likely:");
-            System.out.println("Receive Socket Timed Out.\n" + e);
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        System.out.println("Elevator: Packet received:");
-        System.out.println("From host: " + receivePacket.getAddress());
-        System.out.println("Host port: " + receivePacket.getPort());
-        int len = receivePacket.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing: " );
-
-        String received = new String(data,0,len);   
-        System.out.println(received);
-        System.out.println();
-    }
-
-    /**
-    * @author Nathan MacDiarmid 101098993
-    * @author Amanda Piazza 101143004
     * Receives the acknowledgement from the Scheduler that it has received the message
     * and accepted the data.
     */
@@ -323,7 +324,7 @@ public class Elevator implements Runnable {
      * @param args
      */
     public static void main(String args[]) {
-        Elevator elevator = new Elevator(null);
+        Elevator elevator = new Elevator(null, 3);
         for (int i = 0; i < 3; i++) {
             elevator.sendRequest();
             elevator.receiveInstruction();

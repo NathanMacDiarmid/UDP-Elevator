@@ -16,7 +16,6 @@ Floor.java accepts events from InputData.java. Each event consists of the curren
    */ 
 public class Floor implements Runnable {
 
-    private Scheduler scheduler;
     // All requests will be stored in this sorted ArrayList
     private ArrayList<InputData> elevatorQueue;
     private boolean requestUpButton;
@@ -34,8 +33,7 @@ public class Floor implements Runnable {
      * @param scheduler the Scheduler that is used as the middle man (Box class)
      * Also initializes {@link #elevatorQueue} ArrayList
      */
-    public Floor(Scheduler scheduler) {
-        this.scheduler = scheduler;
+    public Floor() {
         this.elevatorQueue = new ArrayList<>();
         
         // Initializes the send and receive socket for the Floor
@@ -258,7 +256,14 @@ public class Floor implements Runnable {
                 }
                 System.out.println("Floor: Someone on floor " + elevatorQueue.get(0).getFloor() + " has pressed the "
                         + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on");
-                scheduler.putFloorRequest(elevatorQueue.get(0), lastRequest);
+                this.sendInstruction(getElevatorQueue().get(0), lastRequest);
+                this.receiveAcknowledgement();
+
+                // TODO after implementing communication between floor and elevators
+                // Check these two methods to make sure they actually work properly
+                this.sendHasElevatorArrived();
+                this.receiveStatus();
+
                 elevatorQueue.remove(0);
             }
         }
@@ -272,9 +277,10 @@ public class Floor implements Runnable {
     * @param request the InputData request that holds request information
     * @param lastRequest the last request in the elevatorQueue, boolean
     */
-    public void sendInstruction(InputData request, boolean lastRequest) {
+    public void sendInstruction(InputData request, Boolean lastRequest) {
         // Prepares the message to be sent by forming a byte array
         String stringReq = request.toString();
+        stringReq = stringReq + ": " + lastRequest;
         byte[] msg = stringReq.getBytes();
         System.out.println("Floor: sending a packet containing: " + stringReq);
 
@@ -304,9 +310,40 @@ public class Floor implements Runnable {
     /**
     * @author Nathan MacDiarmid 101098993
     * @author Amanda Piazza 101143004
+    * Receives the acknowledgement from the Scheduler that it has received the message
+    * and accepted the data.
+    */
+    public void receiveAcknowledgement() {
+        // Prepares the byte array for arrival
+        // It is only of length 40 because the host only sends a byte
+        // array of 40 in return ("The host has accepted the message.")
+        byte data[] = new byte[40];
+        receivePacket = new DatagramPacket(data, data.length);
+
+        // Receives the DatagramPacket on the send and receive socket
+        try {
+            sendReceiveSocket.receive(receivePacket);
+        } catch(IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        System.out.println("Floor: Packet received:");
+        System.out.println("From host: " + receivePacket.getAddress());
+        System.out.println("Host port: " + receivePacket.getPort());
+        int len = receivePacket.getLength();
+        System.out.println("Length: " + len);
+        System.out.print("Containing: ");
+        String received = new String(data,0,len);   
+        System.out.println(received);
+        System.out.println();
+    }
+
+    /**
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
     * Sends the request for the data that is held by the Host
     */
-    public void sendRequest() {
+    public void sendHasElevatorArrived() {
         // Prepares the message to be sent by forming a byte array
         String message = "Can I get the deats?";
         byte[] msg = message.getBytes();
@@ -372,37 +409,6 @@ public class Floor implements Runnable {
     /**
     * @author Nathan MacDiarmid 101098993
     * @author Amanda Piazza 101143004
-    * Receives the acknowledgement from the Scheduler that it has received the message
-    * and accepted the data.
-    */
-    public void receiveAcknowledgement() {
-        // Prepares the byte array for arrival
-        // It is only of length 40 because the host only sends a byte
-        // array of 40 in return ("The host has accepted the message.")
-        byte data[] = new byte[40];
-        receivePacket = new DatagramPacket(data, data.length);
-
-        // Receives the DatagramPacket on the send and receive socket
-        try {
-            sendReceiveSocket.receive(receivePacket);
-        } catch(IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        System.out.println("Floor: Packet received:");
-        System.out.println("From host: " + receivePacket.getAddress());
-        System.out.println("Host port: " + receivePacket.getPort());
-        int len = receivePacket.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing: ");
-        String received = new String(data,0,len);   
-        System.out.println(received);
-        System.out.println();
-    }
-
-    /**
-    * @author Nathan MacDiarmid 101098993
-    * @author Amanda Piazza 101143004
     * Closes the open sockets when program ends
     */
     public void closeSocket() {
@@ -415,14 +421,9 @@ public class Floor implements Runnable {
      * @param args
      */
     public static void main(String args[]) {
-        Floor floor = new Floor(null);
+        Floor floor = new Floor();
         floor.readData("data.txt");
-        for (int i = 0; i < floor.getElevatorQueue().size(); i++) {
-            floor.sendInstruction(floor.getElevatorQueue().get(i), false);
-            floor.receiveAcknowledgement();
-            floor.sendRequest();
-            floor.receiveStatus();
-        }
+        floor.initiateFloor();
         floor.closeSocket();
     }
 }
