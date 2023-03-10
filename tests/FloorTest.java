@@ -1,9 +1,15 @@
+package tests;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import src.Elevator;
+import src.Floor;
+import src.InputData;
+import src.Scheduler;
 
 import java.util.ArrayList;
 
@@ -16,12 +22,10 @@ public class FloorTest {
 
     @BeforeEach
     public void Setup() {
-        scheduler = new Scheduler();
-        elevator = new Elevator(scheduler);
-        floor = new Floor(scheduler);
-        floorThread = new Thread(floor, "floor");
-        elevatorThread = new Thread(elevator, "elevator1");
-        scheduler = new Scheduler();
+        scheduler = new Scheduler(2);
+        elevator = new Elevator(1,2,"up");
+        elevator = new Elevator(1,2,"down");
+        floor = new Floor();
 
     }
 
