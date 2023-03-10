@@ -4,22 +4,30 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.time.LocalTime;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.Iterator;
 /**
  * This class represents the Elevator sub-system
  * It moves between floors based on instructions passed from data.txt
  */
-public class Elevator implements Runnable {
+public class Elevator {
     private int currentFloor = 0;
-    private Scheduler scheduler;
+    private int elevatorNum = 0;
+    private int numOfPeople = 0;
+    private String direction = null;
+    private int numOfPeopleServiced = 0;
     private Boolean motorMoving;
     private Boolean doorOpen;
     private DatagramPacket sendPacket, receivePacket;
     private DatagramSocket sendAndReceiveSocket;
-    private byte[] data = new byte[100];
+    private boolean firstRequest = true;
+    private byte[] data = new byte[250];
 
     /* requestQueue is used as priority queue of requests */
     private ArrayList<InputData> requestQueue;
@@ -50,15 +58,33 @@ public class Elevator implements Runnable {
             put(7, false);
         }
     };
- 
+
+    /* floorQueue is to keep track of people waiting for this elevator on each floor */
+    private Map<Integer, ArrayList<InputData>> floorQueues = new HashMap<Integer, ArrayList<InputData>>() {
+        {
+            put(1, new ArrayList<InputData>());
+            put(2, new ArrayList<InputData>());
+            put(3, new ArrayList<InputData>());
+            put(4, new ArrayList<InputData>());
+            put(5, new ArrayList<InputData>());
+            put(6, new ArrayList<InputData>());
+            put(7, new ArrayList<InputData>());
+        }
+    };
+
+    /* elevatorQueue is the queue of requests that are currently in this elevator */
+    private ArrayList<InputData> elevatorQueue; 
+
+    
     /**
      * Default constructor for Elevator
      * 
      * @param scheduler the Scheduler instance that needs to be passed (Box class)
      */
-    public Elevator(Scheduler scheduler, int startFloor) { //add startFloor to the constructor
+    public Elevator(int elevatorNum, int startFloor, String direction) { 
+        this.elevatorNum = elevatorNum;
         this.currentFloor = startFloor;
-        this.scheduler = scheduler;
+        this.direction = direction;
         this.requestQueue = new ArrayList<InputData>();
         try {
             this.sendAndReceiveSocket = new DatagramSocket();
@@ -96,6 +122,71 @@ public class Elevator implements Runnable {
     public Boolean getDoorOpen() {
         return doorOpen;
     }
+
+    /**
+     * Moves the elevator from one floor to another while handling multiple requests
+     * @param queue the queue of people to get off the elevator passed from elevator
+     * @param currentFloor the current floor passed from the elevator
+     * @return the current floor incremented by 1 lower or higher, depending on request
+     * @author Juanita Rodelo 101141857
+     * @author Matthew Belanger 101144323
+     * @author Amanda Piazza 101143004
+     */
+    public int moveElevator() {
+        boolean reachedDestination = false;
+        System.out.println("Elevator:  queues:" + requestQueue.toString());
+
+        //if the floor that the elevator is currently on has passengers waiting, pick them up
+        if ((currentFloor != 0) && (this.floorQueues.size() != 0)) {
+            //TODO GOING IN move at wrong spot
+            //TODO FIRST THING:::::: floor queue is making elevator queue null which is causing error on 142 in addAll
+            System.out.println("Elevator: there are people waiting for the elevator on this floor: " + currentFloor + " -> notfiy elevator to open doors ");
+            this.elevatorQueue.addAll(this.floorQueues.get(currentFloor)); //this adds all requests to current elevator
+            this.floorQueues.get(currentFloor).removeAll(elevatorQueue); //this removes all floor requests from current floor because passenger(s) have entered elevator
+            return currentFloor; //do not move elevator
+        }
+        
+        // next if takes care of the situation where the elevator has not picked up ANY passenger(s)
+        if (this.elevatorQueue.size() == 0){ //if the elevator has not picked anyone up, go to floor of first request
+            System.out.println("Scheduler: Elevator is empty");
+
+            if ((currentFloor < requestQueue.get(0).getFloor())) { //if elevator is below floor of first requset, move up, else move down
+                System.out.println("Scheduler: elevator is below initial floor of first request in queue -> moving up");
+                return currentFloor + 1; //move elevator up
+            } else { 
+                System.out.println("Scheduler: elevator is above initial floor of first request in queue -> moving down");
+                return currentFloor - 1; //move elevator down
+            }
+        } else { //else if elevator currently has passenger(s) in it that need to reach their destination floor
+
+            Iterator<InputData> iterator = this.elevatorQueue.iterator(); //go through the requests that are currently in the elevator and check if current floor is equal to any of the destination floors of passenger(s) in the elevator
+            while (iterator.hasNext()) {  
+                InputData currPassenger = iterator.next();
+
+                if (currentFloor == currPassenger.getCarRequest()) {
+                    System.out.println("Scheduler: elevator is at the destination of a passenger in the elevator -> notfiy elevator to open doors");
+                    reachedDestination = true;
+                    iterator.remove(); //remove from elevator queue because passenger left
+                    requestQueue.removeIf(request -> (request == currPassenger)); //remove from general main queue because passenger left
+                }
+            }
+
+            if (reachedDestination) {
+                return currentFloor; //do not move to signal elevator to open/close doors
+            }
+
+            if (currentFloor > elevatorQueue.get(0).getCarRequest()) { //if elevator is above floor of the the destination of the first request, move down, else move up
+                System.out.println("Scheduler: elevator is above destination floor of first request in priority queue -> moving down");
+                return currentFloor - 1; //move elevator down
+            } else {
+                System.out.println("Scheduler: elevator is below destination floor of first request in priority queue -> moving up");
+                return currentFloor + 1; //move elevator up
+            }
+
+        }
+    }
+    
+    
   
     /**
      * This makes the program sleep for a provided duration of time
@@ -110,54 +201,66 @@ public class Elevator implements Runnable {
         }
     }
   
-    @Override
+  // run() commented out, it is no longer needed
+    // @Override
     /**
      * The run method for the Elevator class is inherited from the
      * Runnable interface. It runs the Thread when .start() is used
      * @author Nathan MacDiarmid 101098993
      * @author Juanita Rodelo 101141857
      */
-    public void run() {
-        String currentThreadName = Thread.currentThread().getName();
-        Boolean noMoreRequestsComing = false;
-        int oldCurrentFloor; // this keeps track of the previous floor visited by elevator
-        System.out.println(currentThreadName + ": Current floor is: " + this.currentFloor + "\n");
+    // public void run() {
+    //     String currentThreadName = Thread.currentThread().getName();
+    //     Boolean noMoreRequestsComing = false;
+    //     int oldCurrentFloor; // this keeps track of the previous floor visited by elevator
+    //     System.out.println(currentThreadName + ": Current floor is: " + this.currentFloor + "\n");
 
-        while (true) {
-            oldCurrentFloor = this.currentFloor;
+    //     while (true) {
+    //         oldCurrentFloor = this.currentFloor;
 
-            if (!noMoreRequestsComing) { // if there are more requests to grab
+    //         if (!noMoreRequestsComing) { // if there are more requests to grab
 
-                Map<InputData, Boolean> request = scheduler.getFloorRequest(); // grab them
-                for (InputData r : request.keySet()) {
-                    requestQueue.add(r);
-                    noMoreRequestsComing = request.get(r);
-                }
+    //             Map<InputData, Boolean> request = scheduler.getFloorRequest(); // grab them
+    //             for (InputData r : request.keySet()) {
+    //                 requestQueue.add(r);
+    //                 noMoreRequestsComing = request.get(r);
+    //             }
 
-            }
+    //         }
 
-            if (requestQueue.size() > 0) { // if there are currently requests to service
+    //         if (requestQueue.size() > 0) { // if there are currently requests to service
 
-                // ask scheduler to notify elevator when it has arrived at destination floor and/or picked someone up along the way
-                this.currentFloor = scheduler.moveElevator(requestQueue, this.currentFloor);
+    //             // ask scheduler to notify elevator when it has arrived at destination floor and/or picked someone up along the way
+    //             this.currentFloor = scheduler.moveElevator(requestQueue, this.currentFloor);
 
-                if (this.currentFloor == oldCurrentFloor) { // if oldCurrentFloor is equal to new current floor, elevator did not move
-                    setMotorMoving(false);
-                    System.out.println(currentThreadName + ": Motor stopped moving");
-                    setDoorOpen(true);
-                    System.out.println("Doors opening -> People are walking in/out");
-                    this.sleep(2700); //sleep for the amount of time it takes to open the doors.
-                    System.out.println("Doors are closing");
-                    setDoorOpen(false);
-                } else {
-                    setMotorMoving(true);
-                    System.out.println(currentThreadName + ": Motor moving");
-                }
+    //             if (this.currentFloor == oldCurrentFloor) { // if oldCurrentFloor is equal to new current floor, elevator did not move
+    //                 setMotorMoving(false);
+    //                 System.out.println(currentThreadName + ": Motor stopped moving");
+    //                 setDoorOpen(true);
+    //                 System.out.println("Doors opening -> People are walking in/out");
+    //                 this.sleep(2700); //sleep for the amount of time it takes to open the doors.
+    //                 System.out.println("Doors are closing");
+    //                 setDoorOpen(false);
+    //             } else {
+    //                 setMotorMoving(true);
+    //                 System.out.println(currentThreadName + ": Motor moving");
+    //             }
     
-                this.sleep(7970); //sleep for the amount of time it takes to move between floors.
-                System.out.println(currentThreadName + ": Current floor is now: " + this.currentFloor + "\n");
-            }
-        }
+    //             this.sleep(7970); //sleep for the amount of time it takes to move between floors.
+    //             System.out.println(currentThreadName + ": Current floor is now: " + this.currentFloor + "\n");
+    //         }
+    //     }
+   // }
+
+    public void stopElevator(){
+
+        setMotorMoving(false);
+        System.out.println("Elevator # " + elevatorNum + ": Motor stopped moving");
+        setDoorOpen(true);
+        System.out.println("Doors opening -> People are walking in/out");
+        this.sleep(2700); //sleep for the amount of time it takes to open the doors.
+        System.out.println("Doors are closing");
+        setDoorOpen(false);
     }
 
     /**
@@ -166,11 +269,40 @@ public class Elevator implements Runnable {
     * Sends the request for the data that is held by the Scheduler
     */
     public void sendRequest() {
-        // Prepares the message to be sent by forming a byte array
-        String message = "Can I get the deats?";
+        String message = null;
+        int oldCurrentFloor = currentFloor;
+        System.out.println("Elevator #" + elevatorNum + ": First request? " + firstRequest);
+        message = "Elevator car #: " + this.elevatorNum 
+                        + " Floor: " + this.currentFloor 
+                        + " Num of people: " + this.numOfPeople 
+                        + " Serviced: " + this.numOfPeopleServiced
+                        + " Direction: " + this.direction;
+        /* 
+        if(firstRequest){
+            // Prepares the message to be sent by forming a byte array
+            message = "Elevator car #: " + this.elevatorNum 
+                        + " Floor: " + this.currentFloor 
+                        + " Num of people: " + this.numOfPeople 
+                        + " Serviced: " + this.numOfPeopleServiced;
+        }else{
+            currentFloor = moveElevator();
+
+            //If elevator didn't move, stop motor and open doors
+            if(oldCurrentFloor == currentFloor){
+                stopElevator();
+            }else{
+                message = "Elevator car #: " + elevatorNum 
+                        + " Floor: " + currentFloor 
+                        + " Num of people: " + numOfPeople 
+                        + " Serviced: " + numOfPeopleServiced;
+            }
+        
+        }
+        */
+        
         byte[] msg = message.getBytes();
 
-        System.out.println("Elevator: sending a packet containing: " + message);
+        System.out.println("Elevator car #"+ elevatorNum + " is sending a packet containing: " + message);
 
         // Creates the DatagramPacket to be sent to port 23
         try {
@@ -203,13 +335,13 @@ public class Elevator implements Runnable {
     * from wherever the message was sent from
     */
     public void receiveInstruction() {
+        int len;
         // Initializes the receive DatagramPacket
         receivePacket = new DatagramPacket(data, data.length);
-        System.out.println("Elevator: Waiting for Packet.\n");
+        System.out.println("Elevator " + elevatorNum +  ": Waiting for Packet.");
 
         // Receives the DatagramPacket
         try {        
-            System.out.println("Waiting...");
             sendAndReceiveSocket.receive(receivePacket);
         } catch (IOException e) {
             System.out.print("IO Exception: likely:");
@@ -218,16 +350,56 @@ public class Elevator implements Runnable {
             System.exit(1);
         }
 
-        System.out.println("Elevator: Packet received:");
+        System.out.println("Elevator: Packet received in elevator:" + elevatorNum);
         System.out.println("From host: " + receivePacket.getAddress());
         System.out.println("Host port: " + receivePacket.getPort());
-        int len = receivePacket.getLength();
+        len = receivePacket.getLength();
         System.out.println("Length: " + len);
         System.out.print("Containing: " );
-
         String received = new String(data,0,len);   
         System.out.println(received);
-        System.out.println();
+        
+        saveReceivedMessage(received);
+        System.out.println("Elevator - requestQueue: " + requestQueue.toString());
+        System.out.println("Elevator - floorQueues: " + requestQueue.toString() + "\n");
+
+        
+    }
+
+    public void saveReceivedMessage(String message){
+        InputData request;
+        int currentTime;
+        int floor;
+        boolean isDirectionUp;
+        int carButton;
+        boolean lastRequest;
+        Pattern pattern = Pattern.compile("\\[currentTime=(\\d+:\\d+:\\d+\\.\\d+), floor=(\\d+), isDirectionUp=(\\w+), car button=(\\d+)\\]: (\\w+)");
+        Matcher matcher = pattern.matcher(message);
+        LocalTime time;
+
+        //If message received from scheduler is not "no current requests", then it holds a request and we must save all input data info
+        if(!message.equals("No current requests")){
+
+            firstRequest = false; //if we have received a request, firstRequest = false
+            if (matcher.find()) { //TODO: add try-catch around this parsing
+                time = LocalTime.parse((matcher.group(1)));
+                currentTime = time.get(ChronoField.MILLI_OF_DAY);
+                floor = Integer.parseInt(matcher.group(2));
+                isDirectionUp = Boolean.parseBoolean(matcher.group(3));
+                carButton = Integer.parseInt(matcher.group(4));
+                lastRequest =  Boolean.parseBoolean(matcher.group(5));
+
+                request = new InputData(currentTime, floor, isDirectionUp, carButton);
+                
+                //Add request to elevatorQueue
+                this.floorQueues.get(request.getFloor()).add(request); // adds request to corresponding floor queue
+                this.requestQueue.add(request); // adds request to main request queue
+                this.numOfPeople ++;
+            
+            }
+        
+        }
+        
     }
 
     /**
@@ -324,13 +496,18 @@ public class Elevator implements Runnable {
      * @param args
      */
     public static void main(String args[]) {
-        Elevator elevator = new Elevator(null, 3);
-        for (int i = 0; i < 3; i++) {
-            elevator.sendRequest();
-            elevator.receiveInstruction();
-            elevator.sendSatus();
-            elevator.receiveAcknowledgement();
+        Elevator elevator1 = new Elevator(1, 2, "up");
+        Elevator elevator2 = new Elevator(2, 4, "up");
+        
+        for (int i = 0; i < 4; i++) { //TODO: make an infinite while loop
+            elevator1.sendRequest();
+            elevator2.sendRequest();
+            elevator1.receiveInstruction();
+            elevator2.receiveInstruction();
+            //elevator.sendSatus();
+            //elevator.receiveAcknowledgement();
         }
-        elevator.closeSocket();
+        elevator1.closeSocket();
+        elevator2.closeSocket();
     }
 }
