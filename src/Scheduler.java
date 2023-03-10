@@ -36,6 +36,15 @@ public class Scheduler {
     private int numOfPeople = 0;
 
     private DatagramPacket sendPacket, receivePacket23, receivePacket69;
+    
+    public DatagramPacket getReceivePacket23() {
+        return receivePacket23;
+    }
+
+    public DatagramSocket getReceiveSocket23() {
+        return receiveSocket23;
+    }
+
     private DatagramSocket sendAndReceiveSocket, receiveSocket23, receiveSocket69;
     private byte[] data = new byte[100];
     private int numOfCars;
