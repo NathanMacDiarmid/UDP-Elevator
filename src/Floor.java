@@ -29,6 +29,18 @@ public class Floor  {
     private DatagramPacket sendPacket, receivePacket;
     private DatagramSocket sendReceiveSocket;
 
+    public DatagramPacket getSendPacket() {
+        return sendPacket;
+    }
+
+    public DatagramPacket getReceivePacket() {
+        return receivePacket;
+    }
+
+    public DatagramSocket getSendReceiveSocket() {
+        return sendReceiveSocket;
+    }
+
     /**
      * Default constructor for Floor class
      * @param scheduler the Scheduler that is used as the middle man (Box class)
