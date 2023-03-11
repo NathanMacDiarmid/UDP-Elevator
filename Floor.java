@@ -1,4 +1,4 @@
-package src;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -28,18 +28,6 @@ public class Floor  {
     // Datagram stuff for sending and receiving over UDP
     private DatagramPacket sendPacket, receivePacket;
     private DatagramSocket sendReceiveSocket;
-
-    public DatagramPacket getSendPacket() {
-        return sendPacket;
-    }
-
-    public DatagramPacket getReceivePacket() {
-        return receivePacket;
-    }
-
-    public DatagramSocket getSendReceiveSocket() {
-        return sendReceiveSocket;
-    }
 
     /**
      * Default constructor for Floor class
