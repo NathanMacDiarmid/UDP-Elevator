@@ -3,8 +3,10 @@ Elevator Control System and Simulator
 
 Iteration 1 simulates a elevator using java threads represented with string prompts in the terminal. 
 Users are notified when the elevator has finished a request/move and where that request is. 
+
 Iteration 2 has the goal of adding the state machines for the scheduler and elevator subsystems assuming that
 there is only one elevator. 
+
 Iteration 3 has the goal of adding multiple elvators to the program. The scheduler now has to choose the best
 elevator to receive the incoming instruction to execute based on direction and distance from floor request.
 
