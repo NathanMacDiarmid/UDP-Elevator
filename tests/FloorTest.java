@@ -2,14 +2,12 @@ package tests;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import Elevator;
-import Floor;
-import InputData;
-import Scheduler;
+import src.Floor;
+import src.InputData;
+import src.Scheduler;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -19,16 +17,11 @@ import java.util.ArrayList;
 
 public class FloorTest {
     private Scheduler scheduler;
-    private Thread elevatorThread;
-    private Thread floorThread;
-    private Elevator elevator;
     private Floor floor;
 
     @BeforeEach
     public void Setup() {
         scheduler = new Scheduler(2);
-        elevator = new Elevator(1,2,"up");
-        elevator = new Elevator(1,2,"down");
         floor = new Floor();
 
     }

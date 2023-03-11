@@ -1,3 +1,5 @@
+package src;
+import java.io.DataInput;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -376,7 +378,7 @@ public class Scheduler {
             
             // Initializes the DatagramPacket to be sent to the server
             sendPacket = new DatagramPacket(msgToSend, msgToSend.length,
-            receivePacket23.getAddress(), portOfElevator);
+            receivePacket69.getAddress(), portOfElevator);
 
             System.out.println( "Scheduler: Sending packet:");
             System.out.println("To host: " + sendPacket.getAddress() + ", on port: " + portOfElevator);
@@ -542,6 +544,21 @@ public class Scheduler {
         sendAndReceiveSocket.close();
         receiveSocket23.close();
         receiveSocket69.close();
+    }
+
+    /**
+     * THE FOLLOWING GETTERS AND SETTERS ARE FOR TESTING PURPOSES ONLY
+     */
+    public DatagramPacket getReceivePacket23(){
+        return this.receivePacket23;
+    }
+
+    public DatagramPacket getReceivePacket69(){
+        return this.receivePacket69;
+    }
+
+    public void elevatorAndTheirPortsPut(int i, int elevatorPort){
+        this.elevatorAndTheirPorts.put(i, elevatorPort);
     }
 
     /**

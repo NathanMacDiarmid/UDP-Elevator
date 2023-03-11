@@ -1,3 +1,4 @@
+package src;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -372,6 +373,14 @@ public class Elevator {
 
     public int getSizeOfRequestQueue(){
         return requestQueue.size();
+    }
+
+
+    /**
+     * THE FOLLOWING GETTERS AND SETTERS ARE FOR TESTING PURPOSES ONLY
+     */
+    public DatagramPacket getReceivePacket(){
+        return this.receivePacket;
     }
 
     /**

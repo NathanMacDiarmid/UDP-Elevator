@@ -1,3 +1,4 @@
+package src;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -396,6 +397,17 @@ public class Floor  {
     */
     public void closeSocket() {
         sendReceiveSocket.close();
+    }
+
+    /**
+     * THE FOLLOWING GETTERS AND SETTERS ARE FOR TESTING PURPOSES ONLY
+     */
+    public DatagramPacket getReceivePacket(){
+        return this.receivePacket;
+    }
+
+    public DatagramPacket getSendPacket(){
+        return this.sendPacket;
     }
 
     /**
