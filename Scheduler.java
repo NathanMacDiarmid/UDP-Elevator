@@ -7,7 +7,6 @@ import java.time.temporal.ChronoField;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class Scheduler {
 
@@ -20,6 +19,7 @@ public class Scheduler {
 
     /* noMoreRequests tracks when the floor subsysytem will send last request */
     private boolean noMoreRequests;
+    private boolean thisProjectSucks = false;
 
     /** currentFloor tracks where the elevator is */
     private int currentFloor;
@@ -29,9 +29,6 @@ public class Scheduler {
 
     /* elevatorAndTheirPorts used to map Elevator car number with their port*/
     Map<Integer, Integer> elevatorAndTheirPorts = new HashMap<Integer, Integer>();
-
-    /* numOfPeople is number of requests not fully servcied yet (either waiting to get in elevator or still in elevator) */
-    private int numOfPeople = 0;
 
     private DatagramPacket sendPacket, receivePacket23, receivePacket69;
     private DatagramSocket sendAndReceiveSocket, receiveSocket23, receiveSocket69;
@@ -111,78 +108,11 @@ public class Scheduler {
     /**
      * Getter method used for testing purposes
      * 
-     * @return The queue for each floor
-     * @author Michael Kyrollos
-     */
-    // public Map<Integer, ArrayList<InputData>> getFloorQueues() {
-    //     return floorQueues;
-    // }
-
-    /**
-     * Getter method used for testing purposes
-     * 
      * @return True if there are no requests left.
      * @author Michael Kyrollos
      */
     public boolean isNoMoreRequests() {
         return noMoreRequests;
-    }
-
-    /**
-     * getFloorRequest returns two values, the request sent by the floor subsystem,
-     * and whether that request is the last one
-     * @author Juanita Rodelo 101141857
-     * @author Nathan MacDiarmid 101098993
-     * @author Amanda Piazza 101143004
-     */
-    public synchronized Map<InputData, Boolean> getFloorRequest() {
-        while (queueInUse) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        InputData requestToGiveElevator = this.requestQueue.get(0);
-        this.requestQueue.remove(0);
-        queueInUse = true;
-        notifyAll();
-
-        Map<InputData, Boolean> returnVals = new HashMap<InputData, Boolean>() {
-            {
-                put(requestToGiveElevator, noMoreRequests);
-            }
-        };
-    
-        return returnVals;
-    }
-    
- 
-    /**
-     * The putter method for the Scheduler class puts the floor reqeuests that were
-     * passed from Floor into {@link Scheduler#currentFloor} and
-     * {@link Scheduler#nextFloor} respectfully
-     * @param elevatorQueue the first InputData instance in the list of
-     * commands that were passed from Floor that hold the
-     * current time, floor the elevator was requested on, floor 
-     * the elevator goes to, and whether the elevator is going up or down.
-     * @author Juanita Rodelo 101141857
-     * @author Nathan MacDiarmid 101098993
-     * @author Amanda Piazza 101143004
-     */
-    public synchronized void putFloorRequest(InputData elevatorIntstruction, boolean lastRequest) {
-        while (!queueInUse) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        //this.floorQueues.get(elevatorIntstruction.getFloor()).add(elevatorIntstruction); // adds request to corresponding floor queue
-        this.requestQueue.add(elevatorIntstruction); // adds request to main request queue
-        this.noMoreRequests = lastRequest;
-        queueInUse = false;
-        notifyAll();
     }
 
     /**
@@ -196,8 +126,7 @@ public class Scheduler {
         System.out.println("Scheduler: Waiting for Packet from Floor.");
 
         // Receives the DatagramPacket from the floor
-        try {        
-            //System.out.println("Waiting...");
+        try {
             receiveSocket23.receive(receivePacket23);
         } catch (IOException e) {
             System.out.print("IO Exception: likely:");
@@ -208,7 +137,6 @@ public class Scheduler {
 
         System.out.println("Scheduler: Packet received from Floor:");
         System.out.println("From host: " + receivePacket23.getAddress() + ", on port: " + receivePacket23.getPort());
-        //System.out.println("Host port: " + receivePacket23.getPort());
         int len = receivePacket23.getLength();
         System.out.println("Length: " + len);
         System.out.print("Containing: " );
@@ -276,7 +204,6 @@ public class Scheduler {
 
         System.out.println("Scheduler: Packet received from Elevator:");
         System.out.println("From host: " + receivePacket69.getAddress() + ", on port: " + receivePacket69.getPort());
-        //System.out.println("Host port: " + receivePacket69.getPort());
         int len = receivePacket69.getLength();
         System.out.println("Length: " + len);
         System.out.print("Containing: " );
@@ -293,7 +220,9 @@ public class Scheduler {
 
     /**
      * This method will save the message received from the elevators into the Map 'elevatorLocations'
-     * @param input
+     * @param input string received from floor
+     * @author Michael Kyrollos 101183521
+     * @author Amanda Piazza 101143004
      */
     public void saveElevatorStatus(String input) {
         // split by whitespace
@@ -304,7 +233,6 @@ public class Scheduler {
         int car = Integer.parseInt(tokens[3]);
         int floorNum = Integer.parseInt(tokens[5]);  
         int numPeople = Integer.parseInt(tokens[9].trim());
-        int numPeopleServiced = Integer.parseInt(tokens[11].trim());
         String direction = tokens[13]; 
         int directionValue;       
         if(direction.equals("down")){
@@ -318,13 +246,13 @@ public class Scheduler {
         this.elevatorsInfo.get(car).set(1, numPeople);  
         //set direction
         this.elevatorsInfo.get(car).set(2, directionValue);  
-        //Decrease number of people by the number of requests that have been serviced by this elevator
-        this.numOfPeople -= numPeopleServiced;
     }
 
     /**
      * getElevatorToSendRequest determines closest elevator (while ensuring all elevators hold roughly the same number of people)
      * @return returns the elevator # of the elevator to send request to
+     * @author Nathan MacDiarmid 101098993
+     * @author Matthew Belanger 101144323
      */
     public int getElevatorToSendRequest(){ 
         InputData currentRequest = this.requestQueue.get(0);
@@ -339,21 +267,17 @@ public class Scheduler {
         if(this.elevatorsInfo.get(1).get(2) == 1){ //if elevator is going up
             if(currentRequest.getIsDirectionUp()){ //if passenger of request is also going up
                 currentDirectionIsCorrect = true; //current elevator direction matches direction of requestt direction
-                //System.out.println("elevator 1 is going up, so is request");
             }
             else{
                 currentDirectionIsCorrect = false; //else car moving in different direction of request
-                //System.out.println("elevator 1 is going up, request is going down"); 
             }
         }
         else{ //elavator is going down
             if(currentRequest.getIsDirectionUp()){ //if passenger of request is going up
                 currentDirectionIsCorrect = false; 
-                //System.out.println("elevator 1 is going down, request is going up");
             }
             else{
                 currentDirectionIsCorrect = true; //current elevator direction matches direction of request
-                //System.out.println("elevator 1 is going down, so is request");
             }
         }
 
@@ -363,11 +287,9 @@ public class Scheduler {
             elevatorsDistanceDifference = this.elevatorsInfo.get(i).get(0) - currentRequest.getFloor();
             
             if (this.elevatorsInfo.get(i).get(2) == 1) { //if elevator is going up
-                directionIsUp = true;
-                //System.out.println("direction of car " + i + "is going " + directionIsUp);                
+                directionIsUp = true;                
             } else {
-                directionIsUp = false;
-                //System.out.println("direction of car " + i + "is going " + directionIsUp);   
+                directionIsUp = false; 
             }
 
             if (currentRequest.getIsDirectionUp() == directionIsUp) { //if direction of current request is up
@@ -379,9 +301,6 @@ public class Scheduler {
                     if (currentBestFloorDifference <= 0 && currentDirectionIsCorrect) {
                         //next elevator is closer to request
                         if (Math.abs(elevatorsDistanceDifference) < Math.abs(currentBestFloorDifference)) {
-                            //if (elevator.get(i).NumPeople < numPeople / 2 ){
-                            //   use this elevator(i) (update lines inside here)
-                            //}
                             closestElevatorNum = i; //update elevator to next elevator
                             currentBestFloorDifference = elevatorsDistanceDifference; 
                             currentDirectionIsCorrect = directionIsUp;
@@ -397,9 +316,6 @@ public class Scheduler {
                     if (currentBestFloorDifference >= 0 && currentDirectionIsCorrect) {
                         //next elevator is closer to request
                         if (Math.abs(elevatorsDistanceDifference) < Math.abs(currentBestFloorDifference)) {
-                            //if (elevator.get(i).NumPeople < numPeople / 2 ){
-                                //   use this elevator (update lines inside here)
-                            //}
                             closestElevatorNum = i; //update elevator to next elevator
                             currentBestFloorDifference = elevatorsDistanceDifference; 
                             currentDirectionIsCorrect = directionIsUp;
@@ -410,9 +326,6 @@ public class Scheduler {
                 if (!currentDirectionIsCorrect) {
                     //next elevator is closer to request
                     if (Math.abs(elevatorsDistanceDifference) < Math.abs(currentBestFloorDifference)) {
-                        //if (elevator.get(i).NumPeople < numPeople / 2 ){
-                            //   use this elevator (update lines inside here)
-                        //}
                         closestElevatorNum = i; //update elevator to next elevator
                         currentBestFloorDifference = elevatorsDistanceDifference; 
                         currentDirectionIsCorrect = directionIsUp;
@@ -435,7 +348,7 @@ public class Scheduler {
     */
     public void sendToElevators() {
         int elevatorToSendRequest = 0;
-        if(!noMoreRequests){
+        if(!thisProjectSucks){
             elevatorToSendRequest = getElevatorToSendRequest();
         }else{
             elevatorToSendRequest = -1; 
@@ -446,7 +359,6 @@ public class Scheduler {
         
         Set<Integer> elevatorNums = elevatorAndTheirPorts.keySet();
         Iterator<Integer> keyIterator = elevatorNums.iterator();
-        System.out.println("Scheduler: elevator port number map: " + elevatorAndTheirPorts);
         
         //Iterator through map that holds elevators and their ports
         while(keyIterator.hasNext()){
@@ -468,7 +380,6 @@ public class Scheduler {
 
             System.out.println( "Scheduler: Sending packet:");
             System.out.println("To host: " + sendPacket.getAddress() + ", on port: " + portOfElevator);
-            //System.out.println("Destination host port: " + portOfElevator);
             int len = sendPacket.getLength();
             System.out.println("Length: " + len);
             System.out.print("Containing: ");
@@ -488,12 +399,13 @@ public class Scheduler {
         for (int i = 0; i < data.length; i++) {
             data[i] = 0;
         }
+        this.thisProjectSucks = noMoreRequests;
     }
 
     /**
+    * Receive method for Scheduler that receives from the Elevator
     * @author Nathan MacDiarmid 101098993
     * @author Amanda Piazza 101143004
-    * Receive method for Scheduler that receives from the Elevator
     */
     public void receiveFromElevator() {
         // Initializes the receive DatagramPacket to be able to receive the message
@@ -509,11 +421,9 @@ public class Scheduler {
             System.out.println("Receive Socket Timed Out.\n" + e);
             e.printStackTrace();
             System.exit(1);
-        }
-        //TODO add elevator number  to received message 
+        } 
         System.out.println("Scheduler: Packet received from Elevator:");
         System.out.println("From host: " + receivePacket69.getAddress());
-        System.out.println("Host port: " + receivePacket69.getPort());
         int len = receivePacket69.getLength();
         System.out.println("Length: " + len);
         System.out.print("Containing: " );
@@ -562,7 +472,6 @@ public class Scheduler {
      * being sent to the Floor
      */
 
-     // TODO look at possibly removing this as we may not need to reply to Floor
      public void receiveFloorRequest() {
         // Initializes the DatagramPacket to be received from the Floor
         byte[] request = new byte[20];
@@ -582,7 +491,6 @@ public class Scheduler {
 
         System.out.println("Scheduler: Packet received from Floor:");
         System.out.println("From host: " + receivePacket23.getAddress());
-        System.out.println("Host port: " + receivePacket23.getPort());
         int len = receivePacket23.getLength();
         System.out.println("Length: " + len);
         System.out.print("Containing: " );
@@ -592,37 +500,10 @@ public class Scheduler {
     }
 
     /**
-     * @author Nathan MacDiarmid 101098993
-     * @author Amanda Piazza 101143004
-     * Send method for Scheduler that sends the message to the Floor
-     */
-    public void sendStatusToFloor() {
-        // Initializes the DatagramPacket to send to the Floor
-        sendPacket = new DatagramPacket(data, receivePacket69.getLength(),
-        receivePacket23.getAddress(), receivePacket23.getPort());
-
-        System.out.println( "Scheduler: Sending packet:");
-        System.out.println("To host: " + sendPacket.getAddress());
-        System.out.println("Destination host port: " + sendPacket.getPort());
-        int len = sendPacket.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing: ");
-        System.out.println(new String(sendPacket.getData(),0,len));
-
-        // Sends the DatagramPacket to the Floor
-        try {
-            sendAndReceiveSocket.send(sendPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        System.out.println("Scheduler: packet sent to Floor");
-        for (int i = 0; i < data.length; i++) {
-            data[i] = 0;
-        }
-    }
-
+    * translateStringInstruction parses the request coming from the floor
+    * @author Michael Kyrollos 101183521
+    * @author Amanda Piazza 101143004
+    */
     public void translateStringInstruction(String instruction) {
         // String format: InputData [currentTime=16:48:10.0, floor=6, isDirectionUp=false, car button=3]: true
 
@@ -637,7 +518,7 @@ public class Scheduler {
         LocalTime time;
         
         //parse through the pattern to extract data for the given request 
-        if (matcher.find()) { //TODO: add try-catch around this parsing
+        if (matcher.find()) {
             time = LocalTime.parse((matcher.group(1)));
             currentTime = time.get(ChronoField.MILLI_OF_DAY);
             floor = Integer.parseInt(matcher.group(2));
@@ -649,7 +530,6 @@ public class Scheduler {
             
             //Add request to elevatorQueue
             this.requestQueue.add(request); // adds request to main request queue
-            this.numOfPeople ++;
             this.noMoreRequests = lastRequest;
         }
     }
@@ -670,7 +550,6 @@ public class Scheduler {
      * @param args
      */
     public static void main(String args[]) {
-        //Map<Integer, Integer> elevatorAndTheirPorts = new HashMap<Integer, Integer>();
         int elevatorPort;
         Scheduler scheduler = new Scheduler(2);
         
@@ -678,11 +557,9 @@ public class Scheduler {
             // Check if request received is last request, if true stop receiving more instructions
             if(!scheduler.noMoreRequests){
                 scheduler.receiveInstructionFromFloor();
-                System.out.println("Scheduler: last request? " + scheduler.noMoreRequests);
                 scheduler.sendFloorAcknowledgement();
             }
             
-
             // Call receive requests method n times where n is the number of elevators
             for(int i = 1; i < scheduler.getNumOfCars() + 1; i++){
                 elevatorPort = scheduler.receiveElevatorRequest();
