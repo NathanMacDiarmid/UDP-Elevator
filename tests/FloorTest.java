@@ -6,10 +6,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import src.Elevator;
-import src.Floor;
-import src.InputData;
-import src.Scheduler;
+import Elevator;
+import Floor;
+import InputData;
+import Scheduler;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
