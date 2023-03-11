@@ -1,4 +1,4 @@
-package src;
+
 
 public class InputData implements Comparable<InputData> {
     // represents the time the request was sent
