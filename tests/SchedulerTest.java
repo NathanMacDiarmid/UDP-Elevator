@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import Elevator;
-import Floor;
-import InputData;
-import Scheduler;
+import src.Elevator;
+import src.Floor;
+import src.InputData;
+import src.Scheduler;
 
 import java.time.LocalTime;
 import java.time.temporal.ChronoField;
