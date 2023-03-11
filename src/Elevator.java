@@ -1,4 +1,4 @@
-
+package src;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -19,7 +19,6 @@ import java.util.Iterator;
  */
 public class Elevator {
     private int currentFloor = 0;
-    private boolean doneServicing = false;
     private int elevatorNum = 0;
     private int numOfPeople = 0;
     private String direction = null;
@@ -94,7 +93,6 @@ public class Elevator {
             e.printStackTrace();
             System.exit(1);
         }
-        this.elevatorQueue = new ArrayList<InputData>();
     }
 
     // The following methods are getters and setters for each of the attributes
@@ -136,50 +134,30 @@ public class Elevator {
      * @author Amanda Piazza 101143004
      */
     public int moveElevator() {
-        if(currentFloor == -1){
-            System.exit(0);
-        }
-        System.out.println("IN MOVE ELEVATOR");
-        int sizeBeforePickup = (elevatorQueue != null) ? elevatorQueue.size() : 0;//if null size is 0 
         boolean reachedDestination = false;
         System.out.println("Elevator:  queues:" + requestQueue.toString());
-        System.out.println("Elevator #" + elevatorNum + "is at floor " + currentFloor);
-        //System.out.println("The floor pickup request is at: " + this.floorQueues.get(currentFloor) + " WITH FLOOR: " + floorQueues.get(currentFloor).get(0).getCarRequest());
-        System.out.println("Elevator #" + elevatorNum + "has " + numOfPeople + " inside");
 
         //if the floor that the elevator is currently on has passengers waiting, pick them up
-        if ((currentFloor != 0) && (this.floorQueues.get(currentFloor).size() != 0)) {
+        if ((currentFloor != 0) && (this.floorQueues.size() != 0)) {
+            //TODO GOING IN move at wrong spot
+            //TODO FIRST THING:::::: floor queue is making elevator queue null which is causing error on 142 in addAll
             System.out.println("Elevator: there are people waiting for the elevator on this floor: " + currentFloor + " -> notfiy elevator to open doors ");
-            
             this.elevatorQueue.addAll(this.floorQueues.get(currentFloor)); //this adds all requests to current elevator
-            int sizeAfterPickup = elevatorQueue.size();
-            
-            numOfPeople += (sizeAfterPickup - sizeBeforePickup) ;
-            System.out.println("Number of people before:" + sizeBeforePickup + ", after: "+sizeAfterPickup);
-            System.out.println("Elevator #" + elevatorNum + "has " + numOfPeople + " inside");
-            
             this.floorQueues.get(currentFloor).removeAll(elevatorQueue); //this removes all floor requests from current floor because passenger(s) have entered elevator
             return currentFloor; //do not move elevator
         }
         
         // next if takes care of the situation where the elevator has not picked up ANY passenger(s)
         if (this.elevatorQueue.size() == 0){ //if the elevator has not picked anyone up, go to floor of first request
-            System.out.println("Scheduler: Elevator is empty -> we need to pick up passenger");
+            System.out.println("Scheduler: Elevator is empty");
 
-            try{
-                if ((currentFloor < requestQueue.get(0).getFloor())) { //if elevator is below floor of first requset, move up, else move down
-                    System.out.println("Scheduler: elevator is below initial floor of first request in queue -> moving up");
-                    direction = "up";
-                    return currentFloor + 1; //move elevator up
-                } else { 
-                    System.out.println("Scheduler: elevator is above initial floor of first request in queue -> moving down");
-                    direction = "down";
-                    return currentFloor - 1; //move elevator down
-                }
-            }catch(Exception e){
-                return -1;
+            if ((currentFloor < requestQueue.get(0).getFloor())) { //if elevator is below floor of first requset, move up, else move down
+                System.out.println("Scheduler: elevator is below initial floor of first request in queue -> moving up");
+                return currentFloor + 1; //move elevator up
+            } else { 
+                System.out.println("Scheduler: elevator is above initial floor of first request in queue -> moving down");
+                return currentFloor - 1; //move elevator down
             }
-           
         } else { //else if elevator currently has passenger(s) in it that need to reach their destination floor
 
             Iterator<InputData> iterator = this.elevatorQueue.iterator(); //go through the requests that are currently in the elevator and check if current floor is equal to any of the destination floors of passenger(s) in the elevator
@@ -187,12 +165,9 @@ public class Elevator {
                 InputData currPassenger = iterator.next();
 
                 if (currentFloor == currPassenger.getCarRequest()) {
-                    System.out.println("Elevator #" + elevatorNum + "has " + numOfPeople + " inside");
                     System.out.println("Scheduler: elevator is at the destination of a passenger in the elevator -> notfiy elevator to open doors");
                     reachedDestination = true;
                     iterator.remove(); //remove from elevator queue because passenger left
-                    
-                    numOfPeople --;
                     requestQueue.removeIf(request -> (request == currPassenger)); //remove from general main queue because passenger left
                 }
             }
@@ -203,17 +178,17 @@ public class Elevator {
 
             if (currentFloor > elevatorQueue.get(0).getCarRequest()) { //if elevator is above floor of the the destination of the first request, move down, else move up
                 System.out.println("Scheduler: elevator is above destination floor of first request in priority queue -> moving down");
-                direction = "down";
                 return currentFloor - 1; //move elevator down
             } else {
                 System.out.println("Scheduler: elevator is below destination floor of first request in priority queue -> moving up");
-                direction = "up";
                 return currentFloor + 1; //move elevator up
             }
 
         }
     }
     
+    
+  
     /**
      * This makes the program sleep for a provided duration of time
      * @param time in milliseconds (2000 is 2 seconds)
@@ -226,7 +201,57 @@ public class Elevator {
             e.printStackTrace();
         }
     }
+  
+  // run() commented out, it is no longer needed
+    // @Override
+    /**
+     * The run method for the Elevator class is inherited from the
+     * Runnable interface. It runs the Thread when .start() is used
+     * @author Nathan MacDiarmid 101098993
+     * @author Juanita Rodelo 101141857
+     */
+    // public void run() {
+    //     String currentThreadName = Thread.currentThread().getName();
+    //     Boolean noMoreRequestsComing = false;
+    //     int oldCurrentFloor; // this keeps track of the previous floor visited by elevator
+    //     System.out.println(currentThreadName + ": Current floor is: " + this.currentFloor + "\n");
 
+    //     while (true) {
+    //         oldCurrentFloor = this.currentFloor;
+
+    //         if (!noMoreRequestsComing) { // if there are more requests to grab
+
+    //             Map<InputData, Boolean> request = scheduler.getFloorRequest(); // grab them
+    //             for (InputData r : request.keySet()) {
+    //                 requestQueue.add(r);
+    //                 noMoreRequestsComing = request.get(r);
+    //             }
+
+    //         }
+
+    //         if (requestQueue.size() > 0) { // if there are currently requests to service
+
+    //             // ask scheduler to notify elevator when it has arrived at destination floor and/or picked someone up along the way
+    //             this.currentFloor = scheduler.moveElevator(requestQueue, this.currentFloor);
+
+    //             if (this.currentFloor == oldCurrentFloor) { // if oldCurrentFloor is equal to new current floor, elevator did not move
+    //                 setMotorMoving(false);
+    //                 System.out.println(currentThreadName + ": Motor stopped moving");
+    //                 setDoorOpen(true);
+    //                 System.out.println("Doors opening -> People are walking in/out");
+    //                 this.sleep(2700); //sleep for the amount of time it takes to open the doors.
+    //                 System.out.println("Doors are closing");
+    //                 setDoorOpen(false);
+    //             } else {
+    //                 setMotorMoving(true);
+    //                 System.out.println(currentThreadName + ": Motor moving");
+    //             }
+    
+    //             this.sleep(7970); //sleep for the amount of time it takes to move between floors.
+    //             System.out.println(currentThreadName + ": Current floor is now: " + this.currentFloor + "\n");
+    //         }
+    //     }
+   // }
 
     public void stopElevator(){
 
@@ -245,45 +270,40 @@ public class Elevator {
     * Sends the request for the data that is held by the Scheduler
     */
     public void sendRequest() {
-        String message = "";
+        String message = null;
         int oldCurrentFloor = currentFloor;
         System.out.println("Elevator #" + elevatorNum + ": First request? " + firstRequest);
-        // message = "Elevator car #: " + this.elevatorNum 
-        //                 + " Floor: " + this.currentFloor 
-        //                 + " Num of people: " + this.numOfPeople 
-        //                 + " Serviced: " + this.numOfPeopleServiced
-        //                 + " Direction: " + this.direction;
-        
-        if(firstRequest){
-            System.out.println("In first request: ");
-            // Prepares the message to be sent by forming a byte array
-            message = "Elevator car #: " + this.elevatorNum 
+        message = "Elevator car #: " + this.elevatorNum 
                         + " Floor: " + this.currentFloor 
                         + " Num of people: " + this.numOfPeople 
                         + " Serviced: " + this.numOfPeopleServiced
                         + " Direction: " + this.direction;
+        /* 
+        if(firstRequest){
+            // Prepares the message to be sent by forming a byte array
+            message = "Elevator car #: " + this.elevatorNum 
+                        + " Floor: " + this.currentFloor 
+                        + " Num of people: " + this.numOfPeople 
+                        + " Serviced: " + this.numOfPeopleServiced;
         }else{
             currentFloor = moveElevator();
-            
-            System.out.println("Right after move, currentFloor: " + currentFloor);
 
-            //If elevator didn't move, stop motor and open doors (requested floor reached)
+            //If elevator didn't move, stop motor and open doors
             if(oldCurrentFloor == currentFloor){
                 stopElevator();
-            }
-            System.out.println("Not first request: ");
-            message = "Elevator car #: " + elevatorNum 
+            }else{
+                message = "Elevator car #: " + elevatorNum 
                         + " Floor: " + currentFloor 
                         + " Num of people: " + numOfPeople 
-                        + " Serviced: " + numOfPeopleServiced
-                        + " Direction: " + direction;                
+                        + " Serviced: " + numOfPeopleServiced;
+            }
+        
         }
-        
-        
+        */
         
         byte[] msg = message.getBytes();
 
-        System.out.println("Elevator car #" + elevatorNum + " is sending a packet containing: " + message);
+        System.out.println("Elevator car #"+ elevatorNum + " is sending a packet containing: " + message);
 
         // Creates the DatagramPacket to be sent to port 23
         try {
@@ -342,7 +362,7 @@ public class Elevator {
         
         saveReceivedMessage(received);
         System.out.println("Elevator - requestQueue: " + requestQueue.toString());
-        System.out.println("Elevator - floorQueues: " + floorQueues.toString() + "\n");
+        System.out.println("Elevator - floorQueues: " + requestQueue.toString() + "\n");
 
         
     }
@@ -360,9 +380,8 @@ public class Elevator {
 
         //If message received from scheduler is not "no current requests", then it holds a request and we must save all input data info
         if(!message.equals("No current requests")){
-            firstRequest = false;
-            System.out.println("elevator car #" + elevatorNum + ": firstRequest? " + firstRequest);
-            
+
+            firstRequest = false; //if we have received a request, firstRequest = false
             if (matcher.find()) { //TODO: add try-catch around this parsing
                 time = LocalTime.parse((matcher.group(1)));
                 currentTime = time.get(ChronoField.MILLI_OF_DAY);
@@ -375,7 +394,9 @@ public class Elevator {
                 
                 //Add request to elevatorQueue
                 this.floorQueues.get(request.getFloor()).add(request); // adds request to corresponding floor queue
-                this.requestQueue.add(request); // adds request to main request queue            
+                this.requestQueue.add(request); // adds request to main request queue
+                this.numOfPeople ++;
+            
             }
         
         }
@@ -470,10 +491,6 @@ public class Elevator {
         sendAndReceiveSocket.close();
     }
 
-    public int getSizeOfRequestQueue(){
-        return requestQueue.size();
-    }
-
     /**
      * Currently sends all requests in floor
      * Handles number of requests in queue conretely (hard coded)
@@ -482,24 +499,16 @@ public class Elevator {
     public static void main(String args[]) {
         Elevator elevator1 = new Elevator(1, 2, "up");
         Elevator elevator2 = new Elevator(2, 4, "up");
-
-        // elevator1.sendRequest();
-        // elevator2.sendRequest();
-        // elevator1.receiveInstruction();
-        // elevator2.receiveInstruction();
-
-        //while((elevator1.getSizeOfRequestQueue() != 0) || (elevator2.getSizeOfRequestQueue() != 0)) {
-        while(true) {
+        
+        for (int i = 0; i < 4; i++) { //TODO: make an infinite while loop
             elevator1.sendRequest();
             elevator2.sendRequest();
             elevator1.receiveInstruction();
             elevator2.receiveInstruction();
-
             //elevator.sendSatus();
             //elevator.receiveAcknowledgement();
         }
-        // System.out.println("All requests have been serviced");
-        // elevator1.closeSocket();
-        // elevator2.closeSocket();
+        elevator1.closeSocket();
+        elevator2.closeSocket();
     }
 }
