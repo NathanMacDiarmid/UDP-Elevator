@@ -1,4 +1,4 @@
-package src;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -28,18 +28,6 @@ public class Floor  {
     // Datagram stuff for sending and receiving over UDP
     private DatagramPacket sendPacket, receivePacket;
     private DatagramSocket sendReceiveSocket;
-
-    public DatagramPacket getSendPacket() {
-        return sendPacket;
-    }
-
-    public DatagramPacket getReceivePacket() {
-        return receivePacket;
-    }
-
-    public DatagramSocket getSendReceiveSocket() {
-        return sendReceiveSocket;
-    }
 
     /**
      * Default constructor for Floor class
@@ -164,7 +152,7 @@ public class Floor  {
                     time = LocalTime.parse((data[0]));
 
                     // converting the LocalTime to an integer, will stored as an int that represents the millisecond of the day
-                    timeOfRequest = time.get(ChronoField.MILLI_OF_DAY); //TODO: should we declare these variables before we initialize them?
+                    timeOfRequest = time.get(ChronoField.MILLI_OF_DAY);
 
                     //save current floor
                     currentFloor = Integer.parseInt(data[1]);
@@ -224,19 +212,6 @@ public class Floor  {
     }
 
     /**
-     * The run method for the Floor class is inherited from the
-     * Runnable interface. It runs the Thread when .start() is used
-     * @author Nathan MacDiarmid 101098993
-     * @author Michael Kyrollos 101183521
-     * @author Juanita Rodelo 101141857
-     * @author Matthew Belanger 101144323
-     */
-    // public void run() {
-    //     this.readData("data.txt");
-    //     initiateFloor();
-    // }
-
-    /**
      * The functionality behind the {@link #run()} method
      * @author Nathan MacDiarmid 101098993
      * @author Michael Kyrollos 101183521
@@ -271,11 +246,6 @@ public class Floor  {
                 
                 this.sendInstruction(getElevatorQueue().get(0), lastRequest);
                 this.receiveAcknowledgement();
-
-                // TODO after implementing communication between floor and elevators
-                // Check these two methods to make sure they actually work properly
-                //this.sendHasElevatorArrived();
-                //this.receiveStatus();
 
                 elevatorQueue.remove(0);
             }
