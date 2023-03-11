@@ -15,4 +15,3 @@ public class Main {
         elevator1.start();
     }
 }
-
