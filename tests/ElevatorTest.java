@@ -7,12 +7,10 @@ import org.junit.jupiter.api.Test;
 
 import src.Elevator;
 import src.Floor;
-import src.InputData;
 import src.Scheduler;
 
 import java.time.LocalTime;
 import java.time.temporal.ChronoField;
-import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 class ElevatorTest {
