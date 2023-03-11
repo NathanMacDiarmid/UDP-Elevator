@@ -11,19 +11,9 @@ import java.util.regex.Pattern;
 
 public class Scheduler {
 
-    /**
-     * queueInUse represents when the elevator queue is being updated. True means it
-     * is being updated and added to be the floor, false means it is not being
-     * updated
-     */
-    private boolean queueInUse; 
-
     /* noMoreRequests tracks when the floor subsysytem will send last request */
     private boolean noMoreRequests;
-    private boolean thisProjectSucks = false;
-
-    /** currentFloor tracks where the elevator is */
-    private int currentFloor;
+    private boolean elevatorsExecutingInstructions = false;
 
     /* requestQueue used as priority queue of requests */
     private ArrayList<InputData> requestQueue;
@@ -35,9 +25,6 @@ public class Scheduler {
     private DatagramSocket sendAndReceiveSocket, receiveSocket23, receiveSocket69;
     private byte[] data = new byte[100];
     private int numOfCars;
-    
-
-    // Holds the current locations of each elevator
 
     /* This maps the elevator number with their current floor and the number people currently in it*/
     private Map<Integer, ArrayList<Integer>> elevatorsInfo;
@@ -49,9 +36,7 @@ public class Scheduler {
     public Scheduler(int numOfCars) {
 
         this.numOfCars = numOfCars;
-        this.queueInUse = true;
         this.requestQueue = new ArrayList<InputData>();
-        this.currentFloor = 0;
         this.noMoreRequests = false;
         this.elevatorsInfo = new HashMap<Integer, ArrayList<Integer>>();
         System.out.println("Scheduler: num of cars = " + this.numOfCars);
@@ -76,24 +61,14 @@ public class Scheduler {
         
     }
 
-    public void setQueueInUse(boolean queueInUse) {
-        this.queueInUse = queueInUse;
-    }
-
-    public boolean isQueueInUse() {
-        return queueInUse;
-    }
-
+    /**
+     * Gets number of cars
+     * @return the number of cars that the Scheduler is controlling
+     * @author Juanita Rodelo 101141857
+     * @author Amanda Piazza 101143004
+     */
     public int getNumOfCars(){
         return this.numOfCars;
-    }
-
-    /**
-     * The two following methods are ONLY FOR TESTING PURPOSES and
-     * should not be included in commercial product.
-     */
-    public int getCurrentFloor() {
-        return currentFloor;
     }
 
     /**
@@ -349,7 +324,7 @@ public class Scheduler {
     */
     public void sendToElevators() {
         int elevatorToSendRequest = 0;
-        if(!thisProjectSucks){
+        if(!elevatorsExecutingInstructions){
             elevatorToSendRequest = getElevatorToSendRequest();
         }else{
             elevatorToSendRequest = -1; 
@@ -400,7 +375,7 @@ public class Scheduler {
         for (int i = 0; i < data.length; i++) {
             data[i] = 0;
         }
-        this.thisProjectSucks = noMoreRequests;
+        this.elevatorsExecutingInstructions = noMoreRequests;
     }
 
     /**
