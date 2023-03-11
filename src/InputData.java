@@ -1,3 +1,4 @@
+package src;
 
 
 public class InputData implements Comparable<InputData> {
