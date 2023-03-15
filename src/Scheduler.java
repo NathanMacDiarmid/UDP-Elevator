@@ -28,7 +28,7 @@ public class Scheduler {
     private int numOfCars;
 
     /* This maps the elevator number with their current floor and the number people currently in it*/
-    private Map<Integer, ArrayList<Integer>> elevatorsInfo;
+     private Map<Integer, int[]> elevatorsInfo;
 
     /**
      * Default constructor for Scheduler
@@ -39,16 +39,16 @@ public class Scheduler {
         this.numOfCars = numOfCars;
         this.requestQueue = new ArrayList<InputData>();
         this.noMoreRequests = false;
-        this.elevatorsInfo = new HashMap<Integer, ArrayList<Integer>>();
+        this.elevatorsInfo = new HashMap<Integer, int[]>();
         System.out.println("Scheduler: num of cars = " + this.numOfCars);
 
         //for each elevator car, initialize current floor to 0
         for (int i = 0; i < this.numOfCars; i++) {
             //Initializing number of elevators in Map:
-            this.elevatorsInfo.put(i + 1, new ArrayList<Integer>());
-            this.elevatorsInfo.get(i + 1).add(0); //initial floor: 0
-            this.elevatorsInfo.get(i + 1).add(0); //initial number of people: 0
-            this.elevatorsInfo.get(i + 1).add(0); // intial direction 0 (down)
+            this.elevatorsInfo.put(i + 1, new int[3]);
+            this.elevatorsInfo.get(i + 1)[0] = 0; //initial floor: 0
+            this.elevatorsInfo.get(i + 1)[1] = 0; //initial number of people: 0
+            this.elevatorsInfo.get(i + 1)[2] = 0; // intial direction 0 (down)
         }
 
         try {
@@ -217,10 +217,10 @@ public class Scheduler {
         }
 
         //save elevator location in elevatorLocations()
-        this.elevatorsInfo.get(car).set(0, floorNum);
-        this.elevatorsInfo.get(car).set(1, numPeople);
+        this.elevatorsInfo.get(car)[0] = floorNum;
+        this.elevatorsInfo.get(car)[1] = numPeople;
         //set direction
-        this.elevatorsInfo.get(car).set(2, directionValue);
+        this.elevatorsInfo.get(car)[2] = directionValue;
     }
 
     /**
@@ -234,12 +234,12 @@ public class Scheduler {
         System.out.println("Scheduler deciding where to send request: " + currentRequest.toString());
 
         int closestElevatorNum = 1;
-        int currentBestFloorDifference = this.elevatorsInfo.get(1).get(0) - currentRequest.getFloor();
+        int currentBestFloorDifference = this.elevatorsInfo.get(1)[0] - currentRequest.getFloor();
         Boolean currentDirectionIsCorrect;
         int elevatorsDistanceDifference = 0;
 
         //Compare elevator #1's info
-        if (this.elevatorsInfo.get(1).get(2) == 1) { //if elevator is going up
+        if (this.elevatorsInfo.get(1)[2] == 1) { //if elevator is going up
             if (currentRequest.getIsDirectionUp()) { //if passenger of request is also going up
                 currentDirectionIsCorrect = true; //current elevator direction matches direction of requestt direction
             } else {
@@ -256,9 +256,9 @@ public class Scheduler {
         //Iterate through the rest of the elevators
         for (int i = 2; i < this.elevatorsInfo.size() + 1; i++) {
             Boolean directionIsUp;
-            elevatorsDistanceDifference = this.elevatorsInfo.get(i).get(0) - currentRequest.getFloor();
+            elevatorsDistanceDifference = this.elevatorsInfo.get(i)[0] - currentRequest.getFloor();
 
-            if (this.elevatorsInfo.get(i).get(2) == 1) { //if elevator is going up
+            if (this.elevatorsInfo.get(i)[2] == 1) { //if elevator is going up
                 directionIsUp = true;
             } else {
                 directionIsUp = false;
