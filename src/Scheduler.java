@@ -20,7 +20,7 @@ public class Scheduler {
     private ArrayList<InputData> requestQueue;
 
     /* elevatorAndTheirPorts used to map Elevator car number with their port*/
-    Map<Integer, Integer> elevatorAndTheirPorts = new HashMap<Integer, Integer>();
+    Map<Integer, Integer> elevatorAndTheirPorts = new HashMap<Integer, Integer>(); //TODO: make this private/public with getters and setters
 
     private DatagramPacket sendPacket, receivePacket23, receivePacket69;
     private DatagramSocket sendAndReceiveSocket, receiveSocket23, receiveSocket69;
@@ -28,7 +28,7 @@ public class Scheduler {
     private int numOfCars;
 
     /* This maps the elevator number with their current floor and the number people currently in it*/
-     private Map<Integer, int[]> elevatorsInfo;
+    private Map<Integer, int[]> elevatorsInfo;
 
     /**
      * Default constructor for Scheduler
@@ -45,10 +45,12 @@ public class Scheduler {
         //for each elevator car, initialize current floor to 0
         for (int i = 0; i < this.numOfCars; i++) {
             //Initializing number of elevators in Map:
-            this.elevatorsInfo.put(i + 1, new int[3]);
+            this.elevatorsInfo.put(i + 1, new int[5]);
             this.elevatorsInfo.get(i + 1)[0] = 0; //initial floor: 0
             this.elevatorsInfo.get(i + 1)[1] = 0; //initial number of people: 0
             this.elevatorsInfo.get(i + 1)[2] = 0; // intial direction 0 (down)
+            this.elevatorsInfo.get(i + 1)[3] = 0; // initial amount of people serviced 0
+            this.elevatorsInfo.get(i + 1)[4] = 0; // initial amount of requests sent to this elevator 0
         }
 
         try {
@@ -208,6 +210,7 @@ public class Scheduler {
         int car = Integer.parseInt(tokens[3]);
         int floorNum = Integer.parseInt(tokens[5]);
         int numPeople = Integer.parseInt(tokens[9].trim());
+        int peopleServiced = Integer.parseInt(tokens[11].trim());
         String direction = tokens[13];
         int directionValue;
         if (direction.equals("down")) {
@@ -221,6 +224,7 @@ public class Scheduler {
         this.elevatorsInfo.get(car)[1] = numPeople;
         //set direction
         this.elevatorsInfo.get(car)[2] = directionValue;
+        this.elevatorsInfo.get(car)[3] = peopleServiced;
     }
 
     /**
@@ -322,6 +326,7 @@ public class Scheduler {
         int elevatorToSendRequest = 0;
         if (!elevatorsExecutingInstructions) {
             elevatorToSendRequest = getElevatorToSendRequest();
+            elevatorsInfo.get(elevatorToSendRequest)[4]++; // increments amount of requests that elevator is sent
         } else {
             elevatorToSendRequest = -1;
         }
@@ -341,8 +346,13 @@ public class Scheduler {
 
             //send nothing
             if (currElevatorNum != elevatorToSendRequest) { //if the elevator car number does not match elevator servicing request
-                String message = "No current requests"; //current floor has no requests 
-                msgToSend = message.getBytes();
+                if (isNoMoreRequests()) {
+                    String message = "No more requests"; // there are no more requests coming from Floor
+                    msgToSend = message.getBytes();
+                } else {
+                    String message = "No current requests"; //current floor has no requests 
+                    msgToSend = message.getBytes();
+                }
             } else { //send request                
                 msgToSend = data;
             }
@@ -469,6 +479,10 @@ public class Scheduler {
         this.elevatorAndTheirPorts.put(i, elevatorPort);
     }
 
+    public Map<Integer, int[]> getElevatorInfo() {
+        return elevatorsInfo;
+    }
+
     /**
      * Currently sends all requests in floor
      * Handles number of requests in queue conretely (hard coded)
@@ -477,8 +491,9 @@ public class Scheduler {
     public static void main(String args[]) {
         int elevatorPort;
         Scheduler scheduler = new Scheduler(2);
+        int elevatorsDone = 0;
 
-        while (true) {
+        while (elevatorsDone < scheduler.numOfCars) {
             // Check if request received is last request, if true stop receiving more instructions
             if (!scheduler.noMoreRequests) {
                 scheduler.receiveInstructionFromFloor();
@@ -487,11 +502,18 @@ public class Scheduler {
 
             // Call receive requests method n times where n is the number of elevators
             for (int i = 1; i < scheduler.getNumOfCars() + 1; i++) {
-                elevatorPort = scheduler.receiveElevatorRequest();
-                scheduler.elevatorAndTheirPorts.put(i, elevatorPort);
+                // if the amount of requests sent = the amount of people serviced AND theres no more requests coming from floor
+                if ((scheduler.getElevatorInfo().get(i)[3] == scheduler.getElevatorInfo().get(i)[4] && scheduler.isNoMoreRequests())) {
+                    elevatorsDone++;
+                } else {
+                    elevatorPort = scheduler.receiveElevatorRequest();
+                    scheduler.elevatorAndTheirPorts.put(i, elevatorPort);
+                }
             }
 
             scheduler.sendToElevators();
         }
+
+        scheduler.closeSockets();
     }
 }

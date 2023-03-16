@@ -29,6 +29,7 @@ public class Elevator {
     private DatagramPacket sendPacket, receivePacket;
     private DatagramSocket sendAndReceiveSocket;
     private boolean firstRequest = true;
+    private boolean noMoreRequests = false;
     private byte[] data = new byte[250];
 
     /* requestQueue is used as priority queue of requests */
@@ -76,7 +77,6 @@ public class Elevator {
 
     /* elevatorQueue is the queue of requests that are currently in this elevator */
     private ArrayList<InputData> elevatorQueue; 
-
     
     /**
      * Default constructor for Elevator
@@ -135,7 +135,7 @@ public class Elevator {
      * @author Matthew Belanger 101144323
      * @author Amanda Piazza 101143004
      */
-    public int moveElevator() {
+    public int moveElevator() { //TODO: take into account that the destination floor for one request is the initial floor for another request, should print both events
         int sizeBeforePickup = (elevatorQueue != null) ? elevatorQueue.size() : 0;//if null size is 0 
         boolean reachedDestination = false;
 
@@ -180,6 +180,7 @@ public class Elevator {
                     
                     numOfPeople --;
                     requestQueue.removeIf(request -> (request == currPassenger)); //remove from general main queue because passenger left
+                    numOfPeopleServiced++;
                 }
             }
 
@@ -319,14 +320,17 @@ public class Elevator {
         len = receivePacket.getLength();
         System.out.println("Length: " + len);
         System.out.print("Containing: " );
-        String received = new String(data,0,len);   
+        String received = new String(data,0,len);
+
+        // Checks if the message received is no more requests so that the elevator instance knows
+        if (received.equals("No more requests")) {
+            noMoreRequests = true;
+        }
         System.out.println(received);
         
         saveReceivedMessage(received);
         System.out.println("Elevator - requestQueue: " + requestQueue.toString());
-        System.out.println("Elevator - floorQueues: " + floorQueues.toString() + "\n");
-
-        
+        System.out.println("Elevator - floorQueues: " + floorQueues.toString() + "\n");   
     }
 
     /**
@@ -375,12 +379,15 @@ public class Elevator {
         return requestQueue.size();
     }
 
-
     /**
      * THE FOLLOWING GETTERS AND SETTERS ARE FOR TESTING PURPOSES ONLY
      */
     public DatagramPacket getReceivePacket(){
         return this.receivePacket;
+    }
+
+    public boolean isNoMoreRequests() {
+        return noMoreRequests;
     }
 
     /**
@@ -389,14 +396,49 @@ public class Elevator {
      * @param args
      */
     public static void main(String args[]) {
+        // TODO: as a note for the for loop, possibly add these to an arraylist and iterate through it
         Elevator elevator1 = new Elevator(1, 2, "up");
         Elevator elevator2 = new Elevator(2, 4, "up");
 
-        for (int i = 0; i < 11; i++) {
-            elevator1.sendRequest();
-            elevator2.sendRequest();
-            elevator1.receiveInstruction();
-            elevator2.receiveInstruction();
+        boolean elev1Done = false;
+        boolean elev2Done = false;
+
+        while(!elev1Done || !elev2Done) {
+            // TODO: can put each if instance in a for loop so it handles abstractly
+
+            // Runs elevator if theres no more requests to be received but the elevator hasn't finished executing requests
+            if (elevator1.isNoMoreRequests() && elevator1.getRequestQueue().size() != 0) {
+                elevator1.moveElevator();
+            // sets the elevator to finished if theres no more requests and the elevator finished executing requests
+            } else if (elevator1.isNoMoreRequests() && elevator1.getRequestQueue().size() == 0) {
+                elev1Done = true;
+            }
+
+            // Runs elevator if theres no more requests to be received but the elevator hasn't finished executing requests
+            if (elevator2.isNoMoreRequests() && elevator2.getRequestQueue().size() != 0) {
+                elevator2.moveElevator();
+            // sets the elevator to finished if theres no more requests and the elevator finished executing requests
+            } else if (elevator2.isNoMoreRequests() && elevator2.getRequestQueue().size() == 0) {
+                elev2Done = true;
+            }
+
+            // if the elevator is done, don't send a request
+            if (!elev1Done) {
+                elevator1.sendRequest();
+            }
+
+            if (!elev2Done) {
+                elevator2.sendRequest();
+            }
+
+            // if the elevator is done, don't receive a request
+            if (!elev1Done) {
+                elevator1.receiveInstruction();
+            }
+
+            if (!elev2Done) {
+                elevator2.receiveInstruction();
+            }
         }
 
         elevator1.closeSocket();
