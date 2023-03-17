@@ -10,21 +10,27 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * This class represents the scheduler that manages the requests coming from the floor to the elevators
+ */
 public class Scheduler {
 
     /* noMoreRequests tracks when the floor subsysytem will send last request */
     private boolean noMoreRequests;
+
     private boolean elevatorsExecutingInstructions = false;
 
     /* requestQueue used as priority queue of requests */
     private ArrayList<InputData> requestQueue;
 
-    /* elevatorAndTheirPorts used to map Elevator car number with their port*/
+    /* elevatorAndTheirPorts maps elevator car numbers with their port*/
     Map<Integer, Integer> elevatorAndTheirPorts = new HashMap<Integer, Integer>(); //TODO: make this private/public with getters and setters
 
     private DatagramPacket sendPacket, receivePacket23, receivePacket69;
     private DatagramSocket sendAndReceiveSocket, receiveSocket23, receiveSocket69;
     private byte[] data = new byte[100];
+
+    /* Keeps track of the number of elevator cars */
     private int numOfCars;
 
     /* This maps the elevator number with their current floor and the number people currently in it*/
@@ -40,19 +46,19 @@ public class Scheduler {
         this.requestQueue = new ArrayList<InputData>();
         this.noMoreRequests = false;
         this.elevatorsInfo = new HashMap<Integer, int[]>();
-        System.out.println("Scheduler: num of cars = " + this.numOfCars);
+        //System.out.println("Scheduler: num of cars = " + this.numOfCars);
 
-        //for each elevator car, initialize current floor to 0
+        //for each elevator car, initialize their information fields
         for (int i = 0; i < this.numOfCars; i++) {
-            //Initializing number of elevators in Map:
             this.elevatorsInfo.put(i + 1, new int[5]);
             this.elevatorsInfo.get(i + 1)[0] = 0; //initial floor: 0
             this.elevatorsInfo.get(i + 1)[1] = 0; //initial number of people: 0
-            this.elevatorsInfo.get(i + 1)[2] = 0; // intial direction 0 (down)
-            this.elevatorsInfo.get(i + 1)[3] = 0; // initial amount of people serviced 0
-            this.elevatorsInfo.get(i + 1)[4] = 0; // initial amount of requests sent to this elevator 0
+            this.elevatorsInfo.get(i + 1)[2] = 0; // intial direction: 0 (down)
+            this.elevatorsInfo.get(i + 1)[3] = 0; // initial amount of people serviced: 0
+            this.elevatorsInfo.get(i + 1)[4] = 0; // initial amount of requests sent to this elevator: 0
         }
 
+        //creates sockets to receive from floor and elevators
         try {
             this.sendAndReceiveSocket = new DatagramSocket();
             this.receiveSocket23 = new DatagramSocket(23);
@@ -65,7 +71,7 @@ public class Scheduler {
     }
 
     /**
-     * Gets number of cars
+     * Gets the number of elevator cars
      * @return the number of cars that the Scheduler is controlling
      * @author Juanita Rodelo 101141857
      * @author Amanda Piazza 101143004
@@ -85,7 +91,7 @@ public class Scheduler {
     }
 
     /**
-     * Getter method used for testing purposes
+     * gets whether there are more requests
      * 
      * @return True if there are no requests left.
      * @author Michael Kyrollos
@@ -95,9 +101,9 @@ public class Scheduler {
     }
 
     /**
+     * receives message containing requests from the floor
      * @author Nathan MacDiarmid 101098993
      * @author Amanda Piazza 101143004
-     * Receive method for Host that receives the message from the floor
      */
     public void receiveInstructionFromFloor() {
         // Initializes the DatagramPacket to be received from the floor
@@ -111,26 +117,24 @@ public class Scheduler {
             System.out.print("IO Exception: likely:");
             System.out.println("Receive Socket Timed Out.\n" + e);
             e.printStackTrace();
-            System.exit(1);
+            System.exit(1); //TODO: should the system exit in this case?
         }
 
-        System.out.println("Scheduler: Packet received from Floor:");
-        System.out.println("From host: " + receivePacket23.getAddress() + ", on port: " + receivePacket23.getPort());
         int len = receivePacket23.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing: ");
-
         String received = new String(data, 0, len);
+        System.out.println("Scheduler: Packet received from Floor host: " + receivePacket23.getAddress() + ", on port: " + receivePacket23.getPort() + ", with length: " + len);
+        System.out.print("Containing: ");
+       
         translateStringInstruction(received);
         System.out.println(received);
         System.out.println();
     }
 
     /**
+     * Sends acknowledgement to the floor that the data has been
+     * received and accepted by the scheduler
      * @author Nathan MacDiarmid 101098993
      * @author Amanda Piazza 101143004
-     * Sends to acknowledgement to the floor that the data has been
-     * received and accepted by the scheduler.
      */
     public void sendFloorAcknowledgement() {
         String message = "The Scheduler has accepted the message.";
@@ -140,10 +144,9 @@ public class Scheduler {
         sendPacket = new DatagramPacket(msg, msg.length,
                 receivePacket23.getAddress(), receivePacket23.getPort());
 
-        System.out.println("Scheduler: Sending packet acknowledgment to Floor:");
-        System.out.println("To host: " + sendPacket.getAddress() + ", on port: " + sendPacket.getPort());
         int len = sendPacket.getLength();
-        System.out.println("Length: " + len);
+        System.out.println("Scheduler: Sending packet acknowledgment to Floor host: " + sendPacket.getAddress() + ", on port: " + sendPacket.getPort() + len);
+        System.out.println("To host: " + sendPacket.getAddress() + ", on port: " + sendPacket.getPort());
         System.out.print("Containing: ");
         System.out.println(new String(sendPacket.getData(), 0, len));
         System.out.println();
@@ -158,18 +161,17 @@ public class Scheduler {
     }
 
     /**
+     * Receives Elevators status and calls function to save elevator information
      * @author Nathan MacDiarmid 101098993
      * @author Amanda Piazza 101143004
-     * Receives the Elevators request for information before
-     * being sent to the Elevator.
-     * Return port that the packet was received on (to keep track of ports of all elevator cars)
+     * @return port that the packet was received on (to keep track of ports of all elevator cars)
      */
-    public int receiveElevatorRequest() {
+    public int receiveElevatorStatus() {
 
         // Initializes the DatagramPacket to be received from the Server
         byte[] request = new byte[100];
         receivePacket69 = new DatagramPacket(request, request.length);
-        System.out.println("Scheduler: Waiting for Packet from elevator.\n");
+        System.out.println("Scheduler: Waiting for Packet from elevator.");
 
         // Receives the DatagramPacket from the Server
         try {
@@ -181,15 +183,12 @@ public class Scheduler {
             System.exit(1);
         }
 
-        System.out.println("Scheduler: Packet received from Elevator:");
-        System.out.println("From host: " + receivePacket69.getAddress() + ", on port: " + receivePacket69.getPort());
         int len = receivePacket69.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing: ");
-
         String received = new String(request);
+        System.out.println("Scheduler: Packet received from Elevator host:" + receivePacket69.getAddress() + ", on port: " + receivePacket69.getPort() + ", with length: " + len );
+        System.out.print("Containing: ");
         System.out.println(received);
-        saveElevatorStatus(received);
+        saveElevatorStatus(received); 
         System.out.println();
 
         return receivePacket69.getPort();
@@ -197,7 +196,7 @@ public class Scheduler {
     }
 
     /**
-     * This method will save the message received from the elevators into the Map 'elevatorLocations'
+     * Saves the status received from the elevator into the Map 'elevatorsInfo'
      * @param input string received from floor
      * @author Michael Kyrollos 101183521
      * @author Amanda Piazza 101143004
@@ -205,106 +204,109 @@ public class Scheduler {
     public void saveElevatorStatus(String input) {
         // split by whitespace
         // receiving it in format 'Elevator car #: 2 Floor: 2 Num of people: 3 Serviced: 1 '
-
         String[] tokens = input.split(" ");
-        int car = Integer.parseInt(tokens[3]);
+        int car = Integer.parseInt(tokens[3]); //TODO: maybe have a try-catch around this parsing, we are checking this before sending it in the floor so idk if this is necessary to double check
         int floorNum = Integer.parseInt(tokens[5]);
         int numPeople = Integer.parseInt(tokens[9].trim());
         int peopleServiced = Integer.parseInt(tokens[11].trim());
         String direction = tokens[13];
         int directionValue;
+
         if (direction.equals("down")) {
             directionValue = 0;
         } else {
             directionValue = 1;
         }
 
-        //save elevator location in elevatorLocations()
+        //save elevator location in elevatorsInfo
         this.elevatorsInfo.get(car)[0] = floorNum;
         this.elevatorsInfo.get(car)[1] = numPeople;
-        //set direction
         this.elevatorsInfo.get(car)[2] = directionValue;
         this.elevatorsInfo.get(car)[3] = peopleServiced;
     }
 
     /**
-     * getElevatorToSendRequest determines closest elevator (while ensuring all elevators hold roughly the same number of people)
+     * Determines the best elevator to send request to
      * @return returns the elevator # of the elevator to send request to
      * @author Nathan MacDiarmid 101098993
      * @author Matthew Belanger 101144323
      */
-    public int getElevatorToSendRequest() {
+    public int getElevatorForRequest() {
+
         InputData currentRequest = this.requestQueue.get(0);
-        System.out.println("Scheduler deciding where to send request: " + currentRequest.toString());
+        System.out.println("Scheduler deciding where to send request: " + currentRequest.toString() + "\n");
 
-        int closestElevatorNum = 1;
-        int currentBestFloorDifference = this.elevatorsInfo.get(1)[0] - currentRequest.getFloor();
-        Boolean currentDirectionIsCorrect;
-        int elevatorsDistanceDifference = 0;
+        //initially sets this to elevator #1 as base case
+        int chosenElevator = 1; 
+        //initially set to the difference of the first elevator's current floor with the request's current floor
+        int bestFloorDifference = this.elevatorsInfo.get(1)[0] - currentRequest.getFloor(); 
+        Boolean directionMatches;
+        //int elevatorDistanceDifference = 0;
 
-        //Compare elevator #1's info
-        if (this.elevatorsInfo.get(1)[2] == 1) { //if elevator is going up
-            if (currentRequest.getIsDirectionUp()) { //if passenger of request is also going up
-                currentDirectionIsCorrect = true; //current elevator direction matches direction of requestt direction
+        //if elevator #1's direction is up
+        if (this.elevatorsInfo.get(1)[2] == 1) {
+            if (currentRequest.getIsDirectionUp()) { //if request is also going up
+                directionMatches = true;
             } else {
-                currentDirectionIsCorrect = false; //else car moving in different direction of request
+                directionMatches = false;
             }
-        } else { //elavator is going down
-            if (currentRequest.getIsDirectionUp()) { //if passenger of request is going up
-                currentDirectionIsCorrect = false;
+        } else { //elavator #1 is going down
+            if (currentRequest.getIsDirectionUp()) { //if request is going up
+                directionMatches = false;
             } else {
-                currentDirectionIsCorrect = true; //current elevator direction matches direction of request
+                directionMatches = true;
             }
         }
 
-        //Iterate through the rest of the elevators
-        for (int i = 2; i < this.elevatorsInfo.size() + 1; i++) {
+        //Iterate through the rest of the elevators to compare their distance difference and direction to determine most efficient elevator to send to request to
+        for (int currElevator = 2; currElevator < this.elevatorsInfo.size() + 1; currElevator++) { 
             Boolean directionIsUp;
-            elevatorsDistanceDifference = this.elevatorsInfo.get(i)[0] - currentRequest.getFloor();
+            int elevatorDistanceDifference = this.elevatorsInfo.get(currElevator)[0] - currentRequest.getFloor();
 
-            if (this.elevatorsInfo.get(i)[2] == 1) { //if elevator is going up
+            if (this.elevatorsInfo.get(currElevator)[2] == 1) { //if elevator is going up
                 directionIsUp = true;
             } else {
                 directionIsUp = false;
             }
 
-            if (currentRequest.getIsDirectionUp() == directionIsUp) { //if direction of current request is up
+            if (currentRequest.getIsDirectionUp() == directionIsUp) { //if direction of current request is up and the direction of the elevator is up
 
-                //if the difference between the floor that the elevator is on and the floor of the request is less than 0
-                //elevator is below
-                if (elevatorsDistanceDifference <= 0) {
-                    //if the previous elevator # is also below the floor of the request is also less than 0
-                    if (currentBestFloorDifference <= 0 && currentDirectionIsCorrect) {
-                        //next elevator is closer to request
-                        if (Math.abs(elevatorsDistanceDifference) < Math.abs(currentBestFloorDifference)) {
-                            closestElevatorNum = i; //update elevator to next elevator
-                            currentBestFloorDifference = elevatorsDistanceDifference;
-                            currentDirectionIsCorrect = directionIsUp;
+                //if the the elevator is below the floor of the request
+                if (elevatorDistanceDifference <= 0) {
+                    //if the previous elevator is also below the floor of the request and it's direction is the same as the request
+                    if (bestFloorDifference <= 0 && directionMatches) {
+                        //check if the previous floor difference is less than the current elevator's floor difference
+                        if (Math.abs(elevatorDistanceDifference) < Math.abs(bestFloorDifference)) {
+                            //then current elevator is closer to request than the previous
+                            chosenElevator = currElevator; 
+                            bestFloorDifference = elevatorDistanceDifference;
+                            directionMatches = directionIsUp;
                         }
                     }
                 }
-            } else if (!currentRequest.getIsDirectionUp() == !directionIsUp) {
+            } else if (!currentRequest.getIsDirectionUp() == !directionIsUp) { //else direction of current request is down and direction of elevator is down
 
-                //if the difference between the floor that the elevator is on and the floor of the request is less than 0
-                //elevator is above
-                if (elevatorsDistanceDifference >= 0) {
-                    //next elevator can service elevator (going in same direction)
-                    if (currentBestFloorDifference >= 0 && currentDirectionIsCorrect) {
-                        //next elevator is closer to request
-                        if (Math.abs(elevatorsDistanceDifference) < Math.abs(currentBestFloorDifference)) {
-                            closestElevatorNum = i; //update elevator to next elevator
-                            currentBestFloorDifference = elevatorsDistanceDifference;
-                            currentDirectionIsCorrect = directionIsUp;
+                //if the the elevator is above the floor of the request
+                if (elevatorDistanceDifference >= 0) {
+                    //if the previous elevator is also above the floor of the request and it's direction is the same as the request
+                    if (bestFloorDifference >= 0 && directionMatches) {
+                       //check if the previous floor difference is less than the current elevator's floor difference
+                        if (Math.abs(elevatorDistanceDifference) < Math.abs(bestFloorDifference)) {
+                            //then current elevator is closer to request than the previous
+                            chosenElevator = currElevator;
+                            bestFloorDifference = elevatorDistanceDifference;
+                            directionMatches = directionIsUp;
                         }
                     }
                 }
-            } else {
-                if (!currentDirectionIsCorrect) {
-                    //next elevator is closer to request
-                    if (Math.abs(elevatorsDistanceDifference) < Math.abs(currentBestFloorDifference)) {
-                        closestElevatorNum = i; //update elevator to next elevator
-                        currentBestFloorDifference = elevatorsDistanceDifference;
-                        currentDirectionIsCorrect = directionIsUp;
+            } else { //else direction of request does not match direction of elevator -> in this case only take floor difference into consideration
+               
+                if (!directionMatches) { 
+                    //check if the previous floor difference is less than the current elevator's floor difference
+                    if (Math.abs(elevatorDistanceDifference) < Math.abs(bestFloorDifference)) {
+                        chosenElevator = currElevator; 
+                        bestFloorDifference = elevatorDistanceDifference;
+                        directionMatches = directionIsUp;
                     }
                 }
             }
@@ -313,61 +315,57 @@ public class Scheduler {
         //remove request from queue because elevator now has it and will service it
         this.requestQueue.remove(0);
 
-        return closestElevatorNum;
+        return chosenElevator;
     }
 
     /**
+    * Sends instruction to the elevator that was returned by getElevatorForRequest() through respective elevator port 
     * @author Nathan MacDiarmid 101098993
     * @author Amanda Piazza 101143004
-    * Send method that sends the instruction to the Elevator to the specified port
-    * In this case, the specified port is port 69
     */
     public void sendToElevators() {
-        int elevatorToSendRequest = 0;
-        if (!elevatorsExecutingInstructions) {
-            elevatorToSendRequest = getElevatorToSendRequest();
-            elevatorsInfo.get(elevatorToSendRequest)[4]++; // increments amount of requests that elevator is sent
-        } else {
-            elevatorToSendRequest = -1;
-        }
 
+        int elevatorToSendRequest = 0;
         byte[] msgToSend;
         int portOfElevator;
+        String message;
 
         Set<Integer> elevatorNums = elevatorAndTheirPorts.keySet();
         Iterator<Integer> keyIterator = elevatorNums.iterator();
 
-        //Iterator through map that holds elevators and their ports
+        if (!elevatorsExecutingInstructions) { //if there are requests for the elevator to service
+            elevatorToSendRequest = getElevatorForRequest();
+            elevatorsInfo.get(elevatorToSendRequest)[4]++; // increments amount of requests that elevator is sent
+        } else { //if there are no elevators to service 
+            elevatorToSendRequest = -1; //set elevator to an invalid elevator value 
+        }
+
+        //Iterate through map that holds elevators and their ports
         while (keyIterator.hasNext()) {
             Integer currElevatorNum = keyIterator.next();
-            System.out.println(
-                    "Scheduler: current elevator we are responding to: " + elevatorAndTheirPorts.get(currElevatorNum));
             portOfElevator = elevatorAndTheirPorts.get(currElevatorNum);
 
-            //send nothing
-            if (currElevatorNum != elevatorToSendRequest) { //if the elevator car number does not match elevator servicing request
-                if (isNoMoreRequests()) {
-                    String message = "No more requests"; // there are no more requests coming from Floor
+            //if the current elevator does not match the elevator # to send request to
+            if (currElevatorNum != elevatorToSendRequest) { 
+                if (isNoMoreRequests()) { //check if there are no more requests coming from Floor //TODO: I don't think this is necessary 
+                    message = "No more requests"; 
                     msgToSend = message.getBytes();
                 } else {
-                    String message = "No current requests"; //current floor has no requests 
+                    message = "No current requests"; //current floor has no requests 
                     msgToSend = message.getBytes();
                 }
-            } else { //send request                
+            } else { //the elevator recieving the request matches the current elevator in iterator                
                 msgToSend = data;
             }
 
             // Initializes the DatagramPacket to be sent to the server
-            sendPacket = new DatagramPacket(msgToSend, msgToSend.length,
-                    receivePacket69.getAddress(), portOfElevator);
+            sendPacket = new DatagramPacket(msgToSend, msgToSend.length, receivePacket69.getAddress(), portOfElevator);
 
-            System.out.println("Scheduler: Sending packet:");
-            System.out.println("To host: " + sendPacket.getAddress() + ", on port: " + portOfElevator);
             int len = sendPacket.getLength();
-            System.out.println("Length: " + len);
+            System.out.println("Scheduler: Sending packet to host: " + sendPacket.getAddress() + ", on port: " + portOfElevator + ", with length: " + len);
             System.out.print("Containing: ");
-            System.out.println(new String(sendPacket.getData(), 0, len));
-            System.out.println("Scheduler: packet sent to Elevator #: " + currElevatorNum + "\n");
+            System.out.println(new String(sendPacket.getData(), 0, len)); //TODO: make sure above and below sending and receiving methods do this instead of creating a string just to print it
+            
 
             // Sends the DatagramPacket to the Server
             try {
@@ -376,6 +374,7 @@ public class Scheduler {
                 e.printStackTrace();
                 System.exit(1);
             }
+            System.out.println("Scheduler: packet sent to Elevator #: " + currElevatorNum + "\n");
         }
         // Clears the request pipeline
         for (int i = 0; i < data.length; i++) {
@@ -385,21 +384,18 @@ public class Scheduler {
     }
 
     /**
+    * Receives elevator request from the floor
     * @author Nathan MacDiarmid 101098993
     * @author Amanda Piazza 101143004
-    * Receives the Floors request for information before
-    * being sent to the Floor
     */
-
     public void receiveFloorRequest() {
         // Initializes the DatagramPacket to be received from the Floor
         byte[] request = new byte[20];
         receivePacket23 = new DatagramPacket(request, request.length);
-        System.out.println("Scheduler: Waiting for Packet.\n");
+        System.out.println("Scheduler: Waiting for Packet from floor.\n");
 
         // Receives the DatagramPacket from the Floor
         try {
-            System.out.println("Waiting...");
             receiveSocket23.receive(receivePacket23);
         } catch (IOException e) {
             System.out.print("IO Exception: likely:");
@@ -408,18 +404,14 @@ public class Scheduler {
             System.exit(1);
         }
 
-        System.out.println("Scheduler: Packet received from Floor:");
-        System.out.println("From host: " + receivePacket23.getAddress());
         int len = receivePacket23.getLength();
-        System.out.println("Length: " + len);
+        System.out.println("Scheduler: Packet received from Floor host: " + receivePacket23.getAddress() + ", on port: " +  receivePacket23.getPort() + ", with length: " + len);
         System.out.print("Containing: ");
-
-        String received = new String(request);
-        System.out.println(received + "\n");
+        System.out.println(new String(request) + "\n");
     }
 
     /**
-    * translateStringInstruction parses the request coming from the floor
+    * Parses the request coming from the floor and saves it in requestQueue and other variables
     * @author Michael Kyrollos 101183521
     * @author Amanda Piazza 101143004
     */
@@ -432,31 +424,29 @@ public class Scheduler {
         boolean isDirectionUp;
         int carButton;
         boolean lastRequest;
-        Pattern pattern = Pattern.compile(
-                "\\[currentTime=(\\d+:\\d+:\\d+\\.\\d+), floor=(\\d+), isDirectionUp=(\\w+), car button=(\\d+)\\]: (\\w+)");
+        Pattern pattern = Pattern.compile("\\[currentTime=(\\d+:\\d+:\\d+\\.\\d+), floor=(\\d+), isDirectionUp=(\\w+), car button=(\\d+)\\]: (\\w+)");
         Matcher matcher = pattern.matcher(instruction);
         LocalTime time;
 
         //parse through the pattern to extract data for the given request 
         if (matcher.find()) {
-            time = LocalTime.parse((matcher.group(1)));
+            time = LocalTime.parse((matcher.group(1))); //TODO: maybe we should have try-catches around these to double check
             currentTime = time.get(ChronoField.MILLI_OF_DAY);
             floor = Integer.parseInt(matcher.group(2));
             isDirectionUp = Boolean.parseBoolean(matcher.group(3));
             carButton = Integer.parseInt(matcher.group(4));
             lastRequest = Boolean.parseBoolean(matcher.group(5));
-
             request = new InputData(currentTime, floor, isDirectionUp, carButton);
 
             //Add request to elevatorQueue
-            this.requestQueue.add(request); // adds request to main request queue
+            this.requestQueue.add(request);
             this.noMoreRequests = lastRequest;
         }
     }
 
     /**
-    * @author Nathan MacDiarmid 101098993
     * Closes the open sockets when program ends
+    * @author Nathan MacDiarmid 101098993
     */
     public void closeSockets() {
         sendAndReceiveSocket.close();
@@ -483,37 +473,37 @@ public class Scheduler {
         return elevatorsInfo;
     }
 
-    /**
-     * Currently sends all requests in floor
-     * Handles number of requests in queue conretely (hard coded)
-     * @param args
-     */
     public static void main(String args[]) {
+        System.out.println();
         int elevatorPort;
         Scheduler scheduler = new Scheduler(2);
         int elevatorsDone = 0;
 
-        while (elevatorsDone < scheduler.numOfCars) {
+        //while all elevators are not done sending requests and receving (because they're done servicing all their requests)
+        while (elevatorsDone <= scheduler.numOfCars) {
+           
             // Check if request received is last request, if true stop receiving more instructions
             if (!scheduler.noMoreRequests) {
                 scheduler.receiveInstructionFromFloor();
                 scheduler.sendFloorAcknowledgement();
             }
 
+
             // Call receive requests method n times where n is the number of elevators
             for (int i = 1; i < scheduler.getNumOfCars() + 1; i++) {
-                // if the amount of requests sent = the amount of people serviced AND theres no more requests coming from floor
+                
+                // if the amount of requests sent to an elevator is equal the amount of people that elevator has serviced AND theres no more requests coming from floor
                 if ((scheduler.getElevatorInfo().get(i)[3] == scheduler.getElevatorInfo().get(i)[4] && scheduler.isNoMoreRequests())) {
-                    elevatorsDone++;
+                    elevatorsDone ++; //increment the number of elevators that have completely finished serivicing their requests
                 } else {
-                    elevatorPort = scheduler.receiveElevatorRequest();
-                    scheduler.elevatorAndTheirPorts.put(i, elevatorPort);
+                    elevatorPort = scheduler.receiveElevatorStatus();
+                    scheduler.elevatorAndTheirPorts.put(i, elevatorPort); //save elevator port in Map
                 }
             }
 
             scheduler.sendToElevators();
+            System.out.println("-------------------------------------------------------------------------------------------------");
         }
-
         scheduler.closeSockets();
     }
 }

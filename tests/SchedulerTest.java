@@ -73,8 +73,8 @@ class SchedulerTest {
      */
     @Test
     public void testReceiveElevatorRequest(){
-        elevator1.sendRequest();
-        scheduler.receiveElevatorRequest();
+        elevator1.sendStatus();
+        scheduler.receiveElevatorStatus();
         String received = new String(scheduler.getReceivePacket69().getData(), 0, scheduler.getReceivePacket69().getLength());   
         assertEquals("Elevator car #: 1 Floor: 1 Num of people: 0 Serviced: 0 Direction: up", received);    }
 
@@ -92,10 +92,10 @@ class SchedulerTest {
         scheduler.receiveInstructionFromFloor();        
         scheduler.sendFloorAcknowledgement();
         floor.receiveAcknowledgement();
-        elevator1.sendRequest();
-        elevator2.sendRequest();
+        elevator1.sendStatus();
+        elevator2.sendStatus();
         for(int i = 1; i < scheduler.getNumOfCars() + 1; i++){
-            elevatorPort = scheduler.receiveElevatorRequest();
+            elevatorPort = scheduler.receiveElevatorStatus();
             scheduler.elevatorAndTheirPortsPut(i, elevatorPort);
         }  
         scheduler.sendToElevators(); 

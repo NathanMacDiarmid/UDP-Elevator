@@ -12,10 +12,12 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoField;
 import java.util.*;
 
+import javax.xml.transform.Source;
+
 /**
 Floor.java accepts events from InputData.java. Each event consists of the current time, the floor request, 
    the direction of travel and the car button pressed. These events are sent to Scheduler.java
-   */ 
+*/ 
 public class Floor  {
 
     // All requests will be stored in this sorted ArrayList
@@ -122,13 +124,14 @@ public class Floor  {
     }
 
     /**
-     * Reads a file named data.txt that is in the same directory and parses through elevator data. 
+     * Reads a file named data.txt that is in the same directory and parses through elevator requests. 
      * Creates a usable format for the rest scheduler.
      * @author Michael Kyrollos 101183521
      * @author Nathan MacDiarmid 101098993
      */
-    public void readData(String filename) {
-        String path = new File("").getAbsolutePath() + "/" + filename;
+    public void readData(String filename) { //TODO: make sure that the destination floor is not equal to the initial floor of request
+
+        String path = new File("").getAbsolutePath() + "/" + filename; //TODO: have a try-catch incase there is no data.txt file found
 
         try (Scanner input = new Scanner(new File(path))) {
             while (input.hasNextLine()) { // Check each value to verify if they are valid before adding them to elevatorQueue
@@ -184,7 +187,7 @@ public class Floor  {
     }
 
     /**
-     * Determines the direction button pressed based on String representation
+     * Returns the direction that a given request is going in
      * Assumes that the data in the txt is in valid format and following our
      * standard
      * 
@@ -213,7 +216,7 @@ public class Floor  {
     }
 
     /**
-     * The functionality behind the {@link #run()} method
+     * Populates the elevatorQueue with the requests from the intput data file and calls the send a receive functions
      * @author Nathan MacDiarmid 101098993
      * @author Michael Kyrollos 101183521
      * @author Juanita Rodelo 101141857
@@ -243,23 +246,23 @@ public class Floor  {
                     setRequestDownButton(true);
                 }
                 System.out.println("Floor: Someone on floor " + elevatorQueue.get(0).getFloor() + " has pressed the "
-                        + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on");
+                        + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on.");
                 
                 this.sendInstruction(getElevatorQueue().get(0), lastRequest);
                 this.receiveAcknowledgement();
 
                 elevatorQueue.remove(0);
+                System.out.println("-------------------------------------------------------------------------------------------------");
             }
         }
     }
 
     /**
+    * Sends an instruction to the scheduler via port 23
+    * @param request the InputData request that holds request information
+    * @param lastRequest whether the request is the last one in the elevatorQueue, boolean
     * @author Nathan MacDiarmid 101098993
     * @author Amanda Piazza 101143004
-    * Send an instruction to the scheduler through specified port
-    * In this case, it is port 23 the destination
-    * @param request the InputData request that holds request information
-    * @param lastRequest the last request in the elevatorQueue, boolean
     */
     public void sendInstruction(InputData request, Boolean lastRequest) {
         // Prepares the message to be sent by forming a byte array
@@ -275,12 +278,9 @@ public class Floor  {
             e.printStackTrace();
             System.exit(1);
         }
-
-        System.out.println("To host: " + sendPacket.getAddress());
-        System.out.println("Destination host port: " + sendPacket.getPort());
         int len = sendPacket.getLength();
-        System.out.println("Length: " + len);
-
+        System.out.println("To host: " + sendPacket.getAddress() + ", on port: " + sendPacket.getPort() + ", with length: " + len);
+        
         // Sends the DatagramPacket over port 23
         try {
             sendReceiveSocket.send(sendPacket);
@@ -292,10 +292,10 @@ public class Floor  {
     }
 
     /**
-    * @author Nathan MacDiarmid 101098993
-    * @author Amanda Piazza 101143004
     * Receives the acknowledgement from the Scheduler that it has received the message
     * and accepted the data.
+    * @author Nathan MacDiarmid 101098993
+    * @author Amanda Piazza 101143004
     */
     public void receiveAcknowledgement() {
         // Prepares the byte array for arrival
@@ -308,83 +308,15 @@ public class Floor  {
         try {
             sendReceiveSocket.receive(receivePacket);
         } catch(IOException e) {
+            System.out.print("IO Exception: likely:");
+            System.out.println("Receive Socket Timed Out.\n" + e);
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("Floor: Packet received:");
-        System.out.println("From host: " + receivePacket.getAddress());
-        System.out.println("Host port: " + receivePacket.getPort());
-        int len = receivePacket.getLength();
-        System.out.println("Length: " + len);
+
+        int len = receivePacket.getLength(); //TODO: len (and other vars) could be a class variable, so we can use in receive and send
+        System.out.println("Floor: Packet received from host: " + receivePacket.getAddress() + ", on port: " +  receivePacket.getPort() + ", with length: " + len);
         System.out.print("Containing: ");
-        String received = new String(data,0,len);   
-        System.out.println(received);
-        System.out.println();
-    }
-
-    /**
-    * @author Nathan MacDiarmid 101098993
-    * @author Amanda Piazza 101143004
-    * Sends the request for the data that is held by the Host
-    */
-    public void sendHasElevatorArrived() {
-        // Prepares the message to be sent by forming a byte array
-        String message = "Can I get the deats?";
-        byte[] msg = message.getBytes();
-
-        System.out.println("Floor: sending a packet containing: " + message);
-
-        // Creates the DatagramPacket to be sent to port 23
-        try {
-            sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), 23);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        System.out.println("To host: " + sendPacket.getAddress());
-        System.out.println("Destination host port: " + sendPacket.getPort());
-        int len = sendPacket.getLength();
-        System.out.println("Length: " + len);
-
-        // Sends the DatagramPacket over port 23
-        try {
-            sendReceiveSocket.send(sendPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        System.out.println("Floor: Request sent.\n");
-    }
-
-    /**
-    * @author Nathan MacDiarmid 101098993
-    * @author Amanda Piazza 101143004
-    * Receive method for Floor receives a message from the specified port
-    * In this case, it is port 23
-    */
-    public void receiveStatus() {
-        // Prepares the byte array for arrival
-        // It is only of length 4 because the server only sends a byte
-        // array of 4 in return
-        byte data[] = new byte[4];
-        receivePacket = new DatagramPacket(data, data.length);
-
-        // Receives the DatagramPacket on the send and receive socket
-        try {
-            sendReceiveSocket.receive(receivePacket);
-        } catch(IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        System.out.println("Floor: Packet received:");
-        System.out.println("From host: " + receivePacket.getAddress());
-        System.out.println("Host port: " + receivePacket.getPort());
-        int len = receivePacket.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing: ");
-
         String received = new String(data,0,len);   
         System.out.println(received);
         System.out.println();
@@ -416,6 +348,7 @@ public class Floor  {
      * @param args
      */
     public static void main(String args[]) {
+        System.out.println();
         Floor floor = new Floor();
         floor.readData("data.txt");
         floor.initiateFloor();
