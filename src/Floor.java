@@ -17,8 +17,8 @@ import javax.xml.transform.Source;
 /**
 Floor.java accepts events from InputData.java. Each event consists of the current time, the floor request, 
    the direction of travel and the car button pressed. These events are sent to Scheduler.java
-*/ 
-public class Floor  {
+*/
+public class Floor {
 
     // All requests will be stored in this sorted ArrayList
     private ArrayList<InputData> elevatorQueue;
@@ -39,7 +39,7 @@ public class Floor  {
      */
     public Floor() {
         this.elevatorQueue = new ArrayList<>();
-        
+
         // Initializes the send and receive socket for the Floor
         try {
             sendReceiveSocket = new DatagramSocket();
@@ -106,9 +106,15 @@ public class Floor  {
      * @return true if any of these inputs are invalid (negative, greater than 7 or not "up" or "down")
      * @return false otherwise
      * @author Nathan MacDiarmid 101098993
+     * @author Michael Kyrollos 101183521
      */
-    private boolean handleInputErrors(int currentFloor, int floorRequest, String direction) {
+    private boolean handleInputErrors(int currentFloor, int floorRequest, String direction, int doorNotOpenError,
+            int doorNotCloseError, int elevatorStuckError) {
         if (currentFloor < 0 || currentFloor > 7) {
+            return true;
+        }
+
+        if (currentFloor == floorRequest) {
             return true;
         }
 
@@ -117,6 +123,18 @@ public class Floor  {
         }
 
         if (!direction.equals("up") && !direction.equals("down")) {
+            return true;
+        }
+
+        if (doorNotOpenError > 1 && doorNotOpenError < 0) {
+            return true;
+        }
+
+        if (doorNotCloseError > 1 && doorNotCloseError < 0) {
+            return true;
+        }
+
+        if (elevatorStuckError > 1 && elevatorStuckError < 0) {
             return true;
         }
 
@@ -129,7 +147,7 @@ public class Floor  {
      * @author Michael Kyrollos 101183521
      * @author Nathan MacDiarmid 101098993
      */
-    public void readData(String filename) { //TODO: make sure that the destination floor is not equal to the initial floor of request
+    public void readData(String filename) {
 
         String path = new File("").getAbsolutePath() + "/" + filename; //TODO: have a try-catch incase there is no data.txt file found
 
@@ -143,10 +161,13 @@ public class Floor  {
                 int timeOfRequest;
                 int currentFloor;
                 int floorRequest;
+                boolean doorNotOpenError;
+                boolean doorNotCloseError;
+                boolean elevatorStuckError;
 
                 // Checks to make sure that only 4 pieces of data are passed from data.txt (time of request, current floor, direction, floor destination)
                 // If more than 4 pieces are passed, it goes to the next line
-                if (data.length > 4) {
+                if (data.length != 7) {
                     continue;
                 }
 
@@ -163,17 +184,29 @@ public class Floor  {
 
                     //save floor request
                     floorRequest = Integer.parseInt(data[3]);
+
+                    // error input part if doors do not open 
+                    doorNotOpenError = convertToBool(Integer.parseInt(data[4]));
+
+                    // error input part if doors do not close 
+                    doorNotCloseError = convertToBool(Integer.parseInt(data[5]));
+
+                    // error input part if the elevator does not make it to the next floor
+                    elevatorStuckError = convertToBool(Integer.parseInt(data[6]));
+
                 } catch (Exception e) {
                     continue;
                 }
 
                 // Skips input line if invalid input
-                if (handleInputErrors(currentFloor, floorRequest, data[2])) {
+                if (handleInputErrors(currentFloor, floorRequest, data[2], Integer.parseInt(data[4]),
+                        Integer.parseInt(data[5]), Integer.parseInt(data[6]))) {
                     continue;
                 }
 
                 //Creating new InputData class for every line in the txt, storing it in the elevator ArrayList
-                elevatorQueue.add(new InputData(timeOfRequest, currentFloor, isGoingUp(data[2]), floorRequest));
+                elevatorQueue.add(new InputData(timeOfRequest, currentFloor, isGoingUp(data[2]), floorRequest,
+                        doorNotOpenError, doorNotCloseError, elevatorStuckError));
             }
         } catch (NumberFormatException | FileNotFoundException e) {
             e.printStackTrace();
@@ -184,6 +217,18 @@ public class Floor  {
         // It is sorted in ascending order based on the 'timeOfRequest' of the request.
         Collections.sort(elevatorQueue);
         printInputData(elevatorQueue);
+    }
+
+    /**
+     * Returns the boolean value of the error injection to be used by the scheduler. 
+     * @param number The integer number (0 or 1) to be converted to boolean
+     * @return true if number is 1 and false is 0
+     * @author Michael Kyrollos, 101183521
+     * @version 20/03/2023
+     */
+    private boolean convertToBool(int number) {
+        return (number == 1) ? true : false;
+
     }
 
     /**
@@ -226,8 +271,8 @@ public class Floor  {
         long startTime = System.currentTimeMillis();
         long firstRequestTime = elevatorQueue.get(0).getTimeOfRequest();
         boolean lastRequest = false; //tracks when the last request is being passed to the scheduler
-        
-        while(elevatorQueue.size() != 0) {
+
+        while (elevatorQueue.size() != 0) {
             if (elevatorQueue.size() == 1) { //If there is only one request left in the input file, set lastRequest to true
                 lastRequest = true;
             }
@@ -247,12 +292,13 @@ public class Floor  {
                 }
                 System.out.println("Floor: Someone on floor " + elevatorQueue.get(0).getFloor() + " has pressed the "
                         + getDirectionLamp() + " button...The " + getDirectionLamp() + " lamp is now on.");
-                
+
                 this.sendInstruction(getElevatorQueue().get(0), lastRequest);
                 this.receiveAcknowledgement();
 
                 elevatorQueue.remove(0);
-                System.out.println("-------------------------------------------------------------------------------------------------");
+                System.out.println(
+                        "-------------------------------------------------------------------------------------------------");
             }
         }
     }
@@ -279,8 +325,9 @@ public class Floor  {
             System.exit(1);
         }
         int len = sendPacket.getLength();
-        System.out.println("To host: " + sendPacket.getAddress() + ", on port: " + sendPacket.getPort() + ", with length: " + len);
-        
+        System.out.println(
+                "To host: " + sendPacket.getAddress() + ", on port: " + sendPacket.getPort() + ", with length: " + len);
+
         // Sends the DatagramPacket over port 23
         try {
             sendReceiveSocket.send(sendPacket);
@@ -307,7 +354,7 @@ public class Floor  {
         // Receives the DatagramPacket on the send and receive socket
         try {
             sendReceiveSocket.receive(receivePacket);
-        } catch(IOException e) {
+        } catch (IOException e) {
             System.out.print("IO Exception: likely:");
             System.out.println("Receive Socket Timed Out.\n" + e);
             e.printStackTrace();
@@ -315,9 +362,10 @@ public class Floor  {
         }
 
         int len = receivePacket.getLength(); //TODO: len (and other vars) could be a class variable, so we can use in receive and send
-        System.out.println("Floor: Packet received from host: " + receivePacket.getAddress() + ", on port: " +  receivePacket.getPort() + ", with length: " + len);
+        System.out.println("Floor: Packet received from host: " + receivePacket.getAddress() + ", on port: "
+                + receivePacket.getPort() + ", with length: " + len);
         System.out.print("Containing: ");
-        String received = new String(data,0,len);   
+        String received = new String(data, 0, len);
         System.out.println(received);
         System.out.println();
     }
@@ -334,11 +382,11 @@ public class Floor  {
     /**
      * THE FOLLOWING GETTERS AND SETTERS ARE FOR TESTING PURPOSES ONLY
      */
-    public DatagramPacket getReceivePacket(){
+    public DatagramPacket getReceivePacket() {
         return this.receivePacket;
     }
 
-    public DatagramPacket getSendPacket(){
+    public DatagramPacket getSendPacket() {
         return this.sendPacket;
     }
 
