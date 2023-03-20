@@ -42,15 +42,47 @@ public class Elevator {
     private ArrayList<InputData> requestQueue;
 
     /* floorButtons represent the buttons inside the elevator */
-    private Map<Integer, Boolean> floorButtons=new HashMap<Integer,Boolean>(){{put(1,false);put(2,false);put(3,false);put(4,false);put(5,false);put(6,false);put(7,false);}};
+    private Map<Integer, Boolean> floorButtons = new HashMap<Integer, Boolean>() {
+        {
+
+            put(1, false);
+            put(2, false);
+            put(3, false);
+            put(4, false);
+            put(5, false);
+            put(6, false);
+
+            put(7, false);
+        }
+    };
 
     /* floorButtonsLamps represent the lamps on the buttons inside the elevator */
-    private Map<Integer, Boolean> floorButtonsLamps=new HashMap<Integer,Boolean>(){{
-    // (integer, boolean(pressed or not), String("light on"/"light off"))
-    put(1,false);put(2,false);put(3,false);put(4,false);put(5,false);put(6,false);put(7,false);}};
+    private Map<Integer, Boolean> floorButtonsLamps = new HashMap<Integer, Boolean>() {
+        {
+            // (integer, boolean(pressed or not), String("light on " /"light off"))  
+
+            put(1, false);
+            put(2, false);
+            put(3, false);
+            put(4, false);
+            put(5, false);
+            put(6, false);
+            put(7, false);
+        }
+    };
 
     /* floorQueue is to keep track of people waiting for this elevator on each floor */
-    private Map<Integer, ArrayList<InputData>> floorQueues=new HashMap<Integer,ArrayList<InputData>>(){{put(1,new ArrayList<InputData>());put(2,new ArrayList<InputData>());put(3,new ArrayList<InputData>());put(4,new ArrayList<InputData>());put(5,new ArrayList<InputData>());put(6,new ArrayList<InputData>());put(7,new ArrayList<InputData>());}};
+    private Map<Integer, ArrayList<InputData>> floorQueues = new HashMap<Integer, ArrayList<InputData>>() {
+        {
+            put(1, new ArrayList<InputData>());
+            put(2, new ArrayList<InputData>());
+            put(3, new ArrayList<InputData>());
+            put(4, new ArrayList<InputData>());
+            put(5, new ArrayList<InputData>());
+            put(6, new ArrayList<InputData>());
+            put(7, new ArrayList<InputData>());
+        }
+    };
 
     /* elevatorQueue is the queue of requests that are currently in this elevator */
     private ArrayList<InputData> insideElevatorQueue;
@@ -395,13 +427,13 @@ public class Elevator {
         // Checks if the message received is no more requests so that the elevator instance knows
         if (message.equals("No more requests")) {
             noMoreRequests = true;
-        } else {
+
             //If message received from scheduler is not "no current requests", then it holds a request and we must save all input data info
             if (!message.equals("No current requests")) {
                 firstRequest = false;
 
                 if (matcher.find()) {
-                      time = LocalTime.parse((matcher.group(1))); //TODO: might want to have a try-catch around this parsing
+                    time = LocalTime.parse((matcher.group(1))); //TODO: might want to have a try-catch around this parsing
                     currentTime = time.get(ChronoField.MILLI_OF_DAY);
                     floor = Integer.parseInt(matcher.group(2));
                     isDirectionUp = Boolean.parseBoolean(matcher.group(3));
