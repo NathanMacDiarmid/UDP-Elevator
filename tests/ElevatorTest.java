@@ -2,6 +2,7 @@ package tests;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +27,10 @@ class ElevatorTest {
         floor = new Floor();
     }
 
+    @AfterEach
+    public void tearDown() {
+        scheduler.closeSockets();
+    }
     /**
      * This tests the sendRequest() method in the elavator class by checking
      * that the data received is the same as whats being sent.
