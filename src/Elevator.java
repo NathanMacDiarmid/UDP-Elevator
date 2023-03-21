@@ -11,6 +11,9 @@ import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -108,7 +111,7 @@ public class Elevator {
         }
     };
 
-    private boolean elevatorStuck = false;
+    private boolean createElevatorStuckFault;
 
     /* elevatorQueue is the queue of requests that are currently in this elevator */
     private ArrayList<InputData> insideElevatorQueue;
@@ -131,7 +134,7 @@ public class Elevator {
             System.exit(1);
         }
         this.insideElevatorQueue = new ArrayList<InputData>();
-        this.elevatorStuck = false;
+        this.createElevatorStuckFault = false;
     }
 
     /*
@@ -226,13 +229,13 @@ public class Elevator {
                 System.out.println(
                         "Elevator #" + elevatorNum + ": Is below initial floor of first request in queue -> moving up");
                 direction = "up";
-                this.sleep(1000); //real time: 6 seconds, demo time: 1 second 
+                elevatorMoveTiming();
                 currentFloor = currentFloor + 1; //move elevator up
             } else {
                 System.out.println("Elevator #" + elevatorNum
                         + ": Is above initial floor of first request in queue -> moving down");
                 direction = "down";
-                this.sleep(1000); //real time: 6 seconds, demo time: 1 second 
+                elevatorMoveTiming();
                 currentFloor = currentFloor - 1; //move elevator down
             }
 
@@ -297,13 +300,13 @@ public class Elevator {
                     System.out.println("Elevator #" + elevatorNum
                             + ": is above destination floor of first request in priority queue -> moving down");
                     direction = "down";
-                    this.sleep(1000);
+                    elevatorMoveTiming();
                     currentFloor = currentFloor - 1; //move elevator down
                 } else {
                     System.out.println("Elevator #" + elevatorNum
                             + ": is below destination floor of first request in priority queue -> moving up");
                     direction = "up";
-                    this.sleep(1000);
+                    elevatorMoveTiming();
                     currentFloor = currentFloor + 1; //move elevator up
                 }
 
@@ -312,6 +315,29 @@ public class Elevator {
         }
 
         return currentFloor;
+    }
+
+    /**
+     * This method will handle the timing as well as the timer for
+     * moving floors, timeout will activate if we take longer then the timeout
+     * time to move between floors.
+     */
+    public void elevatorMoveTiming(){
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run(){
+                System.out.println("Timeout");
+            }
+        }, 3000);
+
+        if(createElevatorStuckFault){
+            this.sleep(5000);
+        }
+        else{
+            this.sleep(1000);
+        }
+        timer.cancel();
     }
 
     /**
@@ -515,20 +541,13 @@ public class Elevator {
                 this.openDoorFaultByFloor.replace(request.getFloor(), request.getDoorNotOpenError());
                 
                 if(elevatorStuckError){
-                    elevatorStuck();
+                    createElevatorStuckFault = true;
                 }
                 
             }
             
         }
     }
-
-    public void elevatorStuck(){
-        System.out.println("Elevator #" + elevatorNum + " is STUCK");
-        this.sleep(5000);
-        
-    }
-
     
 
     /**
