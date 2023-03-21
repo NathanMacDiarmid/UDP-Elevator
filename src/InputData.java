@@ -1,6 +1,5 @@
 package src;
 
-
 public class InputData implements Comparable<InputData> {
     // represents the time the request was sent
     private long timeOfRequest;
@@ -8,19 +7,27 @@ public class InputData implements Comparable<InputData> {
     private int floor;
     // the direction the elevator will go once arrived at the floor (up, down,
     // up/down)
-    private Boolean isDirectionUp;
+    private boolean isDirectionUp;
     // the floor the elevator will go to once it arrives at the 'floor'
     private int carRequest;
+
+    private boolean doorNotOpenError;
+    private boolean doorNotCloseError;
+    private boolean elevatorStuckError;
 
     /**
      * Constructor for the InputData class, takes in all the values per line in the
      * txt file.
      */
-    public InputData(long timeOfRequest, int floor, Boolean isDirectionUp, int carRequest) {
+    public InputData(long timeOfRequest, int floor, boolean isDirectionUp, int carRequest, boolean doorNotOpenError,
+            boolean doorNotCloseError, boolean elevatorStuckError) {
         this.timeOfRequest = timeOfRequest;
         this.floor = floor;
         this.isDirectionUp = isDirectionUp;
         this.carRequest = carRequest;
+        this.doorNotOpenError = doorNotOpenError;
+        this.doorNotCloseError = doorNotCloseError;
+        this.elevatorStuckError = elevatorStuckError;
     }
 
     public Boolean getIsDirectionUp() {
@@ -63,6 +70,18 @@ public class InputData implements Comparable<InputData> {
         return this.carRequest;
     }
 
+    public Boolean getDoorNotOpenError() {
+        return doorNotOpenError;
+    }
+
+    public Boolean getDoorNotCloseError() {
+        return doorNotCloseError;
+    }
+
+    public Boolean getElevatorStuckError() {
+        return elevatorStuckError;
+    }
+
     @Override
     /**
      * Allows the represented data in InputData.java to be printed.
@@ -79,7 +98,9 @@ public class InputData implements Comparable<InputData> {
         // adding String formatting
         String time = String.format("%02d:%02d:%02d.%d", hour, minute, second, millis);
         return "InputData [currentTime=" + time + ", floor=" + floor + ", isDirectionUp="
-                + isDirectionUp + ", car button=" + carRequest + "]";
+                + isDirectionUp + ", car button=" + carRequest + ", doorNotOpenError=" + doorNotOpenError
+                + ", doorNotCloseError="
+                + doorNotCloseError + ", elevatorStuckError=" + elevatorStuckError + "]";
     }
 
     @Override
