@@ -84,6 +84,32 @@ public class Elevator {
         }
     };
 
+    private Map<Integer, Boolean> closeDoorFaultByFloor = new HashMap<Integer, Boolean>() {
+        { 
+            put(1, false);
+            put(2, false);
+            put(3, false);
+            put(4, false);
+            put(5, false);
+            put(6, false);
+            put(7, false);
+        }
+    };
+
+    private Map<Integer, Boolean> openDoorFaultByFloor = new HashMap<Integer, Boolean>() {
+        { 
+            put(1, false);
+            put(2, false);
+            put(3, false);
+            put(4, false);
+            put(5, false);
+            put(6, false);
+            put(7, false);
+        }
+    };
+
+    private boolean elevatorStuck = false;
+
     /* elevatorQueue is the queue of requests that are currently in this elevator */
     private ArrayList<InputData> insideElevatorQueue;
 
@@ -105,6 +131,7 @@ public class Elevator {
             System.exit(1);
         }
         this.insideElevatorQueue = new ArrayList<InputData>();
+        this.elevatorStuck = false;
     }
 
     /*
@@ -177,6 +204,8 @@ public class Elevator {
         boolean reachedDestination = false;
         boolean pickedPplUp = false;
         int sizeAfterPickup;
+        boolean doorNotOpen = false;
+        boolean doorNotClose = false;
 
         // if the floor that the elevator is currently on has passengers waiting -> pick them up
         if ((currentFloor != 0) && (this.floorQueues.get(currentFloor).size() != 0)) {
@@ -197,11 +226,13 @@ public class Elevator {
                 System.out.println(
                         "Elevator #" + elevatorNum + ": Is below initial floor of first request in queue -> moving up");
                 direction = "up";
+                this.sleep(1000); //real time: 6 seconds, demo time: 1 second 
                 currentFloor = currentFloor + 1; //move elevator up
             } else {
                 System.out.println("Elevator #" + elevatorNum
                         + ": Is above initial floor of first request in queue -> moving down");
                 direction = "down";
+                this.sleep(1000); //real time: 6 seconds, demo time: 1 second 
                 currentFloor = currentFloor - 1; //move elevator down
             }
 
@@ -228,26 +259,36 @@ public class Elevator {
                 }
             }
 
+            //if the current floor has an open fault happening
+            if(openDoorFaultByFloor.get(currentFloor)){
+                doorNotOpen = true;
+            }
+            //if the current floor has a close fault happening
+            if(closeDoorFaultByFloor.get(currentFloor)){
+                doorNotClose = true;
+            }
+            
             //if we have reached the desitnation floor of one or more passengers AND there are people on this floor waiting for the elevator -> stop elevator and let them off and pick up passengeres waiting
             if (reachedDestination && pickedPplUp) {
+                
                 System.out.println("Elevator #" + elevatorNum + " -> Notfiy elevator to open doors");
-                stopElevator();
+                stopElevator(doorNotOpen);
                 System.out.println("Elevator #" + elevatorNum + " -> People are walking in and out");
-                startElevator();
+                startElevator(doorNotClose);
             } else if (reachedDestination) {
                 System.out.println("Elevator #" + elevatorNum + " -> Notfiy elevator to open doors");
-                stopElevator();
+                stopElevator(doorNotOpen);
                 System.out.println("Elevator #" + elevatorNum + " -> People are walking out");
-                startElevator();
+                startElevator(doorNotClose);
 
             } else if (pickedPplUp) {
                 System.out.println("Elevator #" + elevatorNum + " -> Notfiy elevator to open doors");
-                stopElevator();
+                stopElevator(doorNotOpen);
                 System.out.println("Elevator #" + elevatorNum + " -> People are walking in");
-                startElevator();
+                startElevator(doorNotClose);
             }
 
-            //if there are still more people in the elevator after dropping one or more passengers off, start going to their destination floor
+            //if there are people in the elevator after dropping one or more passengers off, start going to their destination floor
             if (this.insideElevatorQueue.size() > 0) {
 
                 //if elevator is above floor of the the destination of the first request, move down, else move up
@@ -256,11 +297,13 @@ public class Elevator {
                     System.out.println("Elevator #" + elevatorNum
                             + ": is above destination floor of first request in priority queue -> moving down");
                     direction = "down";
+                    this.sleep(1000);
                     currentFloor = currentFloor - 1; //move elevator down
                 } else {
                     System.out.println("Elevator #" + elevatorNum
                             + ": is below destination floor of first request in priority queue -> moving up");
                     direction = "up";
+                    this.sleep(1000);
                     currentFloor = currentFloor + 1; //move elevator up
                 }
 
@@ -288,12 +331,20 @@ public class Elevator {
      * Stops the motor, opens door, let's people walk in/out, and closes doors
      * @author Juanita Rodelo 101141857
      */
-    public void stopElevator() {
+    public void stopElevator(boolean doorNotOpenError) {
 
         setMotorMoving(false);
         System.out.println("Elevator #" + elevatorNum + ": Motor stopped moving");
-        setDoorOpen(true);
-        System.out.println("Elevator #" + elevatorNum + ": Doors opening");
+        
+        if(doorNotOpenError){
+            System.out.println("Elevator #" + elevatorNum + ": has failed to open doors");
+            System.out.println("Elevator #" + elevatorNum + " -> fixing door");                  
+            this.sleep(4000); 
+            System.out.println("Elevator #" + elevatorNum + " -> doors have been fixed"); 
+            //Handle error
+        }
+        System.out.println("Elevator #" + elevatorNum + ": Doors opening"); 
+        setDoorOpen(true);        
         this.sleep(2700); //sleep for the amount of time it takes to open the doors.
 
     }
@@ -302,9 +353,16 @@ public class Elevator {
      * Stops the motor, opens door, let's people walk in/out, and closes doors
      * @author Juanita Rodelo 101141857
      */
-    public void startElevator() {
+    public void startElevator(boolean doorNotCloseError) {
 
-        System.out.println("Elevator #" + elevatorNum + ": Doors are closing");
+        if(doorNotCloseError){             
+            System.out.println("Elevator #" + elevatorNum + ": has failed to close doors");
+            System.out.println("Elevator #" + elevatorNum + " -> fixing door");                  
+            this.sleep(4000); 
+            System.out.println("Elevator #" + elevatorNum + " -> doors have been fixed"); 
+            //Handle error
+        }      
+        System.out.println("Elevator #" + elevatorNum + ": Doors are closing"); 
         setDoorOpen(false);
         System.out.println("Elevator #" + elevatorNum + ": Motor is moving again");
         setMotorMoving(true);
@@ -411,6 +469,7 @@ public class Elevator {
     * @author Michael Kyrollos 101183521
     */
     public void saveReceivedMessage(String message) {
+        System.out.println("in save received message");
         InputData request;
         int currentTime;
         int floor;
@@ -427,32 +486,50 @@ public class Elevator {
         // Checks if the message received is no more requests so that the elevator instance knows
         if (message.equals("No more requests")) {
             noMoreRequests = true;
+        }
 
-            //If message received from scheduler is not "no current requests", then it holds a request and we must save all input data info
-            if (!message.equals("No current requests")) {
-                firstRequest = false;
+        //If message received from scheduler is not "no current requests", then it holds a request and we must save all input data info
+        if (!message.equals("No current requests")) {
+            firstRequest = false;
 
-                if (matcher.find()) {
-                    time = LocalTime.parse((matcher.group(1))); //TODO: might want to have a try-catch around this parsing
-                    currentTime = time.get(ChronoField.MILLI_OF_DAY);
-                    floor = Integer.parseInt(matcher.group(2));
-                    isDirectionUp = Boolean.parseBoolean(matcher.group(3));
-                    carButton = Integer.parseInt(matcher.group(4));
-                    doorNotOpenError = Boolean.parseBoolean(matcher.group(5));
-                    doorNotCloseError = Boolean.parseBoolean(matcher.group(6));
-                    elevatorStuckError = Boolean.parseBoolean(matcher.group(7));
-                    // lastRequest = Boolean.parseBoolean(matcher.group(8));
-                    request = new InputData(currentTime, floor, isDirectionUp, carButton, doorNotOpenError,
-                            doorNotCloseError,
-                            elevatorStuckError);
+            if (matcher.find()) {
+                time = LocalTime.parse((matcher.group(1))); //TODO: might want to have a try-catch around this parsing
+                currentTime = time.get(ChronoField.MILLI_OF_DAY);
+                floor = Integer.parseInt(matcher.group(2));
+                isDirectionUp = Boolean.parseBoolean(matcher.group(3));
+                carButton = Integer.parseInt(matcher.group(4));
+                doorNotOpenError = Boolean.parseBoolean(matcher.group(5));
+                doorNotCloseError = Boolean.parseBoolean(matcher.group(6));
+                elevatorStuckError = Boolean.parseBoolean(matcher.group(7));
+                // lastRequest = Boolean.parseBoolean(matcher.group(8));
+                request = new InputData(currentTime, floor, isDirectionUp, carButton, doorNotOpenError,
+                        doorNotCloseError, elevatorStuckError);
 
-                    //Add request to elevatorQueue
-                    this.floorQueues.get(request.getFloor()).add(request); // adds request to corresponding floor queue
-                    this.requestQueue.add(request); // adds request to main request queue 
+                //Add request to elevatorQueue
+                this.floorQueues.get(request.getFloor()).add(request); // adds request to corresponding floor queue
+                System.out.println("adding to requestQueue");
+                this.requestQueue.add(request); // adds request to main request queue 
+                
+                //save whether the request has a faXult occuring
+                this.closeDoorFaultByFloor.replace(request.getFloor(), request.getDoorNotCloseError());
+                this.openDoorFaultByFloor.replace(request.getFloor(), request.getDoorNotOpenError());
+                
+                if(elevatorStuckError){
+                    elevatorStuck();
                 }
+                
             }
+            
         }
     }
+
+    public void elevatorStuck(){
+        System.out.println("Elevator #" + elevatorNum + " is STUCK");
+        this.sleep(5000);
+        
+    }
+
+    
 
     /**
      * Closes the open sockets when program ends

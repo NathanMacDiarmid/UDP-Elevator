@@ -70,18 +70,21 @@ public class InputData implements Comparable<InputData> {
         return this.carRequest;
     }
 
-    public Boolean getDoorNotOpenError() {
+    public boolean getDoorNotOpenError() {
         return doorNotOpenError;
     }
 
-    public Boolean getDoorNotCloseError() {
+    public boolean getDoorNotCloseError() {
         return doorNotCloseError;
     }
 
-    public Boolean getElevatorStuckError() {
+    public boolean getElevatorStuckError() {
         return elevatorStuckError;
     }
 
+    public void setElevatorStuckError(boolean setting) {
+        this.elevatorStuckError = setting;
+    }
     @Override
     /**
      * Allows the represented data in InputData.java to be printed.
@@ -103,6 +106,8 @@ public class InputData implements Comparable<InputData> {
                 + doorNotCloseError + ", elevatorStuckError=" + elevatorStuckError + "]";
     }
 
+
+    
     @Override
     /**
      * Allows the InputData.java classes to be compared to each other via the time
