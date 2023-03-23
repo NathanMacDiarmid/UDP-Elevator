@@ -2,6 +2,7 @@ package tests;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,11 +27,10 @@ public class FloorTest {
 
     }
 
-    // @AfterEach
-    // public void tearDown() {
-    //     elevatorThread.interrupt();
-    //     floorThread.interrupt();
-    // }
+    @AfterEach
+    public void tearDown() {
+        scheduler.closeSockets();
+    }
 
     /**
      * Tests that the file has been read properly, using the first line only.
@@ -43,6 +43,7 @@ public class FloorTest {
         floor.readData("dataForTests.txt");
         assertEquals(5, floor.getElevatorQueue().get(0).getCarRequest());
         assertEquals(3, floor.getElevatorQueue().get(0).getFloor());
+        scheduler.closeSockets();
 
     }
 

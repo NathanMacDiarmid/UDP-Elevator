@@ -2,6 +2,7 @@ package tests;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +27,11 @@ class SchedulerTest {
         elevator1 = new Elevator(1, 1, "up");
         elevator2 = new Elevator(2, 1, "up");
         floor = new Floor();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        scheduler.closeSockets();
     }
 
     /**
