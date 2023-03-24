@@ -24,7 +24,7 @@ public class Scheduler {
     private ArrayList<InputData> requestQueue;
 
     /* elevatorAndTheirPorts maps elevator car numbers with their port*/
-    Map<Integer, Integer> elevatorAndTheirPorts = new HashMap<Integer, Integer>(); //TODO: make this private/public with getters and setters
+    Map<Integer, Integer> elevatorAndTheirPorts = new HashMap<Integer, Integer>();
 
     private DatagramPacket sendPacket, receivePacket23, receivePacket69;
     private DatagramSocket sendAndReceiveSocket, receiveSocket23, receiveSocket69;
@@ -126,7 +126,7 @@ public class Scheduler {
                 + receivePacket23.getPort() + ", with length: " + len);
         System.out.print("Containing: ");
 
-        translateStringInstruction(received);
+        translateStringInstruction(received, false);
         System.out.println(received);
         System.out.println();
     }
@@ -191,6 +191,25 @@ public class Scheduler {
                 + ", on port: " + receivePacket69.getPort() + ", with length: " + len);
         System.out.print("Containing: ");
         System.out.println(received);
+
+        //Check if this is a normal messsga or an emergency message and handle accordingly
+        if(received.split(" ", 2)[0].equals("InputData")){
+            /** This will the request back to the queue of requests so it can be handled
+            *  by another elevator, if we have all ready recived all requests from floor
+            *  class then we will have to reset elevatorsExecutingInstructions so it
+            * can execute this last instruction.
+            */ 
+            System.out.println("Scheduler received EMERGENCY message");
+
+            if(noMoreRequests){
+                this.elevatorsExecutingInstructions = false;
+            }
+            translateStringInstruction(received, true);
+            data = request;
+            
+            return -1;
+        }
+
         saveElevatorStatus(received);
         System.out.println();
 
@@ -205,6 +224,7 @@ public class Scheduler {
      * @author Amanda Piazza 101143004
      */
     public void saveElevatorStatus(String input) {
+        
         // split by whitespace
         // receiving it in format 'Elevator car #: 2 Floor: 2 Num of people: 3 Serviced: 1 '
         String[] tokens = input.split(" ");
@@ -419,9 +439,10 @@ public class Scheduler {
     * @author Michael Kyrollos 101183521
     * @author Amanda Piazza 101143004
     */
-    public void translateStringInstruction(String instruction) {
+    public void translateStringInstruction(String instruction, boolean ignoreLastRequest) {
         // String format: InputData [currentTime=16:48:10.0, floor=6, isDirectionUp=false, car button=3]: true
-
+        System.out.println("In translateStringInstruction - Scheduler instruction: " + instruction);
+        
         InputData request;
         int currentTime;
         int floor;
@@ -435,9 +456,9 @@ public class Scheduler {
                 "\\[currentTime=(\\d+:\\d+:\\d+\\.\\d+), floor=(\\d+), isDirectionUp=(\\w+), car button=(\\d+), doorNotOpenError=(\\w+), doorNotCloseError=(\\w+), elevatorStuckError=(\\w+)\\]: (\\w+)");
         Matcher matcher = pattern.matcher(instruction);
         LocalTime time;
-
         //parse through the pattern to extract data for the given request 
         if (matcher.find()) {
+            System.out.println("in matcher.find()");
             time = LocalTime.parse((matcher.group(1))); //TODO: maybe we should have try-catches around these to double check
             currentTime = time.get(ChronoField.MILLI_OF_DAY);
             floor = Integer.parseInt(matcher.group(2));
@@ -453,7 +474,11 @@ public class Scheduler {
 
             //Add request to elevatorQueue
             this.requestQueue.add(request);
-            this.noMoreRequests = lastRequest;
+            System.out.println("Scheduler: requestQueue: ");
+            System.out.println(requestQueue.toString());
+            if(!ignoreLastRequest){
+                this.noMoreRequests = lastRequest;
+            }
         }
 
     }
@@ -492,9 +517,9 @@ public class Scheduler {
         int elevatorPort;
         Scheduler scheduler = new Scheduler(2);
         int elevatorsDone = 0;
-
+        
         //while all elevators are not done sending requests and receving (because they're done servicing all their requests)
-        while (elevatorsDone <= scheduler.numOfCars) {
+        while (elevatorsDone <= scheduler.getNumOfCars()) {
 
             // Check if request received is last request, if true stop receiving more instructions
             if (!scheduler.noMoreRequests) {
@@ -511,7 +536,17 @@ public class Scheduler {
                     elevatorsDone++; //increment the number of elevators that have completely finished serivicing their requests
                 } else {
                     elevatorPort = scheduler.receiveElevatorStatus();
-                    scheduler.elevatorAndTheirPorts.put(i, elevatorPort); //save elevator port in Map
+
+                    //If -1 was returned there was an error with this elevator and we need to remove it
+                    if(elevatorPort == -1){
+                        scheduler.numOfCars -= 1;
+                        scheduler.elevatorAndTheirPorts.remove(i);
+                        scheduler.elevatorsInfo.remove(i);
+                        //elevatorsDone++; //increment the number of elevators that have completely finished serivicing their requests
+                    }
+                    else{
+                        scheduler.elevatorAndTheirPorts.put(i, elevatorPort); //save elevator port in Map
+                    }
                 }
             }
 

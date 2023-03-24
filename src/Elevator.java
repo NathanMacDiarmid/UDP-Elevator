@@ -47,14 +47,12 @@ public class Elevator {
     /* floorButtons represent the buttons inside the elevator */
     private Map<Integer, Boolean> floorButtons = new HashMap<Integer, Boolean>() {
         {
-
             put(1, false);
             put(2, false);
             put(3, false);
             put(4, false);
             put(5, false);
             put(6, false);
-
             put(7, false);
         }
     };
@@ -63,7 +61,6 @@ public class Elevator {
     private Map<Integer, Boolean> floorButtonsLamps = new HashMap<Integer, Boolean>() {
         {
             // (integer, boolean(pressed or not), String("light on " /"light off"))  
-
             put(1, false);
             put(2, false);
             put(3, false);
@@ -112,6 +109,7 @@ public class Elevator {
     };
 
     private boolean createElevatorStuckFault;
+    private boolean elevatorIsStuck;
 
     /* elevatorQueue is the queue of requests that are currently in this elevator */
     private ArrayList<InputData> insideElevatorQueue;
@@ -135,6 +133,7 @@ public class Elevator {
         }
         this.insideElevatorQueue = new ArrayList<InputData>();
         this.createElevatorStuckFault = false;
+        this.elevatorIsStuck = false;
     }
 
     /*
@@ -142,6 +141,10 @@ public class Elevator {
      */
     public ArrayList<InputData> getRequestQueue() {
         return requestQueue;
+    }
+
+    public boolean getIsStuck() {
+        return elevatorIsStuck;
     }
 
     /**
@@ -327,7 +330,9 @@ public class Elevator {
         timer.schedule(new TimerTask() {
             @Override
             public void run(){
-                System.out.println("Timeout");
+                System.out.println("Timeout has occured while the elevator is trying to move");
+                System.out.println("Therefore we are stuck, activating emergency routine now");
+                elevatorIsStuck = true;
             }
         }, 3000);
 
@@ -398,7 +403,16 @@ public class Elevator {
 
         String message = "";
 
-        if (firstRequest) { //TODO: message is the same in both conditions so change
+        if (elevatorIsStuck) { //if the elevator has a stuck fault, send scheduler "EMERGENCY" message
+            InputData requestToSendBack = this.requestQueue.get(requestQueue.size()-1); //send the last request in the requestQueue
+            requestToSendBack.setElevatorStuckError(false);
+            message = requestToSendBack.toString() +": false";
+
+            //Stop this elevator from handling any more requests
+            this.noMoreRequests = true;
+            this.requestQueue.clear();
+            
+        } else if (firstRequest) { //TODO: message is the same in both conditions so change
             // Prepares the message to be sent by forming a byte array
             message = "Elevator car #: " + elevatorNum
                     + " Floor: " + initialFloor
@@ -407,7 +421,6 @@ public class Elevator {
                     + " Direction: " + this.direction;
             prevCurrentFloor = initialFloor;
         } else if (requestQueue.size() > 0) {
-
             newCurrentFloor = moveElevator(prevCurrentFloor);
             message = "Elevator car #: " + elevatorNum
                     + " Floor: " + newCurrentFloor
@@ -419,7 +432,6 @@ public class Elevator {
         }
 
         return message;
-
     }
 
     /**
@@ -549,7 +561,6 @@ public class Elevator {
         }
     }
     
-
     /**
      * Closes the open sockets when program ends
      * @author Nathan MacDiarmid 101098993 
@@ -598,17 +609,20 @@ public class Elevator {
 
             //iterate through all elevators and check if they're done to know whether they should keep sending their status
             while (elevatorsIterator1.hasNext()) {
-
                 boolean elevatorDone = false;
                 Map.Entry<Elevator, Boolean> currElevatorStatus = elevatorsIterator1.next();
                 Elevator currElevator = currElevatorStatus.getKey();
 
                 //if current elevator is done accepting requests from schedule and has completed servicing all of it's requests -> elevator is done
                 if (currElevator.isNoMoreRequests() && currElevator.getRequestQueue().size() == 0) {
-                    System.out.println("Elevator #" + currElevator.elevatorNum + " is done");
+                    if(currElevator.getIsStuck()){
+                        System.out.println("Elevator #" + currElevator.elevatorNum + " is STUCK");
+                    }
+                    else{
+                        System.out.println("Elevator #" + currElevator.elevatorNum + " is done");
+                    }
                     elevatorsFinished.replace(currElevator, true);
                     elevatorDone = true;
-
                 }
 
                 //only if elevator is not done -> send status, else don't send anything
@@ -627,8 +641,12 @@ public class Elevator {
 
                 //if current elevator is done accepting requests from schedule and has completed servicing all of it's requests -> elevator is done
                 if (currElevator.isNoMoreRequests() && currElevator.getRequestQueue().size() == 0) {
-                    System.out.println("Elevator #" + currElevator.elevatorNum + " is done");
-                    elevatorsFinished.replace(currElevator, true);
+                    if(currElevator.getIsStuck()){
+                        System.out.println("Elevator #" + currElevator.elevatorNum + " is STUCK");
+                    }
+                    else{
+                        System.out.println("Elevator #" + currElevator.elevatorNum + " is done");
+                    }                    elevatorsFinished.replace(currElevator, true);
                     elevatorDone = true;
                 }
 
