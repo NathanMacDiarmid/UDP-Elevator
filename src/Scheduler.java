@@ -166,6 +166,7 @@ public class Scheduler {
      * Receives Elevators status and calls function to save elevator information
      * @author Nathan MacDiarmid 101098993
      * @author Amanda Piazza 101143004
+     * @author Matthew Belanger 101144323
      * @return port that the packet was received on (to keep track of ports of all elevator cars)
      */
     public int receiveElevatorStatus() {
@@ -194,20 +195,19 @@ public class Scheduler {
 
         //Check if this is a normal messsga or an emergency message and handle accordingly
         if(received.split(" ", 2)[0].equals("InputData")){
-            /** This will the request back to the queue of requests so it can be handled
+            /** This will add the request back to the queue of requests so it can be handled
             *  by another elevator, if we have all ready recived all requests from floor
-            *  class then we will have to reset elevatorsExecutingInstructions so it
+            * class then we will have to reset elevatorsExecutingInstructions so it
             * can execute this last instruction.
             */ 
-            System.out.println("Scheduler received EMERGENCY message");
 
             if(noMoreRequests){
                 this.elevatorsExecutingInstructions = false;
             }
             translateStringInstruction(received, true);
-            data = request;
+            data = request; //So the request can be sent to another elevator
             
-            return -1;
+            return -1; //Return -1 so that the scheduler knows there was a problem with this elevator
         }
 
         saveElevatorStatus(received);
@@ -438,11 +438,9 @@ public class Scheduler {
     * Parses the request coming from the floor and saves it in requestQueue and other variables
     * @author Michael Kyrollos 101183521
     * @author Amanda Piazza 101143004
+    * @author Matthew Belanger 101144323
     */
-    public void translateStringInstruction(String instruction, boolean ignoreLastRequest) {
-        // String format: InputData [currentTime=16:48:10.0, floor=6, isDirectionUp=false, car button=3]: true
-        System.out.println("In translateStringInstruction - Scheduler instruction: " + instruction);
-        
+    public void translateStringInstruction(String instruction, boolean ignoreLastRequest) {     
         InputData request;
         int currentTime;
         int floor;
@@ -458,7 +456,6 @@ public class Scheduler {
         LocalTime time;
         //parse through the pattern to extract data for the given request 
         if (matcher.find()) {
-            System.out.println("in matcher.find()");
             time = LocalTime.parse((matcher.group(1))); //TODO: maybe we should have try-catches around these to double check
             currentTime = time.get(ChronoField.MILLI_OF_DAY);
             floor = Integer.parseInt(matcher.group(2));
@@ -474,8 +471,8 @@ public class Scheduler {
 
             //Add request to elevatorQueue
             this.requestQueue.add(request);
-            System.out.println("Scheduler: requestQueue: ");
-            System.out.println(requestQueue.toString());
+
+            // If we are getting a request sent back from an elevator then ignore the lastRequest value
             if(!ignoreLastRequest){
                 this.noMoreRequests = lastRequest;
             }
@@ -542,7 +539,6 @@ public class Scheduler {
                         scheduler.numOfCars -= 1;
                         scheduler.elevatorAndTheirPorts.remove(i);
                         scheduler.elevatorsInfo.remove(i);
-                        //elevatorsDone++; //increment the number of elevators that have completely finished serivicing their requests
                     }
                     else{
                         scheduler.elevatorAndTheirPorts.put(i, elevatorPort); //save elevator port in Map

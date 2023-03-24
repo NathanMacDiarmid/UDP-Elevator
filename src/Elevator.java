@@ -324,6 +324,8 @@ public class Elevator {
      * This method will handle the timing as well as the timer for
      * moving floors, timeout will activate if we take longer then the timeout
      * time to move between floors.
+     * 
+     * @author Matthew Belanger 101144323
      */
     public void elevatorMoveTiming(){
         Timer timer = new Timer();
@@ -336,10 +338,10 @@ public class Elevator {
             }
         }, 3000);
 
-        if(createElevatorStuckFault){
+        if(createElevatorStuckFault){ //Take too long to move to create fault
             this.sleep(5000);
         }
-        else{
+        else{ //Normal moving of the elevator
             this.sleep(1000);
         }
         timer.cancel();
@@ -403,7 +405,7 @@ public class Elevator {
 
         String message = "";
 
-        if (elevatorIsStuck) { //if the elevator has a stuck fault, send scheduler "EMERGENCY" message
+        if (elevatorIsStuck) { //if the elevator has a stuck fault, send scheduler back the last request so that a different elevator can handle it
             InputData requestToSendBack = this.requestQueue.get(requestQueue.size()-1); //send the last request in the requestQueue
             requestToSendBack.setElevatorStuckError(false);
             message = requestToSendBack.toString() +": false";
@@ -438,6 +440,7 @@ public class Elevator {
     * Sends the status of the current elevator to the scheduler
     * @author Nathan MacDiarmid 101098993
     * @author Amanda Piazza 101143004
+    * @author Matthew Belanger 101144323
     */
     public void sendStatus() {
 
