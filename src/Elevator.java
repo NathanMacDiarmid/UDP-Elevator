@@ -111,10 +111,6 @@ public class Elevator {
     private boolean createElevatorStuckFault;
     private boolean elevatorIsStuck;
 
-    public boolean isElevatorIsStuck() {
-        return elevatorIsStuck;
-    }
-
     /* elevatorQueue is the queue of requests that are currently in this elevator */
     private ArrayList<InputData> insideElevatorQueue;
 
@@ -588,10 +584,14 @@ public class Elevator {
     }
 
     /**
-     * THE FOLLOWING GETTER IS FOR TESTING PURPOSES ONLY
+     * THE FOLLOWING GETTERS ARE FOR TESTING PURPOSES ONLY
      */
     public DatagramPacket getReceivePacket() {
         return this.receivePacket;
+    }
+
+    public boolean isElevatorIsStuck() {
+        return elevatorIsStuck;
     }
 
     public static void main(String args[]) {

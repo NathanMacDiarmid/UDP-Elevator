@@ -36,10 +36,6 @@ public class Scheduler {
     /* This maps the elevator number with their current floor and the number people currently in it*/
     private Map<Integer, int[]> elevatorsInfo;
 
-    public Map<Integer, int[]> getElevatorsInfo() {
-        return elevatorsInfo;
-    }
-
     /**
      * Default constructor for Scheduler
      * Initializes all of the attributes
