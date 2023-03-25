@@ -36,6 +36,10 @@ public class Scheduler {
     /* This maps the elevator number with their current floor and the number people currently in it*/
     private Map<Integer, int[]> elevatorsInfo;
 
+    public Map<Integer, int[]> getElevatorsInfo() {
+        return elevatorsInfo;
+    }
+
     /**
      * Default constructor for Scheduler
      * Initializes all of the attributes
@@ -194,19 +198,19 @@ public class Scheduler {
         System.out.println(received);
 
         //Check if this is a normal messsga or an emergency message and handle accordingly
-        if(received.split(" ", 2)[0].equals("InputData")){
+        if (received.split(" ", 2)[0].equals("InputData")) {
             /** This will add the request back to the queue of requests so it can be handled
             *  by another elevator, if we have all ready recived all requests from floor
             * class then we will have to reset elevatorsExecutingInstructions so it
             * can execute this last instruction.
-            */ 
+            */
 
-            if(noMoreRequests){
+            if (noMoreRequests) {
                 this.elevatorsExecutingInstructions = false;
             }
             translateStringInstruction(received, true);
             data = request; //So the request can be sent to another elevator
-            
+
             return -1; //Return -1 so that the scheduler knows there was a problem with this elevator
         }
 
@@ -224,7 +228,7 @@ public class Scheduler {
      * @author Amanda Piazza 101143004
      */
     public void saveElevatorStatus(String input) {
-        
+
         // split by whitespace
         // receiving it in format 'Elevator car #: 2 Floor: 2 Num of people: 3 Serviced: 1 '
         String[] tokens = input.split(" ");
@@ -407,40 +411,12 @@ public class Scheduler {
     }
 
     /**
-    * Receives elevator request from the floor
-    * @author Nathan MacDiarmid 101098993
-    * @author Amanda Piazza 101143004
-    */
-    public void receiveFloorRequest() {
-        // Initializes the DatagramPacket to be received from the Floor
-        byte[] request = new byte[20];
-        receivePacket23 = new DatagramPacket(request, request.length);
-        System.out.println("Scheduler: Waiting for Packet from floor.\n");
-
-        // Receives the DatagramPacket from the Floor
-        try {
-            receiveSocket23.receive(receivePacket23);
-        } catch (IOException e) {
-            System.out.print("IO Exception: likely:");
-            System.out.println("Receive Socket Timed Out.\n" + e);
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        int len = receivePacket23.getLength();
-        System.out.println("Scheduler: Packet received from Floor host: " + receivePacket23.getAddress() + ", on port: "
-                + receivePacket23.getPort() + ", with length: " + len);
-        System.out.print("Containing: ");
-        System.out.println(new String(request) + "\n");
-    }
-
-    /**
     * Parses the request coming from the floor and saves it in requestQueue and other variables
     * @author Michael Kyrollos 101183521
     * @author Amanda Piazza 101143004
     * @author Matthew Belanger 101144323
     */
-    public void translateStringInstruction(String instruction, boolean ignoreLastRequest) {     
+    public void translateStringInstruction(String instruction, boolean ignoreLastRequest) {
         InputData request;
         int currentTime;
         int floor;
@@ -473,7 +449,7 @@ public class Scheduler {
             this.requestQueue.add(request);
 
             // If we are getting a request sent back from an elevator then ignore the lastRequest value
-            if(!ignoreLastRequest){
+            if (!ignoreLastRequest) {
                 this.noMoreRequests = lastRequest;
             }
         }
@@ -514,7 +490,7 @@ public class Scheduler {
         int elevatorPort;
         Scheduler scheduler = new Scheduler(2);
         int elevatorsDone = 0;
-        
+
         //while all elevators are not done sending requests and receving (because they're done servicing all their requests)
         while (elevatorsDone <= scheduler.getNumOfCars()) {
 
@@ -535,12 +511,11 @@ public class Scheduler {
                     elevatorPort = scheduler.receiveElevatorStatus();
 
                     //If -1 was returned there was an error with this elevator and we need to remove it
-                    if(elevatorPort == -1){
+                    if (elevatorPort == -1) {
                         scheduler.numOfCars -= 1;
                         scheduler.elevatorAndTheirPorts.remove(i);
                         scheduler.elevatorsInfo.remove(i);
-                    }
-                    else{
+                    } else {
                         scheduler.elevatorAndTheirPorts.put(i, elevatorPort); //save elevator port in Map
                     }
                 }
