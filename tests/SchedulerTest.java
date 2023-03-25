@@ -214,14 +214,4 @@ class SchedulerTest {
         // the millisecond of the day
         return time.get(ChronoField.MILLI_OF_DAY);
     }
-
-    /*
-     * receiveInstructionFromFloor
-     * sendFloorAcknowledgement
-     * receiveElevatorStatus
-     * getElevatorForRequest
-     * 
-     * receiveFloorRequest
-     * translateStringInstruction
-     */
 }
