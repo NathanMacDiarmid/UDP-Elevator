@@ -13,23 +13,23 @@ elevator to receive the incoming instruction to execute based on direction and d
 ## Contributions:
 🥇 Amanda Piazza (101143004)
 
-  * Floor, Scheduler, and Elevator UDP ports
+  * Elevator stuck timing diagram, Handle door stuck open/close event
      
 🥇 Juanita Rodelo (101141857) 
 
-   * Floor, Scheduler, and Elevator UDP ports
+   * Door stuck open/close timing diagram, Handle door stuck open/close event
      
 🥇 Matthew Belanger (101144323)
 
-   * Implementation of choosing elevator logic, unit testing
+   * Elevator stuck timeout fault
      
 🥇 Michael Kyrollos (101183521)  
 
-   * Unit testing, UML diagrams
+   * Unit testing, UML diagrams, Fault injection and parsing
      
 🥇 Nathan MacDiarmid (101098993) 
 
-   * Floor, Scheduler, and Elevator UDP ports, implementation of choosing elevator logic, sequence diagram, README
+   * Sequence diagram, Elevator stuck timeout fault
 
 ### Structure 
    * Floor.java accepts events from InputData.java. Each event consists of the current time, the floor request, 
