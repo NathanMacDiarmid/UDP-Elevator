@@ -153,33 +153,6 @@ class SchedulerTest {
         assertEquals("No current requests", received2);
     }
 
-    @Test
-    public void testSending() {
-        int elevatorPort;
-        floor.readData("dataForTests.txt");
-        floor.sendInstruction(floor.getElevatorQueue().get(1), false);
-        scheduler.receiveInstructionFromFloor();
-        scheduler.sendFloorAcknowledgement();
-        floor.receiveAcknowledgement();
-        elevator1.sendStatus();
-        elevator2.sendStatus();
-        for (int i = 1; i < scheduler.getNumOfCars() + 1; i++) {
-            elevatorPort = scheduler.receiveElevatorStatus();
-            scheduler.elevatorAndTheirPortsPut(i, elevatorPort);
-        }
-        scheduler.sendToElevators();
-        elevator1.receiveInstruction();
-        elevator2.receiveInstruction();
-        String received1 = new String(elevator1.getReceivePacket().getData(), 0,
-                elevator1.getReceivePacket().getLength());
-        assertEquals(
-                "InputData [currentTime=03:22:44.0, floor=5, isDirectionUp=true, car button=7, doorNotOpenError=",
-                received1.split("false")[0]);
-        String received2 = new String(elevator2.getReceivePacket().getData(), 0,
-                elevator2.getReceivePacket().getLength());
-        assertEquals("No current requests", received2);
-    }
-
     /**
      * SAVING FOR FUTURE ITERATIONS
      * 
