@@ -10,6 +10,9 @@ there is only one elevator.
 Iteration 3 has the goal of adding multiple elvators to the program. The scheduler now has to choose the best
 elevator to receive the incoming instruction to execute based on direction and distance from floor request.
 
+Iteration 4 has the goal of adding code for detecting and handling faults. Faults are outputted in the console as they happen,
+based on the the type of fault, the error handling is adjusted. 
+
 ## Contributions:
 🥇 Amanda Piazza (101143004)
 
