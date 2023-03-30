@@ -22,8 +22,8 @@ class ElevatorTest {
     @BeforeEach
     public void Setup() {
         scheduler = new Scheduler(2);
-        elevator1 = new Elevator(1, 1, "up");
-        elevator2 = new Elevator(2, 5, "down");
+        elevator1 = new Elevator(1, 1, "up", 22);
+        elevator2 = new Elevator(2, 5, "down", 22);
         floor = new Floor();
     }
 

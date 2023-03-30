@@ -26,8 +26,8 @@ import java.util.LinkedHashMap;
 public class Elevator {
     private int initialFloor = 0;
     /* After moving elevator newCurrentFloor will be updated */
-    int newCurrentFloor = 0;
-    int prevCurrentFloor = 0;
+    private int newCurrentFloor = 0;
+    private int prevCurrentFloor = 0;
     private int elevatorNum = 0;
     private int numOfPeopleInsideElev = 0;
     private int numOfPeopleServiced = 0;
@@ -44,68 +44,75 @@ public class Elevator {
     private ArrayList<InputData> requestQueue;
 
     /* floorButtons represent the buttons inside the elevator */
-    private Map<Integer, Boolean> floorButtons = new HashMap<Integer, Boolean>() {
-        {
-            put(1, false);
-            put(2, false);
-            put(3, false);
-            put(4, false);
-            put(5, false);
-            put(6, false);
-            put(7, false);
-        }
-    };
+    private Map<Integer, Boolean> floorButtons = new HashMap<Integer, Boolean>();
+    // private Map<Integer, Boolean> floorButtons = new HashMap<Integer, Boolean>() {
+    //     {
+    //         put(1, false);
+    //         put(2, false);
+    //         put(3, false);
+    //         put(4, false);
+    //         put(5, false);
+    //         put(6, false);
+    //         put(7, false);
+    //     }
+    // };
 
     /* floorButtonsLamps represent the lamps on the buttons inside the elevator */
-    private Map<Integer, Boolean> floorButtonsLamps = new HashMap<Integer, Boolean>() {
-        {
-            // (integer, boolean(pressed or not), String("light on " /"light off"))  
-            put(1, false);
-            put(2, false);
-            put(3, false);
-            put(4, false);
-            put(5, false);
-            put(6, false);
-            put(7, false);
-        }
-    };
+    private Map<Integer, Boolean> floorButtonsLamps = new HashMap<Integer, Boolean>();
+    // private Map<Integer, Boolean> floorButtonsLamps = new HashMap<Integer, Boolean>() {
+    //     {
+    //         // (integer, boolean(pressed or not), String("light on " /"light off"))  
+    //         put(1, false);
+    //         put(2, false);
+    //         put(3, false);
+    //         put(4, false);
+    //         put(5, false);
+    //         put(6, false);
+    //         put(7, false);
+    //     }
+    // };
 
     /* floorQueue is to keep track of people waiting for this elevator on each floor */
-    private Map<Integer, ArrayList<InputData>> floorQueues = new HashMap<Integer, ArrayList<InputData>>() {
-        {
-            put(1, new ArrayList<InputData>());
-            put(2, new ArrayList<InputData>());
-            put(3, new ArrayList<InputData>());
-            put(4, new ArrayList<InputData>());
-            put(5, new ArrayList<InputData>());
-            put(6, new ArrayList<InputData>());
-            put(7, new ArrayList<InputData>());
-        }
-    };
+    private Map<Integer, ArrayList<InputData>> floorQueues = new HashMap<Integer, ArrayList<InputData>>();
+    // private Map<Integer, ArrayList<InputData>> floorQueues = new HashMap<Integer, ArrayList<InputData>>() {
+    //     {
+    //         put(1, new ArrayList<InputData>());
+    //         put(2, new ArrayList<InputData>());
+    //         put(3, new ArrayList<InputData>());
+    //         put(4, new ArrayList<InputData>());
+    //         put(5, new ArrayList<InputData>());
+    //         put(6, new ArrayList<InputData>());
+    //         put(7, new ArrayList<InputData>());
+    //     }
+    // };
 
-    private Map<Integer, Boolean> closeDoorFaultByFloor = new HashMap<Integer, Boolean>() {
-        {
-            put(1, false);
-            put(2, false);
-            put(3, false);
-            put(4, false);
-            put(5, false);
-            put(6, false);
-            put(7, false);
-        }
-    };
+    /* closeDoorByFloor maps the floor to whether there should be a close door fault on that floor */
+    private Map<Integer, Boolean> closeDoorFaultByFloor = new HashMap<Integer, Boolean>();
+    // private Map<Integer, Boolean> closeDoorFaultByFloor = new HashMap<Integer, Boolean>() {
+    //     {
+    //         put(1, false);
+    //         put(2, false);
+    //         put(3, false);
+    //         put(4, false);
+    //         put(5, false);
+    //         put(6, false);
+    //         put(7, false);
+    //     }
+    // };
 
-    private Map<Integer, Boolean> openDoorFaultByFloor = new HashMap<Integer, Boolean>() {
-        {
-            put(1, false);
-            put(2, false);
-            put(3, false);
-            put(4, false);
-            put(5, false);
-            put(6, false);
-            put(7, false);
-        }
-    };
+    /* openDoorByFloor maps the floor to whether there should be an open door fault on that floor */
+    private Map<Integer, Boolean> openDoorFaultByFloor = new HashMap<Integer, Boolean>();
+    // private Map<Integer, Boolean> openDoorFaultByFloor = new HashMap<Integer, Boolean>() {
+    //     {
+    //         put(1, false);
+    //         put(2, false);
+    //         put(3, false);
+    //         put(4, false);
+    //         put(5, false);
+    //         put(6, false);
+    //         put(7, false);
+    //     }
+    // };
 
     private boolean createElevatorStuckFault;
     private boolean elevatorIsStuck;
@@ -118,8 +125,9 @@ public class Elevator {
      * @param elevatorNum is the elevator car #
      * @param startFloor is the floor that the elevator starts on
      * @param direction is the starting direction of the elevator
+     * @param numOfFloors is the number of floors that the elevator system will have
      */
-    public Elevator(int elevatorNum, int startFloor, String direction) {
+    public Elevator(int elevatorNum, int startFloor, String direction, int numOfFloors) {
         this.elevatorNum = elevatorNum;
         this.initialFloor = startFloor;
         this.direction = direction;
@@ -133,6 +141,14 @@ public class Elevator {
         this.insideElevatorQueue = new ArrayList<InputData>();
         this.createElevatorStuckFault = false;
         this.elevatorIsStuck = false;
+
+        for (int i = 1; i < numOfFloors + 1; i++) {
+            floorButtons.put(i, false);
+            floorButtonsLamps.put(i, false);
+            floorQueues.put(i, new ArrayList<InputData>());
+            closeDoorFaultByFloor.put(i, false);
+            openDoorFaultByFloor.put(i, false);
+        }
     }
 
     /*
@@ -532,7 +548,7 @@ public class Elevator {
             firstRequest = false;
 
             if (matcher.find()) {
-                time = LocalTime.parse((matcher.group(1))); //TODO: might want to have a try-catch around this parsing
+                time = LocalTime.parse((matcher.group(1))); 
                 currentTime = time.get(ChronoField.MILLI_OF_DAY);
                 floor = Integer.parseInt(matcher.group(2));
                 isDirectionUp = Boolean.parseBoolean(matcher.group(3));
@@ -595,13 +611,14 @@ public class Elevator {
 
     public static void main(String args[]) {
         System.out.println();
+        final int NUM_OF_FLOORS = 22;
 
         /*This maps an elevator instance to their finished status (true when done, false when not done) */
         LinkedHashMap<Elevator, Boolean> elevatorsFinished = new LinkedHashMap<>();
-        Elevator elevator1 = new Elevator(1, 1, "up");
-        Elevator elevator2 = new Elevator(2, 2, "down");
-        Elevator elevator3 = new Elevator(3, 3, "up");
-        Elevator elevator4 = new Elevator(4, 4, "down");
+        Elevator elevator1 = new Elevator(1, 1, "up", NUM_OF_FLOORS);
+        Elevator elevator2 = new Elevator(2, 2, "down", NUM_OF_FLOORS);
+        Elevator elevator3 = new Elevator(3, 3, "up", NUM_OF_FLOORS);
+        Elevator elevator4 = new Elevator(4, 4, "down", NUM_OF_FLOORS);
         elevatorsFinished.put(elevator1, false);
         elevatorsFinished.put(elevator2, false);
         elevatorsFinished.put(elevator3, false);

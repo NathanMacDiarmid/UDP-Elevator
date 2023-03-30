@@ -172,7 +172,7 @@ public class Scheduler {
     public int receiveElevatorStatus() {
 
         // Initializes the DatagramPacket to be received from the Server
-        byte[] request = new byte[200];
+        byte[] request = new byte[77];
         receivePacket69 = new DatagramPacket(request, request.length);
         System.out.println("Scheduler: Waiting for Packet from elevator.");
 
@@ -224,28 +224,39 @@ public class Scheduler {
      * @author Amanda Piazza 101143004
      */
     public void saveElevatorStatus(String input) {
+        //  Pattern pattern = Pattern.compile(
+        //         "Elevator car #: (\\d+) Floor: (\\d+) Num of people: (\\d+), Serviced: (\\d+), Direction: (\\w+)");
+        // Matcher matcher = pattern.matcher(input);
 
+        // if (matcher.find()) {
         // split by whitespace
         // receiving it in format 'Elevator car #: 2 Floor: 2 Num of people: 3 Serviced: 1 '
         String[] tokens = input.split(" ");
-        int car = Integer.parseInt(tokens[3]); //TODO: maybe have a try-catch around this parsing, we are checking this before sending it in the floor so idk if this is necessary to double check
+        int car = Integer.parseInt(tokens[3]);
         int floorNum = Integer.parseInt(tokens[5]);
         int numPeople = Integer.parseInt(tokens[9].trim());
         int peopleServiced = Integer.parseInt(tokens[11].trim());
-        String direction = tokens[13];
-        int directionValue;
+        String direction = tokens[13].trim();
+      
+        System.out.println("direction of elevator #" + car + ": " + direction + "length " + direction.length());
+        int directionValue = 0;
 
         if (direction.equals("down")) {
+            System.out.println("direction of elevator #"+ car + " is down");
             directionValue = 0;
-        } else {
+        } else if (direction.equals("up")) {
+            System.out.println("direction of elevator #"+ car + " is up");
             directionValue = 1;
         }
 
         //save elevator location in elevatorsInfo
+        System.out.println("in saveElevatorStatus:");
+        System.out.println("directionValue of elevator #" + car + ": " + directionValue);
         this.elevatorsInfo.get(car)[0] = floorNum;
         this.elevatorsInfo.get(car)[1] = numPeople;
         this.elevatorsInfo.get(car)[2] = directionValue;
         this.elevatorsInfo.get(car)[3] = peopleServiced;
+        
     }
 
     /**
@@ -255,7 +266,11 @@ public class Scheduler {
      * @author Matthew Belanger 101144323
      */
     public int getElevatorForRequest() {
-
+        System.out.println("Elevators info: ");
+        for (Map.Entry<Integer, int[]> entry : elevatorsInfo.entrySet()) {
+            System.out.println(entry.getKey() + ":" + Arrays.toString(entry.getValue()));
+        }
+        
         InputData currentRequest = this.requestQueue.get(0);
         System.out.println("Scheduler deciding where to send request: " + currentRequest.toString() + "\n");
 
@@ -280,6 +295,7 @@ public class Scheduler {
                 directionMatches = true;
             }
         }
+        System.out.println("direction of first elevator matches request: " + directionMatches);
 
         //Iterate through the rest of the elevators to compare their distance difference and direction to determine most efficient elevator to send to request to
         for (int currElevator = 2; currElevator < this.elevatorsInfo.size() + 1; currElevator++) {
@@ -292,23 +308,28 @@ public class Scheduler {
                 directionIsUp = false;
             }
 
-            if (currentRequest.getIsDirectionUp() == directionIsUp) { //if direction of current request is up and the direction of the elevator is up
+            
 
+            if (currentRequest.getIsDirectionUp() == directionIsUp) { //if direction of current request is up and the direction of the elevator is up
+                System.out.println("elevator #" + currElevator + " direction is up and so is the direction of the request");
+                System.out.println(this.elevatorsInfo.get(currElevator)[2]);
                 //if the the elevator is below the floor of the request
                 if (elevatorDistanceDifference <= 0) {
                     //if the previous elevator is also below the floor of the request and it's direction is the same as the request
                     if (bestFloorDifference <= 0 && directionMatches) {
+                        System.out.println("bestFloorDifference: " + bestFloorDifference + ". DirectionMatches? " + directionMatches);
                         //check if the previous floor difference is less than the current elevator's floor difference
                         if (Math.abs(elevatorDistanceDifference) < Math.abs(bestFloorDifference)) {
                             //then current elevator is closer to request than the previous
                             chosenElevator = currElevator;
                             bestFloorDifference = elevatorDistanceDifference;
                             directionMatches = directionIsUp;
+                            System.out.println("elevator #" + currElevator + " is the closest and the direction matches? " + directionMatches);
                         }
                     }
                 }
             } else if (!currentRequest.getIsDirectionUp() == !directionIsUp) { //else direction of current request is down and direction of elevator is down
-
+                System.out.println("else: direction of current request is down and the direction of the elevator is down? " + directionIsUp);
                 //if the the elevator is above the floor of the request
                 if (elevatorDistanceDifference >= 0) {
                     //if the previous elevator is also above the floor of the request and it's direction is the same as the request
@@ -319,14 +340,16 @@ public class Scheduler {
                             chosenElevator = currElevator;
                             bestFloorDifference = elevatorDistanceDifference;
                             directionMatches = directionIsUp;
+                            System.out.println("elevator #" + currElevator + " is the closest and the direction matches? " + directionMatches);
                         }
                     }
                 }
             } else { //else direction of request does not match direction of elevator -> in this case only take floor difference into consideration
-
+                System.out.println("Elevator #" + currElevator + ": the direction of the request does not match the direction of the elevat -> look at floor difference instead");
                 if (!directionMatches) {
                     //check if the previous floor difference is less than the current elevator's floor difference
                     if (Math.abs(elevatorDistanceDifference) < Math.abs(bestFloorDifference)) {
+                        System.out.println("the direction doesn't match, elevatorDistanceDifference: " + elevatorDistanceDifference + "bestFloorDifference: " + bestFloorDifference);
                         chosenElevator = currElevator;
                         bestFloorDifference = elevatorDistanceDifference;
                         directionMatches = directionIsUp;

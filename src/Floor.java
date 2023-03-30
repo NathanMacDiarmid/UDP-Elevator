@@ -108,7 +108,7 @@ public class Floor {
      */
     private boolean handleInputErrors(int currentFloor, int floorRequest, String direction, int doorNotOpenError,
             int doorNotCloseError, int elevatorStuckError) {
-        if (currentFloor < 0 || currentFloor > 7) {
+        if (currentFloor < 0 || currentFloor > 22) {
             return true;
         }
 
@@ -116,7 +116,7 @@ public class Floor {
             return true;
         }
 
-        if (floorRequest < 0 || floorRequest > 7) {
+        if (floorRequest < 0 || floorRequest > 22) {
             return true;
         }
 
@@ -147,13 +147,14 @@ public class Floor {
      */
     public void readData(String filename) {
 
-        String path = new File("").getAbsolutePath() + "/" + filename; //TODO: have a try-catch incase there is no data.txt file found
+        String path = new File("").getAbsolutePath() + "/" + filename;
 
         try (Scanner input = new Scanner(new File(path))) {
             while (input.hasNextLine()) { // Check each value to verify if they are valid before adding them to elevatorQueue
 
                 // Values are space-separated 
                 String[] data = input.nextLine().split(" ");
+                System.out.println("data after splitting by space, before parsing: " +  data.toString());
 
                 LocalTime time;
                 int timeOfRequest;
@@ -182,6 +183,8 @@ public class Floor {
 
                     //save floor request
                     floorRequest = Integer.parseInt(data[3]);
+                    System.out.println( Integer.parseInt(data[3]));
+                    System.out.println( Integer.parseInt(data[4]));
 
                     // error input part if doors do not open 
                     doorNotOpenError = convertToBool(Integer.parseInt(data[4]));
