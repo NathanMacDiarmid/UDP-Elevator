@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -598,14 +599,10 @@ public class Elevator {
 
         /*This maps an elevator instance to their finished status (true when done, false when not done) */
         LinkedHashMap<Elevator, Boolean> elevatorsFinished = new LinkedHashMap<>();
-        Elevator elevator1 = new Elevator(1, 1, "up");
-        Elevator elevator2 = new Elevator(2, 2, "down");
-        Elevator elevator3 = new Elevator(3, 3, "up");
-        Elevator elevator4 = new Elevator(4, 4, "down");
+        Elevator elevator1 = new Elevator(1, 2, "up");
+        Elevator elevator2 = new Elevator(2, 4, "up");
         elevatorsFinished.put(elevator1, false);
         elevatorsFinished.put(elevator2, false);
-        elevatorsFinished.put(elevator3, false);
-        elevatorsFinished.put(elevator4, false);
 
         //while all elevators aren't done
         while (elevatorsFinished.containsValue(false)) {
