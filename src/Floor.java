@@ -12,8 +12,6 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoField;
 import java.util.*;
 
-import javax.xml.transform.Source;
-
 /**
 Floor.java accepts events from InputData.java. Each event consists of the current time, the floor request, 
    the direction of travel and the car button pressed. These events are sent to Scheduler.java
