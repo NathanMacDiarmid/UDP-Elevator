@@ -604,6 +604,9 @@ public class Elevator {
         elevatorsFinished.put(elevator1, false);
         elevatorsFinished.put(elevator2, false);
 
+        // Save the system time at which the elevators start running
+        long startTime = System.currentTimeMillis();
+
         //while all elevators aren't done
         while (elevatorsFinished.containsValue(false)) {
 
@@ -666,7 +669,14 @@ public class Elevator {
                     "-------------------------------------------------------------------------------------------------");
 
         }
+        // Save the system time at which the elevators stop running and output the total time it took to service all requests
+        long stopTime = System.currentTimeMillis();
+        long runTimeInSeconds = (stopTime - startTime) / 1000;
+        System.out.println("The elevators took " + runTimeInSeconds + " seconds to finish servicing all of the requests");
+
         elevator1.closeSocket();
         elevator2.closeSocket();
+
+
     }
 }
