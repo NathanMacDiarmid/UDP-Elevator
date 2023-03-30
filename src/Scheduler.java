@@ -484,7 +484,7 @@ public class Scheduler {
     public static void main(String args[]) {
         System.out.println();
         int elevatorPort;
-        Scheduler scheduler = new Scheduler(2);
+        Scheduler scheduler = new Scheduler(4);
         int elevatorsDone = 0;
 
         //while all elevators are not done sending requests and receving (because they're done servicing all their requests)
