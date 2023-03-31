@@ -344,8 +344,8 @@ public class Elevator {
             //System.out.println("Elevator #" + elevatorNum + " -> fixing door");
             output.printDoorError(elevatorNum, true); //true if door is not opening
             this.sleep(4000);
-            System.out.println("Elevator #" + elevatorNum + " -> doors have been fixed");
-            //Handle error
+            output.printDoorFixed(elevatorNum);
+            //System.out.println("Elevator #" + elevatorNum + " -> doors have been fixed");
         }
         // System.out.println("Elevator #" + elevatorNum + ": Doors opening");
         output.printDoorUpdate(elevatorNum, true);
@@ -365,7 +365,8 @@ public class Elevator {
             //System.out.println("Elevator #" + elevatorNum + " -> fixing door");
             output.printDoorError(elevatorNum, false); //false if doors not closing
             this.sleep(4000);
-            System.out.println("Elevator #" + elevatorNum + " -> doors have been fixed");
+            output.printDoorFixed(elevatorNum);
+            //System.out.println("Elevator #" + elevatorNum + " -> doors have been fixed");
             //Handle error
         }
         //System.out.println("Elevator #" + elevatorNum + ": Doors are closing");
@@ -470,9 +471,10 @@ public class Elevator {
         try {
             sendAndReceiveSocket.receive(receivePacket);
         } catch (IOException e) {
-            System.out.print("IO Exception: likely:");
-            System.out.println("Receive Socket Timed Out.\n" + e);
-            e.printStackTrace();
+            output.printCatchMessage(e);
+            //System.out.print("IO Exception: likely:");
+           // System.out.println("Receive Socket Timed Out.\n" + e);
+            //e.printStackTrace();
             System.exit(1);
         }
 
@@ -481,7 +483,8 @@ public class Elevator {
         //        + ", on port: " + receivePacket.getPort() + ", with length: " + len);
         //System.out.print("Containing: ");
         String received = new String(data, 0, len); //TODO: make this a class variable
-        System.out.println(received);
+        output.printReceivedMessage(received);
+        //System.out.println(received);
 
         saveReceivedMessage(received);
        // System.out.println("Elevator - requestQueue: " + requestQueue.toString());
@@ -579,7 +582,7 @@ public class Elevator {
     }
 
     public static void main(String args[]) {
-        System.out.println();
+        System.out.println(); //Remoove / move?
         final int NUM_OF_FLOORS = 22;
 
         /*This maps an elevator instance to their finished status (true when done, false when not done) */
@@ -657,7 +660,7 @@ public class Elevator {
                     currElevator.receiveInstruction();
                 }
 
-            }
+            } //Remove / move?
             System.out.println(
                     "-------------------------------------------------------------------------------------------------");
 

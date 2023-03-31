@@ -1,7 +1,13 @@
 package src;
 
+/**
+ * This class manages the output represenation of the Elevators
+ */
 public class Output {
 
+    /**
+     * Default constructor
+     */
     public Output(){
 
     }
@@ -76,6 +82,9 @@ public class Output {
 
         System.out.println("Elevator #" + elevatorNum + " -> fixing door");
     }
+    public void printDoorFixed(int elevatorNum){
+        System.out.println("Elevator #" + elevatorNum + " -> doors have been fixed");
+    }
 
     public void printDoorUpdate(int elevatorNum, boolean isOpen){
         if(isOpen){
@@ -94,6 +103,15 @@ public class Output {
         System.out.println("The elevators took " + runTimeInSeconds + " seconds to finish servicing all of the requests");
 
     }
+
+    public void printCatchMessage(Exception e){
+        System.out.print("IO Exception: likely:");
+        System.out.println("Receive Socket Timed Out.\n" + e);
+        e.printStackTrace();
+    }
     
+    public void printReceivedMessage(String received){
+        System.out.println(received);
+    }
     
 }
