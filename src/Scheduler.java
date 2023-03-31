@@ -228,11 +228,11 @@ public class Scheduler {
         // split by whitespace
         // receiving it in format 'Elevator car #: 2 Floor: 2 Num of people: 3 Serviced: 1 '
         String[] tokens = input.split(" ");
-        int car = Integer.parseInt(tokens[3]); //TODO: maybe have a try-catch around this parsing, we are checking this before sending it in the floor so idk if this is necessary to double check
+        int car = Integer.parseInt(tokens[3]);
         int floorNum = Integer.parseInt(tokens[5]);
         int numPeople = Integer.parseInt(tokens[9].trim());
         int peopleServiced = Integer.parseInt(tokens[11].trim());
-        String direction = tokens[13];
+        String direction = tokens[13].trim();
         int directionValue;
 
         if (direction.equals("down")) {
@@ -306,6 +306,12 @@ public class Scheduler {
                             directionMatches = directionIsUp;
                         }
                     }
+                    else{
+                        //then current elevator is closer to request than the previous
+                        chosenElevator = currElevator;
+                        bestFloorDifference = elevatorDistanceDifference;
+                        directionMatches = directionIsUp;
+                    }
                 }
             } else if (!currentRequest.getIsDirectionUp() == !directionIsUp) { //else direction of current request is down and direction of elevator is down
 
@@ -320,6 +326,12 @@ public class Scheduler {
                             bestFloorDifference = elevatorDistanceDifference;
                             directionMatches = directionIsUp;
                         }
+                    }
+                    else{
+                        //then current elevator is closer to request than the previous
+                        chosenElevator = currElevator;
+                        bestFloorDifference = elevatorDistanceDifference;
+                        directionMatches = directionIsUp;
                     }
                 }
             } else { //else direction of request does not match direction of elevator -> in this case only take floor difference into consideration
@@ -484,7 +496,7 @@ public class Scheduler {
     public static void main(String args[]) {
         System.out.println();
         int elevatorPort;
-        Scheduler scheduler = new Scheduler(2);
+        Scheduler scheduler = new Scheduler(4);
         int elevatorsDone = 0;
 
         //while all elevators are not done sending requests and receving (because they're done servicing all their requests)
@@ -503,21 +515,33 @@ public class Scheduler {
                 if ((scheduler.getElevatorInfo().get(i)[3] == scheduler.getElevatorInfo().get(i)[4]
                         && scheduler.isNoMoreRequests())) {
                     elevatorsDone++; //increment the number of elevators that have completely finished serivicing their requests
-                } else {
-                    elevatorPort = scheduler.receiveElevatorStatus();
+                }
+                
+                elevatorPort = scheduler.receiveElevatorStatus();
 
-                    //If -1 was returned there was an error with this elevator and we need to remove it
-                    if (elevatorPort == -1) {
-                        scheduler.numOfCars -= 1;
-                        scheduler.elevatorAndTheirPorts.remove(i);
-                        scheduler.elevatorsInfo.remove(i);
-                    } else {
-                        scheduler.elevatorAndTheirPorts.put(i, elevatorPort); //save elevator port in Map
-                    }
+                //If -1 was returned there was an error with this elevator and we need to remove it
+                if (elevatorPort == -1) {
+                    scheduler.numOfCars -= 1;
+                    scheduler.elevatorAndTheirPorts.remove(i);
+                    scheduler.elevatorsInfo.remove(i);
+                } else {
+                    scheduler.elevatorAndTheirPorts.put(i, elevatorPort); //save elevator port in Map
                 }
             }
 
             scheduler.sendToElevators();
+
+            //Check if elevators are done, if so remove them from our list of active elevators
+            for (int i = 1; i < scheduler.getNumOfCars() + 1; i++) {
+                // if the amount of requests sent to an elevator is equal the amount of people that elevator has serviced AND theres no more requests coming from floor
+                if ((scheduler.getElevatorInfo().get(i)[3] == scheduler.getElevatorInfo().get(i)[4]
+                        && scheduler.isNoMoreRequests())) {
+                    scheduler.numOfCars -= 1;
+                    scheduler.elevatorAndTheirPorts.remove(i);
+                    scheduler.elevatorsInfo.remove(i);
+                }
+            }
+
             System.out.println(
                     "-------------------------------------------------------------------------------------------------");
         }

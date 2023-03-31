@@ -12,8 +12,6 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoField;
 import java.util.*;
 
-import javax.xml.transform.Source;
-
 /**
 Floor.java accepts events from InputData.java. Each event consists of the current time, the floor request, 
    the direction of travel and the car button pressed. These events are sent to Scheduler.java
@@ -110,7 +108,7 @@ public class Floor {
      */
     private boolean handleInputErrors(int currentFloor, int floorRequest, String direction, int doorNotOpenError,
             int doorNotCloseError, int elevatorStuckError) {
-        if (currentFloor < 0 || currentFloor > 7) {
+        if (currentFloor < 0 || currentFloor > 22) {
             return true;
         }
 
@@ -118,7 +116,7 @@ public class Floor {
             return true;
         }
 
-        if (floorRequest < 0 || floorRequest > 7) {
+        if (floorRequest < 0 || floorRequest > 22) {
             return true;
         }
 
@@ -149,7 +147,7 @@ public class Floor {
      */
     public void readData(String filename) {
 
-        String path = new File("").getAbsolutePath() + "/" + filename; //TODO: have a try-catch incase there is no data.txt file found
+        String path = new File("").getAbsolutePath() + "/" + filename;
 
         try (Scanner input = new Scanner(new File(path))) {
             while (input.hasNextLine()) { // Check each value to verify if they are valid before adding them to elevatorQueue
