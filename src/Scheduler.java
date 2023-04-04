@@ -1,7 +1,6 @@
 package src;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -499,7 +498,7 @@ public class Scheduler {
         int elevatorPort;
         Scheduler scheduler = new Scheduler(4);
         int elevatorsDone = 0;
-        boolean[] test = new boolean[4];
+        boolean[] elevatorDoneArray = new boolean[4];
         boolean finished = false;
 
         //while all elevators are not done sending requests and receving (because they're done servicing all their requests)
@@ -534,30 +533,30 @@ public class Scheduler {
                 Map.Entry<Integer, int[]> elevator = iterator2.next();
                 // if the amount of requests sent to an elevator is equal the amount of people that elevator has serviced AND theres no more requests coming from floor
                 if (elevator.getValue()[3] == elevator.getValue()[4] && scheduler.isNoMoreRequests()) {
-                    test[elevator.getKey() - 1] = true;
+                    elevatorDoneArray[elevator.getKey() - 1] = true;
                 }
             }
 
-            for (int i = 0; i < test.length; i++) {
+            for (int i = 0; i < elevatorDoneArray.length; i++) {
                 // if the amount of requests sent to an elevator is equal the amount of people that elevator has serviced AND theres no more requests coming from floor
-                if (test[i]) {
+                if (elevatorDoneArray[i]) {
                     scheduler.elevatorAndTheirPorts.remove(i + 1);
                     scheduler.elevatorsInfo.remove(i + 1);
                 }
             }
 
             // loops through the array and if its all true, all elevs are finished
-            for (int i = 0; i < test.length; i++) {
-                if (test[i]) {
+            for (int i = 0; i < elevatorDoneArray.length; i++) {
+                if (elevatorDoneArray[i]) {
                     elevatorsDone++;
                 }
 
-                if (!test[i]) {
+                if (!elevatorDoneArray[i]) {
                     elevatorsDone = 0;
                 }
             }
 
-            if (elevatorsDone >= test.length) {
+            if (elevatorsDone >= elevatorDoneArray.length) {
                 finished = true;
             }
 
