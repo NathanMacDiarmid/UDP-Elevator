@@ -317,8 +317,6 @@ public class Elevator {
     public void stopElevator(boolean doorNotOpenError) {
 
         setMotorMoving(false);
-        //System.out.println("Elevator #" + elevatorNum + ": Motor stopped moving");
-        output.printMotorUpdate(elevatorNum, true);
         if (doorNotOpenError) {
             output.printDoorError(elevatorNum, true); //true if door is not opening
             this.sleep(4000);
@@ -344,7 +342,6 @@ public class Elevator {
         }
         output.printDoorUpdate(elevatorNum, false);
         setDoorOpen(false);
-        output.printMotorUpdate(elevatorNum, false);
         setMotorMoving(true);
     }
 
@@ -568,12 +565,8 @@ public class Elevator {
                 //if current elevator is done accepting requests from schedule and has completed servicing all of it's requests -> elevator is done
                 if (currElevator.isNoMoreRequests() && currElevator.getRequestQueue().size() == 0) {
                     if (currElevator.getIsStuck()) {
-                        currElevator.output.printElevatorStatus(currElevator.elevatorNum, false);
-                        //System.out.println("Elevator #" + currElevator.elevatorNum + " is STUCK");
-                    } else { 
-                        currElevator.output.printElevatorStatus(currElevator.elevatorNum, true);
-                        //System.out.println("Elevator #" + currElevator.elevatorNum + " is done");
-                    }
+                        currElevator.output.printElevatorErrorStatus(currElevator.elevatorNum);
+                     } 
                     elevatorsFinished.replace(currElevator, true);
                     elevatorDone = true;
                 }
