@@ -1,6 +1,7 @@
 package src;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -498,9 +499,13 @@ public class Scheduler {
         int elevatorPort;
         Scheduler scheduler = new Scheduler(4);
         int elevatorsDone = 0;
+        boolean[] test = new boolean[4];
+        boolean finished = false;
 
         //while all elevators are not done sending requests and receving (because they're done servicing all their requests)
-        while (elevatorsDone <= scheduler.getNumOfCars()) {
+        while (!finished) {
+            Iterator<Map.Entry<Integer, int[]>> iterator = scheduler.getElevatorInfo().entrySet().iterator();
+            Iterator<Map.Entry<Integer, int[]>> iterator2 = scheduler.getElevatorInfo().entrySet().iterator();
 
             // Check if request received is last request, if true stop receiving more instructions
             if (!scheduler.noMoreRequests) {
@@ -508,38 +513,52 @@ public class Scheduler {
                 scheduler.sendFloorAcknowledgement();
             }
 
-            // Call receive requests method n times where n is the number of elevators
-            for (int i = 1; i < scheduler.getNumOfCars() + 1; i++) {
+            while (iterator.hasNext()) {
+                Map.Entry<Integer, int[]> elevator = iterator.next();
 
-                // if the amount of requests sent to an elevator is equal the amount of people that elevator has serviced AND theres no more requests coming from floor
-                if ((scheduler.getElevatorInfo().get(i)[3] == scheduler.getElevatorInfo().get(i)[4]
-                        && scheduler.isNoMoreRequests())) {
-                    elevatorsDone++; //increment the number of elevators that have completely finished serivicing their requests
-                }
-                
                 elevatorPort = scheduler.receiveElevatorStatus();
 
-                //If -1 was returned there was an error with this elevator and we need to remove it
                 if (elevatorPort == -1) {
                     scheduler.numOfCars -= 1;
-                    scheduler.elevatorAndTheirPorts.remove(i);
-                    scheduler.elevatorsInfo.remove(i);
+                    scheduler.elevatorAndTheirPorts.remove(elevator.getKey());
+                    scheduler.elevatorsInfo.remove(elevator.getKey());
                 } else {
-                    scheduler.elevatorAndTheirPorts.put(i, elevatorPort); //save elevator port in Map
+                    scheduler.elevatorAndTheirPorts.put(elevator.getKey(), elevatorPort); //save elevator port in Map
                 }
             }
 
             scheduler.sendToElevators();
 
-            //Check if elevators are done, if so remove them from our list of active elevators
-            for (int i = 1; i < scheduler.getNumOfCars() + 1; i++) {
+            // these next loops handle removing finished elevators
+            while (iterator2.hasNext()) {
+                Map.Entry<Integer, int[]> elevator = iterator2.next();
                 // if the amount of requests sent to an elevator is equal the amount of people that elevator has serviced AND theres no more requests coming from floor
-                if ((scheduler.getElevatorInfo().get(i)[3] == scheduler.getElevatorInfo().get(i)[4]
-                        && scheduler.isNoMoreRequests())) {
-                    scheduler.numOfCars -= 1;
-                    scheduler.elevatorAndTheirPorts.remove(i);
-                    scheduler.elevatorsInfo.remove(i);
+                if (elevator.getValue()[3] == elevator.getValue()[4] && scheduler.isNoMoreRequests()) {
+                    test[elevator.getKey() - 1] = true;
                 }
+            }
+
+            for (int i = 0; i < test.length; i++) {
+                // if the amount of requests sent to an elevator is equal the amount of people that elevator has serviced AND theres no more requests coming from floor
+                if (test[i]) {
+                    scheduler.elevatorAndTheirPorts.remove(i + 1);
+                    scheduler.elevatorsInfo.remove(i + 1);
+                }
+            }
+
+            // loops through the array and if its all true, all elevs are finished
+            for (int i = 0; i < test.length; i++) {
+                if (test[i]) {
+                    elevatorsDone++;
+                }
+
+                if (!test[i]) {
+                    elevatorsDone = 0;
+                }
+            }
+
+            if (elevatorsDone >= test.length) {
+                finished = true;
             }
 
             System.out.println(
