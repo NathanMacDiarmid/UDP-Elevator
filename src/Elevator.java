@@ -62,9 +62,6 @@ public class Elevator {
     /* elevatorQueue is the queue of requests that are currently in this elevator */
     private ArrayList<InputData> insideElevatorQueue;
 
-    /* output will handle all calls to prints for the UI */
-    private Output output = new Output();
-
     /**
      * Default constructor for Elevator
      * @param elevatorNum is the elevator car #
@@ -94,7 +91,6 @@ public class Elevator {
             closeDoorFaultByFloor.put(i, false);
             openDoorFaultByFloor.put(i, false);
         }
-       
     }
 
     /*
@@ -176,7 +172,9 @@ public class Elevator {
 
         // if the floor that the elevator is currently on has passengers waiting -> pick them up
         if ((currentFloor != 0) && (this.floorQueues.get(currentFloor).size() != 0)) {
-            output.printElevatorFloorRequest(elevatorNum, currentFloor);
+
+            System.out.println("Elevator #" + elevatorNum
+                    + ": There are people waiting for the elevator on this floor: " + currentFloor);
             pickedPplUp = true;
             this.insideElevatorQueue.addAll(this.floorQueues.get(currentFloor)); //this adds all requests to current elevator
             sizeAfterPickup = insideElevatorQueue.size();
@@ -188,12 +186,14 @@ public class Elevator {
         else if (this.insideElevatorQueue.size() == 0) {
 
             if ((currentFloor < requestQueue.get(0).getFloor())) { //if elevator is below floor of first request, move up, else move down
-                output.printDirection(true, elevatorNum);
+                System.out.println(
+                        "Elevator #" + elevatorNum + ": Is below initial floor of first request in queue -> moving up");
                 direction = "up";
                 elevatorMoveTiming();
                 currentFloor = currentFloor + 1; //move elevator up
             } else {
-                output.printDirection(false, elevatorNum);
+                System.out.println("Elevator #" + elevatorNum
+                        + ": Is above initial floor of first request in queue -> moving down");
                 direction = "down";
                 elevatorMoveTiming();
                 currentFloor = currentFloor - 1; //move elevator down
@@ -211,7 +211,9 @@ public class Elevator {
                 InputData currPassenger = iterator.next();
                 //check if current floor is equal to any of the destination floors of passenger(s) in the elevator
                 if (currentFloor == currPassenger.getCarRequest()) {
-                    output.printDestinationReached(elevatorNum);
+
+                    System.out.println(
+                            "Elevator #" + elevatorNum + ": Is at the destination of a passenger in the elevator");
                     reachedDestination = true;
                     iterator.remove(); //remove from elevator queue because passenger left
                     numOfPeopleInsideElev--;
@@ -231,20 +233,21 @@ public class Elevator {
 
             //if we have reached the desitnation floor of one or more passengers AND there are people on this floor waiting for the elevator -> stop elevator and let them off and pick up passengeres waiting
             if (reachedDestination && pickedPplUp) {
-                output.printOpenDoors(elevatorNum);
+
+                System.out.println("Elevator #" + elevatorNum + " -> Notfiy elevator to open doors");
                 stopElevator(doorNotOpen);
-                output.printUserTransition(elevatorNum, 2); //2 indicates both users walking in and out
+                System.out.println("Elevator #" + elevatorNum + " -> People are walking in and out");
                 startElevator(doorNotClose);
             } else if (reachedDestination) {
-                output.printOpenDoors(elevatorNum);                
+                System.out.println("Elevator #" + elevatorNum + " -> Notfiy elevator to open doors");
                 stopElevator(doorNotOpen);
-                output.printUserTransition(elevatorNum, 1); //1 indicates users walking out                
+                System.out.println("Elevator #" + elevatorNum + " -> People are walking out");
                 startElevator(doorNotClose);
 
             } else if (pickedPplUp) {
-                output.printOpenDoors(elevatorNum);                
+                System.out.println("Elevator #" + elevatorNum + " -> Notfiy elevator to open doors");
                 stopElevator(doorNotOpen);
-                output.printUserTransition(elevatorNum, 0); //0 indicates users walking in                
+                System.out.println("Elevator #" + elevatorNum + " -> People are walking in");
                 startElevator(doorNotClose);
             }
 
@@ -254,12 +257,14 @@ public class Elevator {
                 //if elevator is above floor of the the destination of the first request, move down, else move up
                 //we won't have to check if we are at the destination floor because the previous if statement took care of that
                 if (currentFloor > insideElevatorQueue.get(0).getCarRequest()) {
-                    output.printDirection(false, elevatorNum);
+                    System.out.println("Elevator #" + elevatorNum
+                            + ": is above destination floor of first request in priority queue -> moving down");
                     direction = "down";
                     elevatorMoveTiming();
                     currentFloor = currentFloor - 1; //move elevator down
                 } else {
-                    output.printDirection(true, elevatorNum);
+                    System.out.println("Elevator #" + elevatorNum
+                            + ": is below destination floor of first request in priority queue -> moving up");
                     direction = "up";
                     elevatorMoveTiming();
                     currentFloor = currentFloor + 1; //move elevator up
@@ -284,7 +289,8 @@ public class Elevator {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                output.printElevatorStuckFault();
+                System.out.println("Timeout has occured while the elevator is trying to move");
+                System.out.println("Therefore we are stuck, activating emergency routine now");
                 elevatorIsStuck = true;
             }
         }, 3000);
@@ -317,12 +323,16 @@ public class Elevator {
     public void stopElevator(boolean doorNotOpenError) {
 
         setMotorMoving(false);
+        System.out.println("Elevator #" + elevatorNum + ": Motor stopped moving");
+
         if (doorNotOpenError) {
-            output.printDoorError(elevatorNum, true); //true if door is not opening
+            System.out.println("Elevator #" + elevatorNum + ": has failed to open doors");
+            System.out.println("Elevator #" + elevatorNum + " -> fixing door");
             this.sleep(4000);
-            output.printDoorFixed(elevatorNum);
+            System.out.println("Elevator #" + elevatorNum + " -> doors have been fixed");
+            //Handle error
         }
-        output.printDoorUpdate(elevatorNum, true);
+        System.out.println("Elevator #" + elevatorNum + ": Doors opening");
         setDoorOpen(true);
         this.sleep(2700); //sleep for the amount of time it takes to open the doors.
 
@@ -335,13 +345,15 @@ public class Elevator {
     public void startElevator(boolean doorNotCloseError) {
 
         if (doorNotCloseError) {
-            output.printDoorError(elevatorNum, false); //false if doors not closing
+            System.out.println("Elevator #" + elevatorNum + ": has failed to close doors");
+            System.out.println("Elevator #" + elevatorNum + " -> fixing door");
             this.sleep(4000);
-            output.printDoorFixed(elevatorNum);
+            System.out.println("Elevator #" + elevatorNum + " -> doors have been fixed");
             //Handle error
         }
-        output.printDoorUpdate(elevatorNum, false);
+        System.out.println("Elevator #" + elevatorNum + ": Doors are closing");
         setDoorOpen(false);
+        System.out.println("Elevator #" + elevatorNum + ": Motor is moving again");
         setMotorMoving(true);
     }
 
@@ -398,6 +410,8 @@ public class Elevator {
         String message = prepareStatus();
 
         byte[] msg = message.getBytes();
+        System.out.println("Elevator car #" + elevatorNum + " is sending a packet containing: " + message);
+
         // Creates the DatagramPacket to be sent to port 23
         try {
             sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), 69);
@@ -407,6 +421,9 @@ public class Elevator {
         }
 
         int len = sendPacket.getLength();
+        System.out.println(
+                "To host: " + sendPacket.getAddress() + ", on port: " + sendPacket.getPort() + ", with length: " + len);
+
         // Sends the DatagramPacket over port 23
         try {
             sendAndReceiveSocket.send(sendPacket);
@@ -425,18 +442,28 @@ public class Elevator {
 
         // Initializes the receive DatagramPacket
         receivePacket = new DatagramPacket(data, data.length);
+        System.out.println("Elevator " + elevatorNum + ": Waiting for Packet.");
+
         // Receives the DatagramPacket
         try {
             sendAndReceiveSocket.receive(receivePacket);
         } catch (IOException e) {
+            System.out.print("IO Exception: likely:");
+            System.out.println("Receive Socket Timed Out.\n" + e);
             e.printStackTrace();
             System.exit(1);
         }
 
         int len = receivePacket.getLength();
+        System.out.println("Elevator #" + elevatorNum + " received a packet from host: " + receivePacket.getAddress()
+                + ", on port: " + receivePacket.getPort() + ", with length: " + len);
+        System.out.print("Containing: ");
         String received = new String(data, 0, len); //TODO: make this a class variable
-        
+        System.out.println(received);
+
         saveReceivedMessage(received);
+        System.out.println("Elevator - requestQueue: " + requestQueue.toString());
+        System.out.println("Elevator - floorQueues: " + floorQueues.toString() + "\n");
     }
 
     /**
@@ -444,7 +471,7 @@ public class Elevator {
     * @author Michael Kyrollos 101183521
     */
     public void saveReceivedMessage(String message) {
-        //System.out.println("in save received message");
+        System.out.println("in save received message");
         InputData request;
         int currentTime;
         int floor;
@@ -482,6 +509,7 @@ public class Elevator {
 
                 //Add request to elevatorQueue
                 this.floorQueues.get(request.getFloor()).add(request); // adds request to corresponding floor queue
+                System.out.println("adding to requestQueue");
                 this.requestQueue.add(request); // adds request to main request queue 
 
                 //save whether the request has a faXult occuring
@@ -529,7 +557,7 @@ public class Elevator {
     }
 
     public static void main(String args[]) {
-        System.out.println(); 
+        System.out.println();
         final int NUM_OF_FLOORS = 22;
 
         /*This maps an elevator instance to their finished status (true when done, false when not done) */
@@ -564,8 +592,10 @@ public class Elevator {
                 //if current elevator is done accepting requests from schedule and has completed servicing all of it's requests -> elevator is done
                 if (currElevator.isNoMoreRequests() && currElevator.getRequestQueue().size() == 0) {
                     if (currElevator.getIsStuck()) {
-                        currElevator.output.printElevatorErrorStatus(currElevator.elevatorNum);
-                     } 
+                        System.out.println("Elevator #" + currElevator.elevatorNum + " is STUCK");
+                    } else {
+                        System.out.println("Elevator #" + currElevator.elevatorNum + " is done");
+                    }
                     elevatorsFinished.replace(currElevator, true);
                     elevatorDone = true;
                 }
@@ -587,8 +617,10 @@ public class Elevator {
                 //if current elevator is done accepting requests from schedule and has completed servicing all of it's requests -> elevator is done
                 if (currElevator.isNoMoreRequests() && currElevator.getRequestQueue().size() == 0) {
                     if (currElevator.getIsStuck()) {
-                         currElevator.output.printElevatorErrorStatus(currElevator.elevatorNum);
-                    } 
+                        System.out.println("Elevator #" + currElevator.elevatorNum + " is STUCK");
+                    } else {
+                        System.out.println("Elevator #" + currElevator.elevatorNum + " is done");
+                    }
                     elevatorsFinished.replace(currElevator, true);
                     elevatorDone = true;
                 }
@@ -599,7 +631,7 @@ public class Elevator {
                     currElevator.receiveInstruction();
                 }
 
-            } 
+            }
             System.out.println(
                     "-------------------------------------------------------------------------------------------------");
 
@@ -608,7 +640,8 @@ public class Elevator {
         // Save the system time at which the elevators stop running and output the total time it took to service all requests
         long stopTime = System.currentTimeMillis();
         long runTimeInSeconds = (stopTime - startTime) / 1000;
-        elevator1.output.printTimeElapsed(runTimeInSeconds);
+        System.out.println("The elevators took " + runTimeInSeconds + " seconds to finish servicing all of the requests");
+
         elevator1.closeSocket();
         elevator2.closeSocket();
         elevator3.closeSocket();
