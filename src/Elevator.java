@@ -414,7 +414,6 @@ public class Elevator {
             e.printStackTrace();
             System.exit(1);
         }
-
     }
 
     /**
