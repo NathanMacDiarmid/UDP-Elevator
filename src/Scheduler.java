@@ -36,6 +36,8 @@ public class Scheduler {
     /* This maps the elevator number with their current floor and the number people currently in it*/
     private Map<Integer, int[]> elevatorsInfo;
 
+    private ArrayList<Integer> brokenElevators;
+
     /**
      * Default constructor for Scheduler
      * Initializes all of the attributes
@@ -46,6 +48,7 @@ public class Scheduler {
         this.requestQueue = new ArrayList<InputData>();
         this.noMoreRequests = false;
         this.elevatorsInfo = new HashMap<Integer, int[]>();
+        this.brokenElevators = new ArrayList<Integer>();
         //System.out.println("Scheduler: num of cars = " + this.numOfCars);
 
         //for each elevator car, initialize their information fields
@@ -259,15 +262,21 @@ public class Scheduler {
         InputData currentRequest = this.requestQueue.get(0);
         System.out.println("Scheduler deciding where to send request: " + currentRequest.toString() + "\n");
 
+        Iterator<Map.Entry<Integer, int[]>> iterator = this.getElevatorInfo().entrySet().iterator();
+        Map.Entry<Integer, int[]> elevator = iterator.next();
+        if(this.brokenElevators.contains(elevator.getKey())){
+            elevator = iterator.next();
+        }
+
         //initially sets this to elevator #1 as base case
-        int chosenElevator = 1;
+        int chosenElevator = elevator.getKey();
         //initially set to the difference of the first elevator's current floor with the request's current floor
-        int bestFloorDifference = this.elevatorsInfo.get(1)[0] - currentRequest.getFloor();
+        int bestFloorDifference = this.elevatorsInfo.get(elevator.getKey())[0] - currentRequest.getFloor();
         Boolean directionMatches;
         //int elevatorDistanceDifference = 0;
 
         //if elevator #1's direction is up
-        if (this.elevatorsInfo.get(1)[2] == 1) {
+        if (this.elevatorsInfo.get(elevator.getKey())[2] == 1) {
             if (currentRequest.getIsDirectionUp()) { //if request is also going up
                 directionMatches = true;
             } else {
@@ -282,11 +291,18 @@ public class Scheduler {
         }
 
         //Iterate through the rest of the elevators to compare their distance difference and direction to determine most efficient elevator to send to request to
-        for (int currElevator = 2; currElevator < this.elevatorsInfo.size() + 1; currElevator++) {
-            Boolean directionIsUp;
-            int elevatorDistanceDifference = this.elevatorsInfo.get(currElevator)[0] - currentRequest.getFloor();
+        while(iterator.hasNext()) {
+            Map.Entry<Integer, int[]> currElevator = iterator.next();
 
-            if (this.elevatorsInfo.get(currElevator)[2] == 1) { //if elevator is going up
+            //Skip this elevator if its broken but hasn't been removed from our list of elevators yet
+            if(this.brokenElevators.contains(currElevator.getKey())){
+                continue;
+            }
+
+            Boolean directionIsUp;
+            int elevatorDistanceDifference = this.elevatorsInfo.get(currElevator.getKey())[0] - currentRequest.getFloor();
+
+            if (this.elevatorsInfo.get(currElevator.getKey())[2] == 1) { //if elevator is going up
                 directionIsUp = true;
             } else {
                 directionIsUp = false;
@@ -301,14 +317,14 @@ public class Scheduler {
                         //check if the previous floor difference is less than the current elevator's floor difference
                         if (Math.abs(elevatorDistanceDifference) < Math.abs(bestFloorDifference)) {
                             //then current elevator is closer to request than the previous
-                            chosenElevator = currElevator;
+                            chosenElevator = currElevator.getKey();
                             bestFloorDifference = elevatorDistanceDifference;
                             directionMatches = directionIsUp;
                         }
                     }
                     else{
                         //then current elevator is closer to request than the previous
-                        chosenElevator = currElevator;
+                        chosenElevator = currElevator.getKey();
                         bestFloorDifference = elevatorDistanceDifference;
                         directionMatches = directionIsUp;
                     }
@@ -322,14 +338,14 @@ public class Scheduler {
                         //check if the previous floor difference is less than the current elevator's floor difference
                         if (Math.abs(elevatorDistanceDifference) < Math.abs(bestFloorDifference)) {
                             //then current elevator is closer to request than the previous
-                            chosenElevator = currElevator;
+                            chosenElevator = currElevator.getKey();
                             bestFloorDifference = elevatorDistanceDifference;
                             directionMatches = directionIsUp;
                         }
                     }
                     else{
                         //then current elevator is closer to request than the previous
-                        chosenElevator = currElevator;
+                        chosenElevator = currElevator.getKey();
                         bestFloorDifference = elevatorDistanceDifference;
                         directionMatches = directionIsUp;
                     }
@@ -339,7 +355,7 @@ public class Scheduler {
                 if (!directionMatches) {
                     //check if the previous floor difference is less than the current elevator's floor difference
                     if (Math.abs(elevatorDistanceDifference) < Math.abs(bestFloorDifference)) {
-                        chosenElevator = currElevator;
+                        chosenElevator = currElevator.getKey();
                         bestFloorDifference = elevatorDistanceDifference;
                         directionMatches = directionIsUp;
                     }
@@ -493,14 +509,22 @@ public class Scheduler {
         return elevatorsInfo;
     }
 
+    public void addBrokenElevator(int i){
+        this.brokenElevators.add(i);
+    }
+
     public static void main(String args[]) {
         System.out.println();
         int elevatorPort;
         Scheduler scheduler = new Scheduler(4);
         int elevatorsDone = 0;
+        boolean[] elevatorDoneArray = new boolean[4];
+        boolean finished = false;
 
         //while all elevators are not done sending requests and receving (because they're done servicing all their requests)
-        while (elevatorsDone <= scheduler.getNumOfCars()) {
+        while (!finished) {
+            Iterator<Map.Entry<Integer, int[]>> iterator = scheduler.getElevatorInfo().entrySet().iterator();
+            Iterator<Map.Entry<Integer, int[]>> iterator2 = scheduler.getElevatorInfo().entrySet().iterator();
 
             // Check if request received is last request, if true stop receiving more instructions
             if (!scheduler.noMoreRequests) {
@@ -508,38 +532,51 @@ public class Scheduler {
                 scheduler.sendFloorAcknowledgement();
             }
 
-            // Call receive requests method n times where n is the number of elevators
-            for (int i = 1; i < scheduler.getNumOfCars() + 1; i++) {
+            while (iterator.hasNext()) {
+                Map.Entry<Integer, int[]> elevator = iterator.next();
 
-                // if the amount of requests sent to an elevator is equal the amount of people that elevator has serviced AND theres no more requests coming from floor
-                if ((scheduler.getElevatorInfo().get(i)[3] == scheduler.getElevatorInfo().get(i)[4]
-                        && scheduler.isNoMoreRequests())) {
-                    elevatorsDone++; //increment the number of elevators that have completely finished serivicing their requests
-                }
-                
                 elevatorPort = scheduler.receiveElevatorStatus();
 
-                //If -1 was returned there was an error with this elevator and we need to remove it
                 if (elevatorPort == -1) {
-                    scheduler.numOfCars -= 1;
-                    scheduler.elevatorAndTheirPorts.remove(i);
-                    scheduler.elevatorsInfo.remove(i);
+                    elevatorDoneArray[elevator.getKey() - 1] = true;
+                    scheduler.addBrokenElevator(elevator.getKey());
                 } else {
-                    scheduler.elevatorAndTheirPorts.put(i, elevatorPort); //save elevator port in Map
+                    scheduler.elevatorAndTheirPorts.put(elevator.getKey(), elevatorPort); //save elevator port in Map
                 }
             }
 
             scheduler.sendToElevators();
 
-            //Check if elevators are done, if so remove them from our list of active elevators
-            for (int i = 1; i < scheduler.getNumOfCars() + 1; i++) {
+            // these next loops handle removing finished elevators
+            while (iterator2.hasNext()) {
+                Map.Entry<Integer, int[]> elevator = iterator2.next();
                 // if the amount of requests sent to an elevator is equal the amount of people that elevator has serviced AND theres no more requests coming from floor
-                if ((scheduler.getElevatorInfo().get(i)[3] == scheduler.getElevatorInfo().get(i)[4]
-                        && scheduler.isNoMoreRequests())) {
-                    scheduler.numOfCars -= 1;
-                    scheduler.elevatorAndTheirPorts.remove(i);
-                    scheduler.elevatorsInfo.remove(i);
+                if (elevator.getValue()[3] == elevator.getValue()[4] && scheduler.isNoMoreRequests()) {
+                    elevatorDoneArray[elevator.getKey() - 1] = true;
                 }
+            }
+
+            for (int i = 0; i < elevatorDoneArray.length; i++) {
+                // if the amount of requests sent to an elevator is equal the amount of people that elevator has serviced AND theres no more requests coming from floor
+                if (elevatorDoneArray[i]) {
+                    scheduler.elevatorAndTheirPorts.remove(i + 1);
+                    scheduler.elevatorsInfo.remove(i + 1);
+                }
+            }
+
+            // loops through the array and if its all true, all elevs are finished
+            for (int i = 0; i < elevatorDoneArray.length; i++) {
+                if (elevatorDoneArray[i]) {
+                    elevatorsDone++;
+                }
+
+                if (!elevatorDoneArray[i]) {
+                    elevatorsDone = 0;
+                }
+            }
+
+            if (elevatorsDone >= elevatorDoneArray.length) {
+                finished = true;
             }
 
             System.out.println(
