@@ -530,7 +530,7 @@ public class Elevator {
     }
 
     public static void main(String args[]) {
-        System.out.println(); //Remoove / move?
+        System.out.println(); 
         final int NUM_OF_FLOORS = 22;
 
         /*This maps an elevator instance to their finished status (true when done, false when not done) */
@@ -600,7 +600,7 @@ public class Elevator {
                     currElevator.receiveInstruction();
                 }
 
-            } //Remove / move?
+            } 
             System.out.println(
                     "-------------------------------------------------------------------------------------------------");
 
