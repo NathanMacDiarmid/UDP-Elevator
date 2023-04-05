@@ -431,8 +431,6 @@ public class Elevator {
             e.printStackTrace();
             System.exit(1);
         }
-
-        System.out.println("Elevator #" + elevatorNum + ": Request sent.\n");
     }
 
     /**
