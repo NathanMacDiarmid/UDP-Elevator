@@ -428,7 +428,6 @@ public class Elevator {
             System.exit(1);
         }
 
-        int len = sendPacket.getLength();
         // Sends the DatagramPacket over port 23
         try {
             sendAndReceiveSocket.send(sendPacket);
