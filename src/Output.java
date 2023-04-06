@@ -6,10 +6,12 @@ package src;
 public class Output {
 
     /**
-     * Default constructor
+     * Output prints where each elevator is in real time (floor to floor)
+     * @param elevatorNum
+     * @param currentFloor
      */
-    public Output(){
-
+    public void printFloor(int elevatorNum, int currentFloor){
+        System.out.println("Elevator #" + elevatorNum + ": on Floor #" + currentFloor);
     }
 
     /**
@@ -17,9 +19,9 @@ public class Output {
      * @param elevatorNum denotes the elevator cart #
      * @param currentFloor denotes the current floor
      */
-    public void printElevatorFloorRequest(int elevatorNum, int currentFloor){
+    public void printElevatorFloorRequest(int elevatorNum){
          System.out.println("Elevator #" + elevatorNum
-                    + ": There are people waiting for the elevator on this floor: " + currentFloor);
+                    + ": There are people waiting for the elevator on this floor: "); //TODO: might want to take this out
     }
 
     /**
@@ -27,14 +29,13 @@ public class Output {
      * @param up specifies the direction the elevator is moving in
      * @param elevatorNum denotes the elevator cart #
      */
-    public void printDirection(boolean up, int elevatorNum){
-        if(up == true){
+    public void printDirection(int elevatorNum, boolean directionUp){
+
+        if(directionUp == true){
             System.out.println(
-                        "Elevator #" + elevatorNum + ": Is below initial floor of first request in queue -> moving up");
-                
+                        "Elevator #" + elevatorNum + " -> going UP" + "\n");
         }else{
-            System.out.println("Elevator #" + elevatorNum
-                        + ": Is above initial floor of first request in queue -> moving down");
+            System.out.println("Elevator #" + elevatorNum + " -> going DOWN" + "\n");
         }
     }
 
@@ -42,19 +43,9 @@ public class Output {
      * Output to notify which elevator has reached the destination of a passanger 
      * @param elevatorNum denotes the elevator cart #
      */
-    public void printDestinationReached(int elevatorNum, int destinationFloor){
-        System.out.println(
-                            "Elevator #" + elevatorNum + ": Is at the destination of a passenger in the elevator, floor: " + destinationFloor);                    
-    }
-
-    /**
-     * Output to notify when the doors are opening
-     * @param elevatorNum denotes the elevator cart #
-     */
-    public void printOpenDoors(int elevatorNum){
-        System.out.println("Elevator #" + elevatorNum + " -> Notfiy elevator to open doors");
-                
-    }
+    public void printDestinationReached(int elevatorNum){
+        System.out.println("Elevator #" + elevatorNum + ": Is at the destination floor of a passenger(s) in the elevator");                    
+    } //TODO: might want to take this out
 
     /**
      * Output for the users current state
@@ -62,21 +53,21 @@ public class Output {
      * @param bothInOut represents type of transition 
      */
     public void printUserTransition(int elevatorNum, int bothInOut){
+        
         if(bothInOut == 2){
-             System.out.println("Elevator #" + elevatorNum + " -> People are walking in and out");
+             System.out.println("Elevator #" + elevatorNum + ": People are walking in and out");
         }else if(bothInOut == 1){
-            System.out.println("Elevator #" + elevatorNum + " -> People are walking out");
+            System.out.println("Elevator #" + elevatorNum + ": People are walking out");
         }else if(bothInOut == 0){
-            System.out.println("Elevator #" + elevatorNum + " -> People are walking in");                
+            System.out.println("Elevator #" + elevatorNum + ": People are walking in");                
         }                 
-    }
+    } //TODO: might want to take this out
 
     /**
      * Outputs a fault occuring which is the elevator cart is stuck
      */
     public void printElevatorStuckFault(){
-        System.out.println("Timeout has occured while the elevator is trying to move");
-        System.out.println("Therefore we are stuck, activating emergency routine now");
+        System.out.println("Timeout has occured while the elevator is trying to move -> activating emergency routine now");
     }
 
     /**
@@ -84,7 +75,7 @@ public class Output {
      * @param elevatorNum
      * @param isDone
      */
-    public void printElevatorErrorStatus(int elevatorNum){
+    public void printStuckError(int elevatorNum){
         System.out.println("Elevator #" + elevatorNum + " is STUCK");                
     }
 

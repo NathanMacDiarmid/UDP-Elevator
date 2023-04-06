@@ -20,12 +20,14 @@ class SchedulerTest {
     private Scheduler scheduler;
     private Elevator elevator1, elevator2;
     private Floor floor;
+    private final long TIME_BETWEEN_FLOORS = 2000;
+    private final long TIME_TO_LOAD_UNLOAD = 1000;
 
     @BeforeEach
     public void Setup() {
         scheduler = new Scheduler(2);
-        elevator1 = new Elevator(1, 1, "up", 22);
-        elevator2 = new Elevator(2, 1, "up", 22);
+        elevator1 = new Elevator(1, 1, "up", 22,  TIME_BETWEEN_FLOORS, TIME_TO_LOAD_UNLOAD);
+        elevator2 = new Elevator(2, 1, "up", 22,  TIME_BETWEEN_FLOORS, TIME_TO_LOAD_UNLOAD);
         floor = new Floor();
     }
 
