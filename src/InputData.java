@@ -18,6 +18,13 @@ public class InputData implements Comparable<InputData> {
     /**
      * Constructor for the InputData class, takes in all the values per line in the
      * txt file.
+     * @param timeOfRequest - time of the requst coming in
+     * @param floor - floor that the request is coming from
+     * @param isDirectionUp - direction that the request is going to
+     * @param carRequest - destination floor
+     * @param doorNotOpenError - specifies whether this request will trigger a open door stuck fault
+     * @param doorNotCloseError - specifies whether this request will trigger a closed door stuck fault
+     * @param elevatorStuckError - specifies whether this request will trigger a elevator stuck fault
      */
     public InputData(long timeOfRequest, int floor, boolean isDirectionUp, int carRequest, boolean doorNotOpenError,
             boolean doorNotCloseError, boolean elevatorStuckError) {
@@ -30,6 +37,10 @@ public class InputData implements Comparable<InputData> {
         this.elevatorStuckError = elevatorStuckError;
     }
 
+    /**
+     * gets whether the direction of the request up
+     * @return true if directin is up, false is the direction is down
+     */
     public Boolean getIsDirectionUp() {
         return isDirectionUp;
     }
@@ -54,7 +65,6 @@ public class InputData implements Comparable<InputData> {
 
     /**
      * Gets direction of request.
-     * 
      * @return true if the elevator is going up
      */
     public boolean isDirectionUp() {
@@ -63,28 +73,44 @@ public class InputData implements Comparable<InputData> {
 
     /**
      * Gets the destination floor of request
-     * 
-     * @return int
+     * @return floor of destination 
      */
     public int getCarRequest() {
         return this.carRequest;
     }
 
+    /**
+     * Determine whether this request will generate a door open fault
+     * @return true if yes, false if no
+     */
     public boolean getDoorNotOpenError() {
         return doorNotOpenError;
     }
 
+    /**
+     * Determine whether this request will generate a closed open fault
+     * @return true if yes, false if no
+     */
     public boolean getDoorNotCloseError() {
         return doorNotCloseError;
     }
 
+    /**
+     * Determine whether this request will generate an elevator stuck fault
+     * @return true if yes, false if no
+     */
     public boolean getElevatorStuckError() {
         return elevatorStuckError;
     }
 
+    /**
+     * Sets whether this request will generate a door open fault
+     * @return true if yes, false if no
+     */
     public void setElevatorStuckError(boolean setting) {
         this.elevatorStuckError = setting;
     }
+
     @Override
     /**
      * Allows the represented data in InputData.java to be printed.
@@ -106,8 +132,6 @@ public class InputData implements Comparable<InputData> {
                 + doorNotCloseError + ", elevatorStuckError=" + elevatorStuckError + "]";
     }
 
-
-    
     @Override
     /**
      * Allows the InputData.java classes to be compared to each other via the time
@@ -121,4 +145,5 @@ public class InputData implements Comparable<InputData> {
         int compareTime = (int) (((InputData) o).getTimeOfRequest());
         return (int) this.timeOfRequest - compareTime;
     }
+    
 }

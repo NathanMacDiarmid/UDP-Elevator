@@ -120,7 +120,7 @@ public class Scheduler {
             System.out.print("IO Exception: likely:");
             System.out.println("Receive Socket Timed Out.\n" + e);
             e.printStackTrace();
-            System.exit(1); //TODO: should the system exit in this case?
+            System.exit(1);
         }
 
         int len = receivePacket23.getLength();
@@ -398,7 +398,7 @@ public class Scheduler {
 
             //if the current elevator does not match the elevator # to send request to
             if (currElevatorNum != elevatorToSendRequest) {
-                if (isNoMoreRequests()) { //check if there are no more requests coming from Floor //TODO: I don't think this is necessary 
+                if (isNoMoreRequests()) { //check if there are no more requests coming from Floor
                     message = "No more requests";
                     msgToSend = message.getBytes();
                 } else {
@@ -416,7 +416,7 @@ public class Scheduler {
             System.out.println("Scheduler: Sending packet to host: " + sendPacket.getAddress() + ", on port: "
                     + portOfElevator + ", with length: " + len);
             System.out.print("Containing: ");
-            System.out.println(new String(sendPacket.getData(), 0, len)); //TODO: make sure above and below sending and receiving methods do this instead of creating a string just to print it
+            System.out.println(new String(sendPacket.getData(), 0, len));
 
             // Sends the DatagramPacket to the Server
             try {
@@ -456,7 +456,7 @@ public class Scheduler {
         LocalTime time;
         //parse through the pattern to extract data for the given request 
         if (matcher.find()) {
-            time = LocalTime.parse((matcher.group(1))); //TODO: maybe we should have try-catches around these to double check
+            time = LocalTime.parse((matcher.group(1)));
             currentTime = time.get(ChronoField.MILLI_OF_DAY);
             floor = Integer.parseInt(matcher.group(2));
             isDirectionUp = Boolean.parseBoolean(matcher.group(3));

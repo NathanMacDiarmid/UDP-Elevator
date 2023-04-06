@@ -47,7 +47,8 @@ public class Floor {
         }
     }
 
-    // The following methods are getters and setters for each of the attributes
+    /** The following methods are getters and setters for each of the attributes */ 
+
     public Boolean getRequestUpButton() {
         return requestUpButton;
     }
@@ -101,13 +102,12 @@ public class Floor {
      * @param currentFloor the floor being requested from in the data.txt file
      * @param floorRequest the floor destination in the data.txt file
      * @param direction the direction the elevator is going
-     * @return true if any of these inputs are invalid (negative, greater than 7 or not "up" or "down")
-     * @return false otherwise
+     * @return true if any of these inputs are invalid (negative, greater than 7 or not "up" or "down"), false otherwise
      * @author Nathan MacDiarmid 101098993
      * @author Michael Kyrollos 101183521
      */
-    private boolean handleInputErrors(int currentFloor, int floorRequest, String direction, int doorNotOpenError,
-            int doorNotCloseError, int elevatorStuckError) {
+    private boolean handleInputErrors(int currentFloor, int floorRequest, String direction, int doorNotOpenError, int doorNotCloseError, int elevatorStuckError) {
+        
         if (currentFloor < 0 || currentFloor > 22) {
             return true;
         }
@@ -231,9 +231,7 @@ public class Floor {
 
     /**
      * Returns the direction that a given request is going in
-     * Assumes that the data in the txt is in valid format and following our
-     * standard
-     * 
+     * Assumes that the data in the txt is in valid format and following our standard
      * @param direction The Direction that has been parsed ("up" or "down")
      * @return true if "up" is the direction, false otherwise.
      * @author Michael Kyrollos
@@ -248,7 +246,6 @@ public class Floor {
 
     /**
      * Prints out the data that has been parsed from the "data.txt" file.
-     * 
      * @author Michael Kyrollos
      */
     public void printInputData(ArrayList<InputData> queueToPrint) {
@@ -359,7 +356,7 @@ public class Floor {
             System.exit(1);
         }
 
-        int len = receivePacket.getLength(); //TODO: len (and other vars) could be a class variable, so we can use in receive and send
+        int len = receivePacket.getLength();
         System.out.println("Floor: Packet received from host: " + receivePacket.getAddress() + ", on port: "
                 + receivePacket.getPort() + ", with length: " + len);
         System.out.print("Containing: ");
