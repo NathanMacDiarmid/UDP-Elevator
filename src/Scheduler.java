@@ -273,7 +273,6 @@ public class Scheduler {
         //initially set to the difference of the first elevator's current floor with the request's current floor
         int bestFloorDifference = this.elevatorsInfo.get(elevator.getKey())[0] - currentRequest.getFloor();
         Boolean directionMatches;
-        //int elevatorDistanceDifference = 0;
 
         //if elevator #1's direction is up
         if (this.elevatorsInfo.get(elevator.getKey())[2] == 1) {
