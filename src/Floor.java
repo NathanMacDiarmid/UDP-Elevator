@@ -164,47 +164,86 @@ public class Floor {
                 boolean elevatorStuckError;
 
                 // Checks to make sure that only 4 pieces of data are passed from data.txt (time of request, current floor, direction, floor destination)
-                // If more than 4 pieces are passed, it goes to the next line
-                if (data.length != 7) {
-                    continue;
-                }
+                // If the input file is not 7 or 4 items or not in correct format, it goes to the next line
+                if (data.length == 7) {
+                    // This try catch block handles if the input data are correct types, otherwise, goes to next line in data.txt
+                    try {
+                        // Using the LocalTime class to parse through a standard time format of 'HH:MM:SS:XM'
+                        time = LocalTime.parse((data[0]));
 
-                // This try catch block handles if the input data are correct types, otherwise, goes to next line in data.txt
-                try {
-                    // Using the LocalTime class to parse through a standard time format of 'HH:MM:SS:XM'
-                    time = LocalTime.parse((data[0]));
+                        // converting the LocalTime to an integer, will stored as an int that represents the millisecond of the day
+                        timeOfRequest = time.get(ChronoField.MILLI_OF_DAY);
 
-                    // converting the LocalTime to an integer, will stored as an int that represents the millisecond of the day
-                    timeOfRequest = time.get(ChronoField.MILLI_OF_DAY);
+                        //save current floor
+                        currentFloor = Integer.parseInt(data[1]);
 
-                    //save current floor
-                    currentFloor = Integer.parseInt(data[1]);
+                        //save floor request
+                        floorRequest = Integer.parseInt(data[3]);
 
-                    //save floor request
-                    floorRequest = Integer.parseInt(data[3]);
+                        // error input part if doors do not open 
+                        doorNotOpenError = convertToBool(Integer.parseInt(data[4]));
 
-                    // error input part if doors do not open 
-                    doorNotOpenError = convertToBool(Integer.parseInt(data[4]));
+                        // error input part if doors do not close 
+                        doorNotCloseError = convertToBool(Integer.parseInt(data[5]));
 
-                    // error input part if doors do not close 
-                    doorNotCloseError = convertToBool(Integer.parseInt(data[5]));
+                        // error input part if the elevator does not make it to the next floor
+                        elevatorStuckError = convertToBool(Integer.parseInt(data[6]));
 
-                    // error input part if the elevator does not make it to the next floor
-                    elevatorStuckError = convertToBool(Integer.parseInt(data[6]));
+                    } catch (Exception e) {
+                        continue;
+                    }
 
-                } catch (Exception e) {
-                    continue;
-                }
-
-                // Skips input line if invalid input
-                if (handleInputErrors(currentFloor, floorRequest, data[2], Integer.parseInt(data[4]),
+                    // Skips input line if invalid input
+                    if (handleInputErrors(currentFloor, floorRequest, data[2], Integer.parseInt(data[4]),
                         Integer.parseInt(data[5]), Integer.parseInt(data[6]))) {
+                        continue;
+                    }
+
+                    //Creating new InputData class for every line in the txt, storing it in the elevator ArrayList
+                    elevatorQueue.add(new InputData(timeOfRequest, currentFloor, isGoingUp(data[2]), floorRequest,
+                        doorNotOpenError, doorNotCloseError, elevatorStuckError));
+
+                } else if (data.length == 4) {
+                    // this if statement checks if the input file only has four values (no errors)
+                    // This try catch block handles if the input data are correct types, otherwise, goes to next line in data.txt
+                    try {
+                        // Using the LocalTime class to parse through a standard time format of 'HH:MM:SS:XM'
+                        time = LocalTime.parse((data[0]));
+
+                        // converting the LocalTime to an integer, will stored as an int that represents the millisecond of the day
+                        timeOfRequest = time.get(ChronoField.MILLI_OF_DAY);
+
+                        //save current floor
+                        currentFloor = Integer.parseInt(data[1]);
+
+                        //save floor request
+                        floorRequest = Integer.parseInt(data[3]);
+                        
+                        // error input part if doors do not open set to false since theres none
+                        doorNotOpenError = false;
+
+                        // error input part if doors do not close set to false since theres none
+                        doorNotCloseError = false;
+
+                        // error input part if the elevator does not make it to the next floor set to false since theres none
+                        elevatorStuckError = false;
+                    } catch (Exception e) {
+                        continue;
+                    }
+
+                    // Skips input line if invalid input with all errors to 0
+                    if (handleInputErrors(currentFloor, floorRequest, data[2], 0,
+                        0, 0)) {
+                        continue;
+                    }
+
+                    //Creating new InputData class for every line in the txt, storing it in the elevator ArrayList
+                    elevatorQueue.add(new InputData(timeOfRequest, currentFloor, isGoingUp(data[2]), floorRequest,
+                        doorNotOpenError, doorNotCloseError, elevatorStuckError));
+
+                } else {
                     continue;
                 }
-
-                //Creating new InputData class for every line in the txt, storing it in the elevator ArrayList
-                elevatorQueue.add(new InputData(timeOfRequest, currentFloor, isGoingUp(data[2]), floorRequest,
-                        doorNotOpenError, doorNotCloseError, elevatorStuckError));
             }
         } catch (NumberFormatException | FileNotFoundException e) {
             e.printStackTrace();
@@ -264,6 +303,10 @@ public class Floor {
      */
     private void initiateFloor() {
         long startTime = System.currentTimeMillis();
+        if (elevatorQueue.size() == 0) {
+            System.out.println("No requests provided, please provide requests in data.txt to continue ...");
+            System.exit(1);
+        }
         long firstRequestTime = elevatorQueue.get(0).getTimeOfRequest();
         boolean lastRequest = false; //tracks when the last request is being passed to the scheduler
 
