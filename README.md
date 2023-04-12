@@ -13,26 +13,33 @@ elevator to receive the incoming instruction to execute based on direction and d
 Iteration 4 has the goal of adding code for detecting and handling faults. Faults are outputted in the console as they happen,
 based on the the type of fault, the error handling is adjusted. 
 
+Iteration 5 has the goal of adding a User Interface for the concierge to monitor the elevator system while it is servicing
+requests. The performance of the system was also measured by recording the time it takes to run the entire input
+file. 
+
 ## Contributions:
 🥇 Amanda Piazza (101143004)
+* Implementation of Output Class (UI)
 
-  * Elevator stuck timing diagram, Handle door stuck open/close event
-     
 🥇 Juanita Rodelo (101141857) 
 
-   * Door stuck open/close timing diagram, Handle door stuck open/close event
-     
+   * Measurement Analysis
+   * Output class (UI)
+
+
 🥇 Matthew Belanger (101144323)
 
-   * Elevator stuck timeout fault
-     
+   * Bug Fixes
+
 🥇 Michael Kyrollos (101183521)  
 
-   * Unit testing, UML diagrams, Fault injection and parsing
+   * Unit testing, UML diagrams
      
 🥇 Nathan MacDiarmid (101098993) 
 
-   * Sequence diagram, Elevator stuck timeout fault
+   * UML Sequence Diagram
+   * Scheduler State Machine
+   * Bug Fixes
 
 ### Structure 
    * Floor.java accepts events from InputData.java. Each event consists of the current time, the floor request, 
