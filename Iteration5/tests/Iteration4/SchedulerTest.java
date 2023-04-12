@@ -1,4 +1,4 @@
-package tests;
+package Iteration5.tests.Iteration4;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,14 +20,12 @@ class SchedulerTest {
     private Scheduler scheduler;
     private Elevator elevator1, elevator2;
     private Floor floor;
-    private final long TIME_BETWEEN_FLOORS = 2000;
-    private final long TIME_TO_LOAD_UNLOAD = 1000;
 
     @BeforeEach
     public void Setup() {
         scheduler = new Scheduler(2);
-        elevator1 = new Elevator(1, 1, "up", 22,  TIME_BETWEEN_FLOORS, TIME_TO_LOAD_UNLOAD);
-        elevator2 = new Elevator(2, 1, "up", 22,  TIME_BETWEEN_FLOORS, TIME_TO_LOAD_UNLOAD);
+        elevator1 = new Elevator(1, 1, "up");
+        elevator2 = new Elevator(2, 1, "up");
         floor = new Floor();
     }
 
@@ -154,6 +152,8 @@ class SchedulerTest {
                 elevator2.getReceivePacket().getLength());
         assertEquals("No current requests", received2);
     }
+
+   
 
     /**
      * SAVING FOR FUTURE ITERATIONS
